@@ -45,6 +45,15 @@ export interface Profile {
     longestSessionMinutes: number
     mesoWeek: number // 1..4
     mesoStartDate: string // ISO date of week 1 Monday
+    // Both are written back from `planCardioWeek`'s result every week; without
+    // them the adaptive step-back and the modality rotation restart each week.
+    holdStreak: number // consecutive weeks completed under 70 % of target, default 0
+    rotationCursor: number // index into the enabled modalities, default 0
+    // Minutes LAST week was actually prescribed. The adaptive check has to
+    // divide by this and not by `weeklyMinutes`: a deload week prescribes 60 %
+    // of the baseline, so a perfectly completed deload would otherwise read as
+    // a missed week and hold the next one. 0 on a fresh profile.
+    lastPlannedMinutes: number
     zones?: {
       hr?: { max?: number; lthr?: number }
       pace?: { run?: number; bike?: number; swim?: number } // sec per km / kmh / sec per 100 m
