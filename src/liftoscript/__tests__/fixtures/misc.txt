@@ -1,0 +1,15 @@
+/// Coverage for the small syntax the other fixtures do not exercise.
+# Week 1
+## Day 1
+// Keep the bar over midfoot.
+// Reset between reps.
+/// This internal note must never reach a description.
+T1: Squat / 3x8-12 / 100kg
+T2: Bench Press, Barbell / 1x5 60%, 1x3 70%, 3x5 80% @8+ 60s|30s (Top set)
+T3: Lat Pulldown / 3x15+ ?+ / rest: 90s
+Deadlift / 5x5 120kg @7 / \
+  warmup: 1x5 60kg, 1x3 75% / \
+  progress: lp(5kg)
+Barbell Row / 3x10 / 3x8 / 60kg / id: tags(3, 7)
+Face Pull / 3x20 / 15kg / used: none / progress: none
+Plank / 3x1 / 60s|30s

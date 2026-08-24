@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+@import 'vuiii/style.css';
+
+/*
+ * runbo is light-mode only: the app is used in a bright gym, held at arm's
+ * length, so everything is maximum contrast on white. No dark variants —
+ * vuiii's own dark blocks only apply under `.vuiii-mode-dark`/`-auto`, which
+ * we never set.
+ */
+
+@theme {
+  /* One strong accent: a high-chroma orange that stays readable under gym
+     lighting and marks the single "do this now" affordance on every screen. */
+  --color-accent-50: #fff3ed;
+  --color-accent-100: #ffe2d3;
+  --color-accent-200: #ffc0a4;
+  --color-accent-300: #ff966c;
+  --color-accent-400: #ff6a33;
+  --color-accent-500: #f2490b;
+  --color-accent-600: #d13906;
+  --color-accent-700: #ad2c09;
+  --color-accent-800: #8b250f;
+  --color-accent-900: #72210f;
+
+  /* Cool-toned neutrals: near-black ink on white keeps numerals crisp. */
+  --color-ink-50: #f6f7f9;
+  --color-ink-100: #eceef2;
+  --color-ink-200: #d9dde4;
+  --color-ink-300: #b8bfcc;
+  --color-ink-400: #8d97a8;
+  --color-ink-500: #6b7585;
+  --color-ink-600: #525b69;
+  --color-ink-700: #3e4551;
+  --color-ink-800: #272c35;
+  --color-ink-900: #14181f;
+}
+
+/* Pull vuiii's primary onto the app accent so its buttons/inputs match. */
+:root {
+  --vuiii-color-primary: var(--color-accent-600);
+}
+
+.DialogStack__backdrop {
+  backdrop-filter: blur(4px);
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  @apply bg-white text-ink-900;
+}

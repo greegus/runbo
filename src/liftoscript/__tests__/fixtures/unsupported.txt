@@ -1,0 +1,23 @@
+/// Every construct runbo refuses to guess about, one per line. Each `///` note
+/// gives the id in UNSUPPORTED_CONSTRUCTS whose exact message the parser must
+/// emit for the line directly below it, pointing at the construct's column.
+# Week 1
+## Day 1
+/// updateCustom
+Squat / 5x5 / 100kg / update: custom() {~ weights = 100kg ~}
+/// superset
+Bench Press / 5x5 / 60kg / superset: Barbell Row
+/// reuse
+Front Squat / ...Squat
+/// reuse (with a set-variation selector)
+Paused Bench Press / ...Bench Press[2:1]
+/// weekRepetition
+Deadlift[1-4] / 5x5 / 120kg
+/// exerciseVariations
+Overhead Press / 5x5 / 45kg | Push Press / 3x3 / 55kg
+/// crossExerciseState
+Lat Pulldown / 3x15 / 40kg / progress: custom(foo: 0) {~ state[1].foo = 1 ~}
+/// descriptionIndex
+Bent Over Row / 3x12 / 40kg / descriptionIndex: 2
+/// bodyweightMath
+Pull Up / 3x8 / bodyweight+10kg

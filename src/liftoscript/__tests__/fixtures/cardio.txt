@@ -1,0 +1,18 @@
+/// The runbo cardio extension: durations and distances instead of reps, an
+/// optional zone or RPE, and a `rest:` section for interval work. The modality
+/// comes from the exercise name (Run, Bike, Swim and their aliases).
+# Week 1
+## Easy
+Run / 40min @Z2
+Bike / 60min @Z2
+Walk, Treadmill / 30min @Z1
+
+## Intervals
+Run / 6x3min @Z4 / rest: 2min
+Bike / 5x4min @Z3 / rest: 90s
+Swim / 8x100m @Z3 / rest: 30s
+
+## Long
+Run / 5km @Z2
+Cycling / 90min @Z2
+Run / 45min @6

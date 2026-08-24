@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": true,
+  "printWidth": 120,
+  "semi": false,
+  "quoteProps": "preserve",
+  "ignorePatterns": ["docs/**"],
+  "experimentalSortImports": {},
+  "experimentalSortPackageJson": {}
+}

@@ -1,0 +1,23 @@
+/// A stock, Liftosaur-style GZCLP written with the shorthand progressions.
+/// Everything here must desugar to the same evaluation path as the built-in.
+# Week 1
+## Day 1
+// Push the knees out on the way up.
+T1: Squat / 5x3+ / 100kg / warmup: 1x5 20kg, 1x3 55%, 1x2 75% / progress: lp(5kg, 1, 0, 15kg, 1, 0)
+T2: Bench Press, Barbell / 3x10 / 60kg / warmup: 1x5 20kg, 1x3 55% / progress: dp(2.5kg, 6, 10)
+T3: Lat Pulldown / 3x15+ / 40kg / progress: sum(25, 2.5kg)
+
+## Day 2
+T1: Overhead Press / 5x3+ / 45kg / warmup: 1x5 20kg, 1x3 55%, 1x2 75% / progress: lp(2.5kg, 1, 0, 7.5kg, 1, 0)
+T2: Deadlift, Barbell / 3x10 / 90kg / warmup: 1x5 60kg, 1x3 55% / progress: dp(5kg, 6, 10)
+T3: Bent Over Row / 3x15+ / 40kg / progress: sum(25, 2.5kg)
+
+## Day 3
+T1: Bench Press, Barbell / 5x3+ / 80kg / warmup: 1x5 20kg, 1x3 55%, 1x2 75% / progress: lp(2.5kg)
+T2: Squat / 3x10 / 75kg / warmup: 1x5 20kg, 1x3 55% / progress: dp(5kg, 6, 10)
+T3: Lat Pulldown / 3x15+ / 40kg / progress: none
+
+## Day 4
+T1: Deadlift, Barbell / 5x3+ / 120kg / warmup: 1x5 60kg, 1x3 55%, 1x2 75% / progress: lp(5kg)
+T2: Overhead Press / 3x10 / 35kg / warmup: 1x5 20kg, 1x3 55% / progress: dp(2.5kg, 6, 10)
+T3: Bent Over Row / 3x15+ / 40kg / progress: none

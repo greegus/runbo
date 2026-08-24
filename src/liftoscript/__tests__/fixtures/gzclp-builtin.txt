@@ -1,0 +1,100 @@
+/// runbo's built-in GZCLP program. One week block of four days; the scheduler
+/// cycles A1 -> B1 -> A2 -> B2 through `rotationCursor`, so week repetition is
+/// never needed. T1/T2/T3 labels drive rest-timer and warmup defaults.
+/// `completedReps >= reps` (not zeroOrGte) is deliberate: in GZCLP a set you did
+/// not do is a failed session, and at T1 stage 3 (10x1+) a miss IS a zero, which
+/// zeroOrGte would forgive - the stage would never reset.
+/// `state.inc` carries the per-lift increment: 5kg for Squat/Deadlift,
+/// 2.5kg for Bench Press/Overhead Press.
+# Week 1
+## A1
+T1: Squat / 5x3+ / 6x2+ / 10x1+ / 100kg / warmup: 1x5 20kg, 1x3 55%, 1x2 75% / progress: custom(inc: 5kg, resetFactor: 0.85) {~
+  if (completedReps >= reps) {
+    weights += state.inc
+  } else if (setVariationIndex >= 3) {
+    setVariationIndex = 1
+    weights = roundWeight(weights[1] * state.resetFactor)
+  } else {
+    setVariationIndex += 1
+  }
+~}
+T2: Bench Press / 3x10 / 3x8 / 3x6 / 60kg / warmup: 1x5 20kg, 1x3 55% / progress: custom(inc: 2.5kg, resetFactor: 0.85) {~
+  if (completedReps >= reps) {
+    weights += state.inc
+  } else if (setVariationIndex >= 3) {
+    setVariationIndex = 1
+    weights = roundWeight(weights[1] * state.resetFactor)
+  } else {
+    setVariationIndex += 1
+  }
+~}
+T3: Lat Pulldown / 3x15+ / 40kg / warmup: none / progress: custom() {~ if (completedReps[3] >= 25) { weights += 2.5kg } ~}
+
+## B1
+T1: Overhead Press / 5x3+ / 6x2+ / 10x1+ / 45kg / warmup: 1x5 20kg, 1x3 55%, 1x2 75% / progress: custom(inc: 2.5kg, resetFactor: 0.85) {~
+  if (completedReps >= reps) {
+    weights += state.inc
+  } else if (setVariationIndex >= 3) {
+    setVariationIndex = 1
+    weights = roundWeight(weights[1] * state.resetFactor)
+  } else {
+    setVariationIndex += 1
+  }
+~}
+T2: Deadlift / 3x10 / 3x8 / 3x6 / 90kg / warmup: 1x5 60kg, 1x3 55% / progress: custom(inc: 5kg, resetFactor: 0.85) {~
+  if (completedReps >= reps) {
+    weights += state.inc
+  } else if (setVariationIndex >= 3) {
+    setVariationIndex = 1
+    weights = roundWeight(weights[1] * state.resetFactor)
+  } else {
+    setVariationIndex += 1
+  }
+~}
+T3: Bent Over Row / 3x15+ / 40kg / warmup: none / progress: custom() {~ if (completedReps[3] >= 25) { weights += 2.5kg } ~}
+
+## A2
+T1: Bench Press / 5x3+ / 6x2+ / 10x1+ / 80kg / warmup: 1x5 20kg, 1x3 55%, 1x2 75% / progress: custom(inc: 2.5kg, resetFactor: 0.85) {~
+  if (completedReps >= reps) {
+    weights += state.inc
+  } else if (setVariationIndex >= 3) {
+    setVariationIndex = 1
+    weights = roundWeight(weights[1] * state.resetFactor)
+  } else {
+    setVariationIndex += 1
+  }
+~}
+T2: Squat / 3x10 / 3x8 / 3x6 / 75kg / warmup: 1x5 20kg, 1x3 55% / progress: custom(inc: 5kg, resetFactor: 0.85) {~
+  if (completedReps >= reps) {
+    weights += state.inc
+  } else if (setVariationIndex >= 3) {
+    setVariationIndex = 1
+    weights = roundWeight(weights[1] * state.resetFactor)
+  } else {
+    setVariationIndex += 1
+  }
+~}
+T3: Lat Pulldown / 3x15+ / 40kg / warmup: none / progress: custom() {~ if (completedReps[3] >= 25) { weights += 2.5kg } ~}
+
+## B2
+T1: Deadlift / 5x3+ / 6x2+ / 10x1+ / 120kg / warmup: 1x5 60kg, 1x3 55%, 1x2 75% / progress: custom(inc: 5kg, resetFactor: 0.85) {~
+  if (completedReps >= reps) {
+    weights += state.inc
+  } else if (setVariationIndex >= 3) {
+    setVariationIndex = 1
+    weights = roundWeight(weights[1] * state.resetFactor)
+  } else {
+    setVariationIndex += 1
+  }
+~}
+T2: Overhead Press / 3x10 / 3x8 / 3x6 / 35kg / warmup: 1x5 20kg, 1x3 55% / progress: custom(inc: 2.5kg, resetFactor: 0.85) {~
+  if (completedReps >= reps) {
+    weights += state.inc
+  } else if (setVariationIndex >= 3) {
+    setVariationIndex = 1
+    weights = roundWeight(weights[1] * state.resetFactor)
+  } else {
+    setVariationIndex += 1
+  }
+~}
+T3: Bent Over Row / 3x15+ / 40kg / warmup: none / progress: custom() {~ if (completedReps[3] >= 25) { weights += 2.5kg } ~}
