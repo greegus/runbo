@@ -4,7 +4,7 @@
 
 Supersedes *RunPlan Pro — Implementation Specification v1.0* (January 2026; preserved in git history at commit
 `e07ef1a`). This document is the in-repo form of the implementation brief that merged RunPlan Pro with the
-GZCLP + cardio plan. Together with `runbo-product-reuirements.md` it is the **single source of truth**: where
+GZCLP + cardio plan. Together with `runbo-requirements.md` it is the **single source of truth**: where
 the code and this document disagree, fix one of them in the same change.
 
 Phases 0–3 are implemented (see *Phases & status* at the end); module signatures below are taken from the code.
@@ -64,7 +64,7 @@ Phases 0–3 are implemented (see *Phases & status* at the end); module signatur
   Pinia 4, vue-router 5, vitest 4, oxlint / oxfmt.
 - Runtime deps: `firebase`, `vuiii` (beta), `@mdi/js`, `uuid`. Dev: `vite-plugin-pwa`.
 - Firebase project on the **Blaze plan**: Google sign-in, Firestore, Functions (nodejs24), Hosting, FCM.
-  Client config via `VITE_APP_API_KEY` etc. in `.env.local` (commit `.env.example` with empty values).
+  Client config via `VITE_APP_FIREBASE_API_KEY`, `…_AUTH_DOMAIN`, `…_PROJECT_ID`, `…_STORAGE_BUCKET`, `…_MESSAGING_SENDER_ID`, `…_APP_ID`, `…_MEASUREMENT_ID` in `.env.local` (commit `.env.example` with empty values).
 - Emulators: when `import.meta.env.DEV && import.meta.env.VITE_USE_EMULATOR`, call `connectAuthEmulator` /
   `connectFirestoreEmulator` with the ports from `firebase.json` (copy the emulators block from
   `~/Projects/pubquiz/firebase.json`).

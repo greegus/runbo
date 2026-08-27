@@ -22,5 +22,5 @@ npm run format       # oxfmt
 
 ## Docs
 
-`docs/runbo-product-reuirements.md` (what and why) and `docs/runbo-implementation.md` (how, phases, status) are
+`docs/runbo-requirements.md` (what and why) and `docs/runbo-implementation.md` (how, phases, status) are
 the single source of truth — see `docs/README.md`.

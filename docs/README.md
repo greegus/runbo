@@ -1,6 +1,6 @@
 # Docs
 
-- `runbo-product-reuirements.md` — **what and why**: goal, users, settled product decisions, screens, scope
+- `runbo-requirements.md` — **what and why**: goal, users, settled product decisions, screens, scope
   (MVP vs milestone 2), success criteria, risks.
 - `runbo-implementation.md` — **how**: stack, data model, Firestore rules, Liftoscript spec, training domain
   modules, Firebase layer, import, onboarding, views, Cloud Functions, PWA, testing, phases with acceptance
