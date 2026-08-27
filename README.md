@@ -22,5 +22,5 @@ npm run format       # oxfmt
 
 ## Docs
 
-`docs/` holds the original "RunPlan Pro" exploration (PRD + implementation spec). It is **reference material
-only** — see `docs/README.md`.
+`docs/runbo-product-reuirements.md` (what and why) and `docs/runbo-implementation.md` (how, phases, status) are
+the single source of truth — see `docs/README.md`.

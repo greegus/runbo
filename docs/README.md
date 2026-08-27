@@ -1,14 +1,16 @@
-# Reference docs — superseded
+# Docs
 
-`runbo-product-reuirements.md` and `runbo-implementation.md` are the original "RunPlan Pro" exploration:
-a running-only, goal-driven training app. They are kept for the cardio ideas worth harvesting — adaptive
-replanning, missed-workout classification, Strava webhook flow, screen inspiration.
+- `runbo-product-reuirements.md` — **what and why**: goal, users, settled product decisions, screens, scope
+  (MVP vs milestone 2), success criteria, risks.
+- `runbo-implementation.md` — **how**: stack, data model, Firestore rules, Liftoscript spec, training domain
+  modules, Firebase layer, import, onboarding, views, Cloud Functions, PWA, testing, phases with acceptance
+  criteria and current status.
 
-**They are superseded by the current implementation plan wherever they disagree.** Notably, the following
-from those docs does *not* apply:
+Both are v2.0 (August 2026) and together form the single source of truth for runbo. They were rewritten from
+the implementation brief that merged the original "RunPlan Pro" exploration (running-only, race-goal-driven)
+with the GZCLP + cardio plan (working names "fitko" / "sensei"). Where the code and the docs disagree, fix one
+of them in the same change.
 
-- email/password registration and password reset — runbo uses **Google sign-in + an email allowlist**
-- VueFire — runbo uses a **hand-written Firebase service layer** (same pattern as the pubquiz project)
-- a custom REST API for plans/workouts — runbo talks to **Firestore directly**, with Cloud Functions only for
-  Strava OAuth/webhook and push notifications
-- running-only scope — runbo covers **strength (GZCLP) + cardio** as two orthogonal tracks
+The original RunPlan Pro PRD and implementation spec (v1.x, January 2026) are preserved in git history at
+commit `e07ef1a`; the ideas kept from them and the ones deferred to milestone 2 are listed at the end of the
+PRD.
