@@ -1,0 +1,102 @@
+rules_version = '2';
+
+// Single-tenant-per-user data: every document belongs to exactly one signed-in,
+// allowlisted user. There is no sharing, no admin role and no public read path,
+// so the whole file is two predicates — "is this account allowed in at all" and
+// "does this document belong to it".
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // The allowlist is a single doc `config/allowlist` of shape { emails: string[] },
+    // edited by hand in the Firebase console. `exists()` first: get() on a missing
+    // document returns null, and `null.emails` errors the whole evaluation instead
+    // of denying cleanly — so a deleted allowlist would lock the app out with no
+    // signal beyond permission-denied. Fail closed, deliberately.
+    // `data.get('emails', [])` also survives the doc existing without the field.
+    // exists() and get() on the same path count as ONE document access call and are
+    // cached for the whole evaluation, so this stays cheap even for a list query.
+    function allowlist() {
+      let ref = /databases/$(database)/documents/config/allowlist;
+      return exists(ref) ? get(ref).data.get('emails', []) : [];
+    }
+
+    // DECISION: emails are compared lowercased on the token side. Firestore string
+    // comparison is byte-exact, and Google returns the address as the user typed it
+    // at signup. Entries in config/allowlist must therefore be written lowercase.
+    // Only Google sign-in is enabled, which always yields a verified address, so
+    // there is no separate email_verified check to fail on.
+    function isAllowlisted() {
+      return isAuth()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in allowlist();
+    }
+
+    function owns(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    // Readable by any signed-in user so SignInView can tell "not allowlisted" from
+    // "not signed in". Note the rules above do NOT go through this block: get() and
+    // exists() bypass rules entirely. Never client-writable — a writable allowlist
+    // is self-service privilege escalation.
+    match /config/allowlist {
+      allow read: if isAuth();
+      allow write: if false;
+    }
+
+    // Nothing else in `config` is a client's business — feature flags or ids
+    // dropped in here later must not become readable by every signed-in account
+    // for want of a rule change.
+    match /config/{doc} {
+      allow read, write: if false;
+    }
+
+    // Doc id == uid, so ownership needs no document read and a get() on someone
+    // else's profile is denied without loading it.
+    match /profiles/{uid} {
+      allow read, write: if isAllowlisted() && owns(uid);
+    }
+
+    // Owned by the `uid` field. Rules are not filters: because the list rule reads
+    // resource.data.uid, a query is rejected outright unless it is provably scoped
+    // to the caller. Every client list/subscribe MUST carry
+    // where('uid', '==', auth.currentUser.uid) — see firestore.indexes.json for the
+    // composite indexes the additional orderBy('date') / equality filters need.
+    // Single-document get()s are unaffected.
+    // `read` is split into `get` / `list`: a get() on a document that does not
+    // exist has resource == null, and `resource.data.uid` then errors the
+    // evaluation, so Firestore answers permission-denied instead of "not found"
+    // — which breaks loadDocument() and the write-once `createdAt` probe in
+    // saveDocument(). A missing document leaks nothing. The null branch must NOT
+    // reach `list`, or a query would no longer have to prove it is scoped.
+    //
+    // `update` pins both images: the pre-image stops a user overwriting someone
+    // else's document by re-pointing it at themselves, the post-image stops them
+    // handing one of their own to another uid.
+    match /sessions/{id} {
+      allow get: if isAllowlisted() && (resource == null || owns(resource.data.uid));
+      allow list, delete: if isAllowlisted() && owns(resource.data.uid);
+      allow update: if isAllowlisted() && owns(resource.data.uid) && owns(request.resource.data.uid);
+      allow create: if isAllowlisted() && owns(request.resource.data.uid);
+    }
+
+    match /bodyweight/{id} {
+      allow get: if isAllowlisted() && (resource == null || owns(resource.data.uid));
+      allow list, delete: if isAllowlisted() && owns(resource.data.uid);
+      allow update: if isAllowlisted() && owns(resource.data.uid) && owns(request.resource.data.uid);
+      allow create: if isAllowlisted() && owns(request.resource.data.uid);
+    }
+
+    // Holds Strava OAuth tokens. Written and read only by Cloud Functions, whose
+    // Admin SDK bypasses these rules; no client code touches this collection.
+    match /stravaAccounts/{uid} {
+      allow read, write: if false;
+    }
+
+    // No catch-all match: anything not named above is denied by default.
+  }
+}
