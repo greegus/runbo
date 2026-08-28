@@ -1,0 +1,219 @@
+{
+  "_comment": "SYNTHETIC. Hand-built from the published Liftosaur valibot schema (types.ts, commit 1f8039e). Not a real export - no real export was available at Phase 5. MUST be re-verified against a real export before this fixture is trusted.",
+  "version": "20260702120000",
+  "settings": {
+    "units": "kg",
+    "exercises": {}
+  },
+  "deletedHistory": [],
+  "history": [
+    {
+      "vtype": "history_record",
+      "id": 1781000000010,
+      "date": "2026-06-09T10:13:20.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "A1",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781000000000,
+      "endTime": 1781003600000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t3_facePull",
+          "index": 0,
+          "exercise": {
+            "id": "facePull"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s138",
+              "index": 0,
+              "reps": 15,
+              "weight": {
+                "value": 20,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 20,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s139",
+              "index": 1,
+              "reps": 15,
+              "weight": {
+                "value": 20,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 20,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s140",
+              "index": 2,
+              "reps": 15,
+              "weight": {
+                "value": 20,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 20,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1781200000010,
+      "date": "2026-06-11T17:46:40.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Push Day",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781200000000,
+      "endTime": 1781203600000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s141",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 80,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 80,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s142",
+              "index": 1,
+              "reps": 5,
+              "weight": {
+                "value": 80,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 80,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s143",
+              "index": 2,
+              "reps": 5,
+              "weight": {
+                "value": 80,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 80,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t3_facePull",
+          "index": 1,
+          "exercise": {
+            "id": "facePull"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s144",
+              "index": 0,
+              "reps": 15,
+              "weight": {
+                "value": 20,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 20,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s145",
+              "index": 1,
+              "reps": 15,
+              "weight": {
+                "value": 20,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 20,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s146",
+              "index": 2,
+              "reps": 15,
+              "weight": {
+                "value": 20,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 20,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "_comment": "SYNTHETIC. Hand-built from the published Liftosaur valibot schema (types.ts, commit 1f8039e). Not a real export - no real export was available at Phase 5. MUST be re-verified against a real export before this fixture is trusted.",
+  "version": "20250101000000",
+  "settings": {
+    "units": "lb",
+    "exercises": {},
+    "equipment": {
+      "barbell": {
+        "bar": {
+          "lb": {
+            "value": 45,
+            "unit": "lb"
+          }
+        }
+      }
+    }
+  },
+  "deletedHistory": [],
+  "history": [
+    {
+      "id": 1735732800000,
+      "date": "2025-01-02T12:00:00.000Z",
+      "startTime": 1735732800000,
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "A1",
+      "entries": [
+        {
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "reps": 3,
+              "weight": {
+                "value": 225,
+                "unit": "lb"
+              },
+              "completedReps": 3
+            },
+            {
+              "reps": 3,
+              "weight": {
+                "value": 225,
+                "unit": "lb"
+              },
+              "completedReps": 3
+            },
+            {
+              "reps": 3,
+              "weight": {
+                "value": 225,
+                "unit": "lb"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "reps": 10,
+              "weight": {
+                "value": 135,
+                "unit": "lb"
+              },
+              "completedReps": 10
+            },
+            {
+              "reps": 10,
+              "weight": {
+                "value": 135,
+                "unit": "lb"
+              },
+              "completedReps": 9
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "id": 1735905600000,
+      "date": "2025-01-04T12:00:00.000Z",
+      "startTime": 1735905600000,
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 2,
+      "dayName": "B1",
+      "entries": [
+        {
+          "exercise": {
+            "id": "deadlift",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "reps": 10,
+              "weight": {
+                "value": 185,
+                "unit": "lb"
+              },
+              "completedReps": 10
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+/// SYNTHETIC. The header of Liftosaur's CSV export, which must be refused by name.
+Workout DateTime,Workout Name,Day Name,Exercise,Equipment,Set Index,Reps,Weight,Completed Reps,Completed Weight,RPE,Is AMRAP
+2026-05-04T12:00:00.000Z,GZCLP,A1,Squat,barbell,1,3,100,3,100,,0
+2026-05-04T12:00:00.000Z,GZCLP,A1,Squat,barbell,2,3,100,3,100,,0

@@ -1,0 +1,1947 @@
+{
+  "_comment": "SYNTHETIC. Hand-built from the published Liftosaur valibot schema (types.ts, commit 1f8039e). Not a real export - no real export was available at Phase 5. MUST be re-verified against a real export before this fixture is trusted.",
+  "version": "20260702120000",
+  "settings": {
+    "units": "kg",
+    "exercises": {
+      "3f1c0000-0000-4000-8000-000000000001": {
+        "id": "3f1c0000-0000-4000-8000-000000000001",
+        "name": "Front Squat",
+        "isDeleted": true,
+        "equipment": "barbell"
+      }
+    }
+  },
+  "deletedHistory": [1780488000007],
+  "history": [
+    {
+      "vtype": "history_record",
+      "id": 1780574400007,
+      "date": "2026-06-04T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Empty Entries",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780574400000,
+      "endTime": 1780578000000,
+      "entries": []
+    },
+    {
+      "vtype": "history_record",
+      "id": 1780660800007,
+      "date": "2026-06-05T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "No Sets",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780660800000,
+      "endTime": 1780664400000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_squat_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1780747200007,
+      "date": "2026-06-06T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Unknown Exercise",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780747200000,
+      "endTime": 1780750800000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_9a7c0000-0000-4000-8000-000000000002",
+          "index": 0,
+          "exercise": {
+            "id": "9a7c0000-0000-4000-8000-000000000002"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s71",
+              "index": 0,
+              "reps": 8,
+              "weight": {
+                "value": 30,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 8,
+              "completedWeight": {
+                "value": 30,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s72",
+              "index": 1,
+              "reps": 8,
+              "weight": {
+                "value": 30,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 8,
+              "completedWeight": {
+                "value": 30,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s73",
+              "index": 2,
+              "reps": 8,
+              "weight": {
+                "value": 30,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 8,
+              "completedWeight": {
+                "value": 30,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1780833600007,
+      "date": "2026-06-07T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Deleted Custom",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780833600000,
+      "endTime": 1780837200000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_3f1c0000-0000-4000-8000-000000000001",
+          "index": 0,
+          "exercise": {
+            "id": "3f1c0000-0000-4000-8000-000000000001",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s74",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 80,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 80,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s75",
+              "index": 1,
+              "reps": 5,
+              "weight": {
+                "value": 80,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 80,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s76",
+              "index": 2,
+              "reps": 5,
+              "weight": {
+                "value": 80,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 80,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1780920000007,
+      "date": "2026-06-08T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "No Weight",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780920000000,
+      "endTime": 1780923600000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t3_latPulldown",
+          "index": 0,
+          "exercise": {
+            "id": "latPulldown"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s77",
+              "index": 0,
+              "reps": 12,
+              "isCompleted": true,
+              "completedReps": 12
+            },
+            {
+              "vtype": "set",
+              "id": "s78",
+              "index": 1,
+              "reps": 12,
+              "originalWeight": {
+                "value": 70,
+                "unit": "%"
+              },
+              "isCompleted": true,
+              "completedReps": 12
+            },
+            {
+              "vtype": "set",
+              "id": "s79",
+              "index": 2,
+              "reps": 12,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 12
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1781006400007,
+      "date": "2026-06-09T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Null Weight",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781006400000,
+      "endTime": 1781010000000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t3_latPulldown",
+          "index": 0,
+          "exercise": {
+            "id": "latPulldown"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s80",
+              "index": 0,
+              "reps": 12,
+              "weight": {
+                "value": null,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 12,
+              "completedWeight": {
+                "value": 45,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s81",
+              "index": 1,
+              "reps": 12,
+              "weight": {
+                "value": null,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 12
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 0,
+      "date": "2026-06-10T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Stray Progress",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781092800000,
+      "endTime": 1781096400000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s82",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s83",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s84",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1780488000007,
+      "date": "2026-06-03T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Deleted Record",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780488000000,
+      "endTime": 1780491600000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s85",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s86",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s87",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1780315200007,
+      "date": "2026-06-01T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Duplicate First",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780315200000,
+      "endTime": 1780318800000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s88",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s89",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s90",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1780315230007,
+      "date": "2026-06-01T12:00:30.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Duplicate Second",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780315230000,
+      "endTime": 1780318830000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s91",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s92",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s93",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1780401600007,
+      "date": "2026-06-02T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Spaced First",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780401600000,
+      "endTime": 1780405200000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s94",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s95",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s96",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1780401661007,
+      "date": "2026-06-02T12:01:01.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Spaced Second",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780401661000,
+      "endTime": 1780405261000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s97",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s98",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s99",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1781179200007,
+      "date": "2026-06-11T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Superset",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781179200000,
+      "endTime": 1781182800000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s100",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s101",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s102",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": [],
+          "superset": "g1"
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t3_bentOverRow_barbell",
+          "index": 1,
+          "exercise": {
+            "id": "bentOverRow",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s103",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s104",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s105",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": [],
+          "superset": "g1"
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1781265600007,
+      "date": "2026-06-12T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "No Tier",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781265600000,
+      "endTime": 1781269200000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "squat_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s106",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 95,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 95,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s107",
+              "index": 1,
+              "reps": 5,
+              "weight": {
+                "value": 95,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 95,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s108",
+              "index": 2,
+              "reps": 5,
+              "weight": {
+                "value": 95,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 95,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    42,
+    {
+      "vtype": "history_record",
+      "id": 1781352000007,
+      "date": "2026-07-01T09:30:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Bad Date",
+      "week": 1,
+      "dayInWeek": 1,
+      "endTime": 1781355600000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s109",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s110",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s111",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1781438400007,
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "No Date",
+      "week": 1,
+      "dayInWeek": 1,
+      "endTime": 1781442000000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s112",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s113",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s114",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1781524800007,
+      "date": "2026-06-15T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Zero Completed",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781524800000,
+      "endTime": 1781528400000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s115",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 55,
+                "unit": "kg"
+              },
+              "isCompleted": false
+            },
+            {
+              "vtype": "set",
+              "id": "s116",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 55,
+                "unit": "kg"
+              },
+              "isCompleted": false
+            },
+            {
+              "vtype": "set",
+              "id": "s117",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 55,
+                "unit": "kg"
+              },
+              "isCompleted": false
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1781611200007,
+      "date": "2026-06-16T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Bad Reps",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781611200000,
+      "endTime": 1781614800000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t3_latPulldown",
+          "index": 0,
+          "exercise": {
+            "id": "latPulldown"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s118",
+              "index": 0,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 11
+            },
+            {
+              "vtype": "set",
+              "id": "s119",
+              "index": 1,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s120",
+              "index": 2,
+              "reps": 12,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": "twelve"
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1781697600007,
+      "date": "2026-06-17T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Warmups",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781697600000,
+      "endTime": 1781701200000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_squat_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s121",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s122",
+              "index": 1,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s123",
+              "index": 2,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": [
+            {
+              "vtype": "set",
+              "id": "s1",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 20,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 20,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s2",
+              "index": 1,
+              "reps": 5,
+              "weight": {
+                "value": 60,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 60,
+                "unit": "kg"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1781784000007,
+      "date": "2026-06-18T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Unilateral",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781784000000,
+      "endTime": 1781787600000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t3_dumbbellRow",
+          "index": 0,
+          "exercise": {
+            "id": "dumbbellRow",
+            "equipment": "dumbbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s124",
+              "index": 0,
+              "reps": 12,
+              "weight": {
+                "value": 24,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 12,
+              "completedRepsLeft": 10,
+              "completedWeight": {
+                "value": 24,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s125",
+              "index": 1,
+              "reps": 12,
+              "weight": {
+                "value": 24,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 12,
+              "completedRepsLeft": 12,
+              "completedWeight": {
+                "value": 24,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1781870400007,
+      "date": "2026-06-19T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Cardio Only",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781870400000,
+      "endTime": 1781874000000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "cardio_run",
+          "index": 0,
+          "exercise": {
+            "id": "run"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s125",
+              "index": 0,
+              "reps": 1,
+              "weight": {
+                "value": 0,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 1,
+              "completedWeight": {
+                "value": 0,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 5150,
+      "date": "2026-06-20T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Same Id A",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1781956800000,
+      "endTime": 1781960400000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s126",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s127",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s128",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 5150,
+      "date": "2026-06-21T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Same Id B",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1782043200000,
+      "endTime": 1782046800000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s129",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s130",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s131",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1782129600007,
+      "date": "2026-06-22T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Scrambled",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1782129600000,
+      "endTime": 1782133200000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t3_latPulldown",
+          "index": 2,
+          "exercise": {
+            "id": "latPulldown"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s200",
+              "index": 0,
+              "reps": 15,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 40,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 1,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s201",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t1_squat_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s204",
+              "index": 2,
+              "reps": 3,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s202",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s203",
+              "index": 1,
+              "reps": 4,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 4,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1782216000007,
+      "date": "2026-06-23T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Mixed Order",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1782216000000,
+      "endTime": 1782219600000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 1,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s210",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t1_squat_barbell",
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s211",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1782302400007,
+      "date": "2026-06-24T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "Logged Blank",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1782302400000,
+      "endTime": 1782306000000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_squat_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s220",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true
+            },
+            {
+              "vtype": "set",
+              "id": "s221",
+              "index": 1,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1782388800007,
+      "date": "2026-06-25T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "a1",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1782388800000,
+      "endTime": 1782392400000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_squat_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s230",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 7777,
+      "date": "2026-06-26T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1782475200000,
+      "endTime": 1782478800000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_squat_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s240",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    }
+  ]
+}

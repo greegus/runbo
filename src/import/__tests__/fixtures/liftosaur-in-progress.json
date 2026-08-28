@@ -1,0 +1,153 @@
+{
+  "_comment": "SYNTHETIC. Hand-built from the published Liftosaur valibot schema (types.ts, commit 1f8039e). Not a real export - no real export was available at Phase 5. MUST be re-verified against a real export before this fixture is trusted.",
+  "version": "20260702120000",
+  "settings": {
+    "units": "kg",
+    "exercises": {}
+  },
+  "deletedHistory": [],
+  "history": [
+    {
+      "vtype": "history_record",
+      "id": 1780488000010,
+      "date": "2026-06-03T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "A1",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1780488000000,
+      "endTime": 1780491600000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_squat_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s132",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s133",
+              "index": 1,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s134",
+              "index": 2,
+              "reps": 5,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    }
+  ],
+  "progress": [
+    {
+      "vtype": "progress",
+      "id": 0,
+      "date": "2026-06-04T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 2,
+      "dayName": "B1",
+      "week": 1,
+      "dayInWeek": 2,
+      "startTime": 1780574400000,
+      "endTime": 1780578000000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_overheadPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "overheadPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s135",
+              "index": 0,
+              "reps": 3,
+              "weight": {
+                "value": 45,
+                "unit": "kg"
+              },
+              "completedReps": 3
+            },
+            {
+              "vtype": "set",
+              "id": "s136",
+              "index": 1,
+              "reps": 3,
+              "weight": {
+                "value": 45,
+                "unit": "kg"
+              },
+              "completedReps": 3
+            },
+            {
+              "vtype": "set",
+              "id": "s137",
+              "index": 2,
+              "reps": 3,
+              "weight": {
+                "value": 45,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 45,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    }
+  ]
+}

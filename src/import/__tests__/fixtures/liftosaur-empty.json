@@ -1,0 +1,10 @@
+{
+  "_comment": "SYNTHETIC. Hand-built from the published Liftosaur valibot schema (types.ts, commit 1f8039e). Not a real export - no real export was available at Phase 5. MUST be re-verified against a real export before this fixture is trusted.",
+  "version": "20260702120000",
+  "settings": {
+    "units": "kg",
+    "exercises": {}
+  },
+  "deletedHistory": [],
+  "history": []
+}

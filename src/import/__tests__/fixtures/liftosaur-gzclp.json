@@ -1,0 +1,1448 @@
+{
+  "_comment": "SYNTHETIC. Hand-built from the published Liftosaur valibot schema (types.ts, commit 1f8039e). Not a real export - no real export was available at Phase 5. MUST be re-verified against a real export before this fixture is trusted.",
+  "version": "20260702120000",
+  "tempUserId": "synthetic",
+  "settings": {
+    "units": "kg",
+    "exercises": {},
+    "exerciseData": {},
+    "gyms": [
+      {
+        "name": "Home",
+        "equipment": {}
+      }
+    ]
+  },
+  "programs": [],
+  "deletedHistory": [],
+  "history": [
+    {
+      "vtype": "history_record",
+      "id": 1777896000042,
+      "date": "2026-05-04T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "A1",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1777896000000,
+      "endTime": 1777899600000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_squat_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s3",
+              "index": 0,
+              "reps": 3,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s4",
+              "index": 1,
+              "reps": 3,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s5",
+              "index": 2,
+              "reps": 3,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s6",
+              "index": 3,
+              "reps": 3,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s7",
+              "index": 4,
+              "reps": 3,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isAmrap": true,
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": [
+            {
+              "vtype": "set",
+              "id": "s1",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 20,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 20,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s2",
+              "index": 1,
+              "reps": 5,
+              "weight": {
+                "value": 60,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 60,
+                "unit": "kg"
+              }
+            }
+          ]
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 1,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s8",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 60,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 60,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s9",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 60,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 0
+            },
+            {
+              "vtype": "set",
+              "id": "s10",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 60,
+                "unit": "kg"
+              },
+              "isCompleted": false
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t3_latPulldown",
+          "index": 2,
+          "exercise": {
+            "id": "latPulldown"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s11",
+              "index": 0,
+              "reps": 12,
+              "minReps": 8,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 12,
+              "completedWeight": {
+                "value": 40,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s12",
+              "index": 1,
+              "reps": 12,
+              "minReps": 8,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 40,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s13",
+              "index": 2,
+              "reps": 12,
+              "minReps": 8,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              },
+              "isAmrap": true,
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 40,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1778068800123,
+      "date": "2026-05-06T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 2,
+      "dayName": "B1",
+      "week": 1,
+      "dayInWeek": 2,
+      "startTime": 1778068800000,
+      "endTime": 1778072400000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_overheadPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "overheadPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s14",
+              "index": 0,
+              "reps": 3,
+              "weight": {
+                "value": 45,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 45,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s15",
+              "index": 1,
+              "reps": 3,
+              "weight": {
+                "value": 45,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 45,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s16",
+              "index": 2,
+              "reps": 3,
+              "weight": {
+                "value": 45,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 45,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s17",
+              "index": 3,
+              "reps": 3,
+              "weight": {
+                "value": 45,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 45,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s18",
+              "index": 4,
+              "reps": 3,
+              "weight": {
+                "value": 45,
+                "unit": "kg"
+              },
+              "isAmrap": true,
+              "isCompleted": true,
+              "completedReps": 4,
+              "completedWeight": {
+                "value": 45,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t2_deadlift_barbell",
+          "index": 1,
+          "exercise": {
+            "id": "deadlift",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s19",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s20",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s21",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 100,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 100,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t3_bentOverRow_barbell",
+          "index": 2,
+          "exercise": {
+            "id": "bentOverRow",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s22",
+              "index": 0,
+              "reps": 15,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s23",
+              "index": 1,
+              "reps": 15,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s24",
+              "index": 2,
+              "reps": 15,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isAmrap": true,
+              "isCompleted": true,
+              "completedReps": 18,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1778241600777,
+      "date": "2026-05-08T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 3,
+      "dayName": "A2",
+      "week": 1,
+      "dayInWeek": 3,
+      "startTime": 1778241600000,
+      "endTime": 1778245200000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_benchPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s25",
+              "index": 0,
+              "reps": 2,
+              "weight": {
+                "value": 72.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 2,
+              "completedWeight": {
+                "value": 72.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s26",
+              "index": 1,
+              "reps": 2,
+              "weight": {
+                "value": 72.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 2,
+              "completedWeight": {
+                "value": 72.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s27",
+              "index": 2,
+              "reps": 2,
+              "weight": {
+                "value": 72.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 2,
+              "completedWeight": {
+                "value": 72.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s28",
+              "index": 3,
+              "reps": 2,
+              "weight": {
+                "value": 72.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 2,
+              "completedWeight": {
+                "value": 72.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s29",
+              "index": 4,
+              "reps": 2,
+              "weight": {
+                "value": 72.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 2,
+              "completedWeight": {
+                "value": 72.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s30",
+              "index": 5,
+              "reps": 2,
+              "weight": {
+                "value": 72.5,
+                "unit": "kg"
+              },
+              "isAmrap": true,
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 72.5,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t2_squat_barbell",
+          "index": 1,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s31",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 90,
+                "unit": "kg"
+              },
+              "originalWeight": {
+                "value": 75,
+                "unit": "%"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 90,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s32",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 90,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 90,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s33",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 90,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 90,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t3_latPulldown",
+          "index": 2,
+          "exercise": {
+            "id": "latPulldown"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s34",
+              "index": 0,
+              "reps": 15,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 100,
+                "unit": "lb"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s35",
+              "index": 1,
+              "reps": 15,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 40,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s36",
+              "index": 2,
+              "reps": 15,
+              "weight": {
+                "value": 40,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 40,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1778500800555,
+      "date": "2026-05-11T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 4,
+      "dayName": "B2",
+      "week": 1,
+      "dayInWeek": 4,
+      "startTime": 1778500800000,
+      "endTime": 1778504400000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_deadlift_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "deadlift",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s37",
+              "index": 0,
+              "reps": 3,
+              "weight": {
+                "value": 140,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 140,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s38",
+              "index": 1,
+              "reps": 3,
+              "weight": {
+                "value": 140,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 140,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s39",
+              "index": 2,
+              "reps": 3,
+              "weight": {
+                "value": 140,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 140,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s40",
+              "index": 3,
+              "reps": 3,
+              "weight": {
+                "value": 140,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 3,
+              "completedWeight": {
+                "value": 140,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s41",
+              "index": 4,
+              "reps": 3,
+              "weight": {
+                "value": 140,
+                "unit": "kg"
+              },
+              "isAmrap": true,
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 140,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t2_overheadPress_barbell",
+          "index": 1,
+          "exercise": {
+            "id": "overheadPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s42",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 35,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 35,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s43",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 35,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 35,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s44",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 35,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 35,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t3_bentOverRow_barbell",
+          "index": 2,
+          "exercise": {
+            "id": "bentOverRow",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s45",
+              "index": 0,
+              "reps": 15,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s46",
+              "index": 1,
+              "reps": 15,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s47",
+              "index": 2,
+              "reps": 15,
+              "weight": {
+                "value": 50,
+                "unit": "kg"
+              },
+              "isAmrap": true,
+              "isCompleted": true,
+              "completedReps": 16,
+              "completedWeight": {
+                "value": 50,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1778673600321,
+      "date": "2026-05-13T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 1,
+      "dayName": "A1",
+      "week": 1,
+      "dayInWeek": 1,
+      "startTime": 1778673600000,
+      "endTime": 1778677200000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_squat_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "squat",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s48",
+              "index": 0,
+              "reps": 1,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 1,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s49",
+              "index": 1,
+              "reps": 1,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 1,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s50",
+              "index": 2,
+              "reps": 1,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 1,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s51",
+              "index": 3,
+              "reps": 1,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 1,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s52",
+              "index": 4,
+              "reps": 1,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 1,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s53",
+              "index": 5,
+              "reps": 1,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 1,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s54",
+              "index": 6,
+              "reps": 1,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 1,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s55",
+              "index": 7,
+              "reps": 1,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 1,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s56",
+              "index": 8,
+              "reps": 1,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 1,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s57",
+              "index": 9,
+              "reps": 1,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isAmrap": true,
+              "isCompleted": true,
+              "completedReps": 0
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t2_benchPress_barbell",
+          "index": 1,
+          "exercise": {
+            "id": "benchPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s58",
+              "index": 0,
+              "reps": 10,
+              "weight": {
+                "value": 62.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 62.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s59",
+              "index": 1,
+              "reps": 10,
+              "weight": {
+                "value": 62.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 62.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s60",
+              "index": 2,
+              "reps": 10,
+              "weight": {
+                "value": 62.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 10,
+              "completedWeight": {
+                "value": 62.5,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t3_latPulldown",
+          "index": 2,
+          "exercise": {
+            "id": "latPulldown"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s61",
+              "index": 0,
+              "reps": 15,
+              "weight": {
+                "value": 42.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 42.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s62",
+              "index": 1,
+              "reps": 15,
+              "weight": {
+                "value": 42.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 42.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s63",
+              "index": 2,
+              "reps": 15,
+              "weight": {
+                "value": 42.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 42.5,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    },
+    {
+      "vtype": "history_record",
+      "id": 1778846400999,
+      "date": "2026-05-15T12:00:00.000Z",
+      "programId": "gzclp",
+      "programName": "GZCLP",
+      "day": 2,
+      "dayName": "B1",
+      "week": 1,
+      "dayInWeek": 2,
+      "startTime": 1778846400000,
+      "endTime": 1778850000000,
+      "entries": [
+        {
+          "vtype": "history_entry",
+          "id": "t1_overheadPress_barbell",
+          "index": 0,
+          "exercise": {
+            "id": "overheadPress",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s64",
+              "index": 0,
+              "reps": 5,
+              "weight": {
+                "value": 52.5,
+                "unit": "kg"
+              },
+              "label": "5RM Test",
+              "isCompleted": true,
+              "completedReps": 5,
+              "completedWeight": {
+                "value": 52.5,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t2_deadlift_barbell",
+          "index": 1,
+          "exercise": {
+            "id": "deadlift",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s65",
+              "index": 0,
+              "reps": 6,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 6,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s66",
+              "index": 1,
+              "reps": 6,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 6,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s67",
+              "index": 2,
+              "reps": 6,
+              "weight": {
+                "value": 120,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 6,
+              "completedWeight": {
+                "value": 120,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        },
+        {
+          "vtype": "history_entry",
+          "id": "t3_bentOverRow_barbell",
+          "index": 2,
+          "exercise": {
+            "id": "bentOverRow",
+            "equipment": "barbell"
+          },
+          "sets": [
+            {
+              "vtype": "set",
+              "id": "s68",
+              "index": 0,
+              "reps": 15,
+              "weight": {
+                "value": 52.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 52.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s69",
+              "index": 1,
+              "reps": 15,
+              "weight": {
+                "value": 52.5,
+                "unit": "kg"
+              },
+              "isCompleted": true,
+              "completedReps": 15,
+              "completedWeight": {
+                "value": 52.5,
+                "unit": "kg"
+              }
+            },
+            {
+              "vtype": "set",
+              "id": "s70",
+              "index": 2,
+              "reps": 15,
+              "weight": {
+                "value": 52.5,
+                "unit": "kg"
+              },
+              "isAmrap": true,
+              "isCompleted": true,
+              "completedReps": 17,
+              "completedWeight": {
+                "value": 52.5,
+                "unit": "kg"
+              }
+            }
+          ],
+          "warmupSets": []
+        }
+      ]
+    }
+  ]
+}
