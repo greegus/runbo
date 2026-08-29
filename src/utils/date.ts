@@ -10,7 +10,14 @@
 const ISO_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MS_PER_DAY = 86_400_000
 
-const WEEKDAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+/**
+ * Monday-first labels, index-aligned with `weekdayIndexMondayFirst` and with
+ * `availability.preferredDays` / `longSessionDay`. Exported because the day
+ * picker and the week preview must not each invent their own order — an
+ * off-by-one here silently schedules the long session on the wrong day.
+ */
+export const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
+
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 function pad(value: number, length = 2): string {
@@ -65,5 +72,5 @@ export function daysBetween(isoA: string, isoB: string): number {
 export function formatHuman(iso: string): string {
   const date = parseIso(iso)
 
-  return `${WEEKDAY_NAMES[weekdayIndexMondayFirst(iso)]}, ${date.getUTCDate()} ${MONTH_NAMES[date.getUTCMonth()]} ${date.getUTCFullYear()}`
+  return `${WEEKDAY_LABELS[weekdayIndexMondayFirst(iso)]}, ${date.getUTCDate()} ${MONTH_NAMES[date.getUTCMonth()]} ${date.getUTCFullYear()}`
 }
