@@ -10,7 +10,9 @@
     "type-check": "vue-tsc --build --force",
     "test": "vitest run",
     "lint": "oxlint --fix",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "seed:allowlist": "node scripts/seedAllowlist.mjs",
+    "check:rules": "firebase emulators:exec --only firestore --project demo-runbo \"node scripts/checkRules.mjs\""
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",
