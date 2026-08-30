@@ -201,12 +201,25 @@ export function restSecFor(exercise: PrescribedExercise, setIndex: number): numb
 }
 
 /**
- * One working weight per exercise. Only UNTOUCHED sets are rewritten: a set
- * already logged records what was actually lifted, and correcting the next set's
- * weight must not rewrite history.
+ * One working weight per exercise. An UNTOUCHED set is rewritten because it has
+ * not happened yet; a logged one is left alone because it records what was
+ * actually lifted.
+ *
+ * With one exception: a set carrying no weight at all. Zero is not something
+ * anyone lifted — it is the placeholder an ask-weight lift starts at.
+ *
+ * The screen prevents that combination today: `TierBlock` disables every row of
+ * a lift with no weight, and `SetRow.commit` guards on it rather than trusting
+ * the styling. But the two rules disagree in principle — this one refuses to
+ * touch a logged set, while `finishBlockedReason` rejects any set at zero — and
+ * that disagreement has only one outcome if the guard ever moves: a session that
+ * cannot be finished, only deleted. Left as a lift at zero would be, this is the
+ * cheaper side of the trade.
  */
 export function applyWorkingWeight(sets: LoggedSet[], weight: WeightValue): LoggedSet[] {
-  return sets.map((set) => (set.phase === 'untouched' ? { ...set, weight: { ...weight } } : set))
+  return sets.map((set) =>
+    set.phase === 'untouched' || !(set.weight?.value > 0) ? { ...set, weight: { ...weight } } : set,
+  )
 }
 
 /**

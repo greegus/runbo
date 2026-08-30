@@ -237,6 +237,39 @@ describe('applyWorkingWeight', () => {
   })
 })
 
+describe('applyWorkingWeight and finishBlockedReason together', () => {
+  const kg = (value: number) => ({ value, unit: 'kg' as const })
+
+  const setAt = (weight: number, phase: 'untouched' | 'logged') => ({
+    prescribedReps: 15,
+    isAmrap: false,
+    completedReps: phase === 'logged' ? 15 : null,
+    weight: kg(weight),
+    phase,
+    restSec: 60,
+  })
+
+  it('fixes a logged set that never had a weight', () => {
+    // The screen stops a row of a weightless lift from being tapped at all, so
+    // this state is not reachable through the UI today. It is pinned because the
+    // alternative — leaving a logged set at zero — is a session that can only be
+    // deleted, and that is what the two rules produce between them if that guard
+    // ever moves.
+    const sets = [setAt(0, 'logged'), setAt(0, 'untouched')] as never
+
+    const fixed = applyWorkingWeight(sets, kg(40))
+
+    expect(fixed.map((set) => set.weight.value)).toEqual([40, 40])
+    expect(fixed[0].completedReps).toBe(15)
+  })
+
+  it('still refuses to rewrite a set logged at a real weight', () => {
+    const sets = [setAt(35, 'logged'), setAt(0, 'untouched')] as never
+
+    expect(applyWorkingWeight(sets, kg(40)).map((set) => set.weight.value)).toEqual([35, 40])
+  })
+})
+
 describe('finishBlockedReason', () => {
   const plan = buildStrengthPlan(profile(), 'A1')
 
