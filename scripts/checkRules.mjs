@@ -117,19 +117,23 @@ function runQuery(collectionId, uid, as) {
 const str = (v) => ({ stringValue: v })
 
 async function wipe() {
-  const res = await fetch(
-    `http://${HOST}/emulator/v1/projects/${PROJECT}/databases/(default)/documents`,
-    { method: 'DELETE', headers: { Authorization: 'Bearer owner' } },
-  )
+  const res = await fetch(`http://${HOST}/emulator/v1/projects/${PROJECT}/databases/(default)/documents`, {
+    method: 'DELETE',
+    headers: { Authorization: 'Bearer owner' },
+  })
   if (!res.ok) throw new Error(`could not clear emulator data: ${res.status} ${await res.text()}`)
 }
 
 async function seed() {
   // Written as `owner`, which bypasses the rules — this is the state the rules
   // are then evaluated against, not part of what is being tested.
-  await patch('/config/allowlist', {
-    emails: { arrayValue: { values: [str(USER_A.email), str(USER_B.email)] } },
-  }, 'owner')
+  await patch(
+    '/config/allowlist',
+    {
+      emails: { arrayValue: { values: [str(USER_A.email), str(USER_B.email)] } },
+    },
+    'owner',
+  )
   await patch('/config/featureFlags', { experimental: { booleanValue: true } }, 'owner')
   await patch(`/profiles/${USER_A.uid}`, { displayName: str('Alice') }, 'owner')
   await patch(`/profiles/${USER_B.uid}`, { displayName: str('Bob') }, 'owner')
@@ -146,7 +150,10 @@ async function nonAllowlistedUser() {
   const m = OUTSIDER
   allowed('reads config/allowlist (so the UI can say "not allowlisted")', await get('/config/allowlist', m))
   denied('cannot read another config document', await get('/config/featureFlags', m))
-  denied('cannot write config/allowlist', await patch('/config/allowlist', { emails: { arrayValue: { values: [str(m.email)] } } }, m))
+  denied(
+    'cannot write config/allowlist',
+    await patch('/config/allowlist', { emails: { arrayValue: { values: [str(m.email)] } } }, m),
+  )
   denied('cannot read its own profile', await get(`/profiles/${m.uid}`, m))
   denied('cannot write its own profile', await patch(`/profiles/${m.uid}`, { displayName: str('Mallory') }, m))
   denied('cannot get a session', await get('/sessions/session-a', m))
@@ -181,10 +188,19 @@ async function ownData() {
   allowed('gets its own session', await get('/sessions/session-a', a))
   allowedMissing('gets a missing session: 404, not permission-denied', await get('/sessions/does-not-exist', a))
   allowed('queries its own sessions', await runQuery('sessions', a.uid, a))
-  allowed('creates a session of its own', await patch('/sessions/session-a2', { uid: str(a.uid), date: str('2026-01-02') }, a))
-  allowed('updates its own session', await patch('/sessions/session-a2', { uid: str(a.uid), date: str('2026-01-03') }, a))
+  allowed(
+    'creates a session of its own',
+    await patch('/sessions/session-a2', { uid: str(a.uid), date: str('2026-01-02') }, a),
+  )
+  allowed(
+    'updates its own session',
+    await patch('/sessions/session-a2', { uid: str(a.uid), date: str('2026-01-03') }, a),
+  )
   allowed('deletes its own session', await del('/sessions/session-a2', a))
-  allowed('creates its own bodyweight entry', await patch('/bodyweight/bw-a', { uid: str(a.uid), kg: { doubleValue: 75 } }, a))
+  allowed(
+    'creates its own bodyweight entry',
+    await patch('/bodyweight/bw-a', { uid: str(a.uid), kg: { doubleValue: 75 } }, a),
+  )
   allowed('queries its own bodyweight', await runQuery('bodyweight', a.uid, a))
   allowed('deletes its own bodyweight entry', await del('/bodyweight/bw-a', a))
 }

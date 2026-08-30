@@ -201,7 +201,7 @@ describe('a real Liftosaur GZCLP', () => {
   /** The athlete's own paste has a bare `DAY 3` where a comment was meant. */
   const corrected = gzclpLiftosaurReal.replace(/^DAY 3$/m, '// DAY 3')
 
-  it('reports the athlete\'s stray heading, and nothing else', () => {
+  it("reports the athlete's stray heading, and nothing else", () => {
     const { diagnostics } = adoptProgramText(gzclpLiftosaurReal)
 
     expect(diagnostics).toHaveLength(1)
@@ -231,7 +231,7 @@ describe('a real Liftosaur GZCLP', () => {
     expect(programState['T3:Bent Over Row'].weights).toEqual([])
   })
 
-  it('gives each reused progression its own state, not the source lift\'s', () => {
+  it("gives each reused progression its own state, not the source lift's", () => {
     // Six lines run Squat's script via `{ ...t1: Squat }`. If reuse copied the
     // state too, every lift would jump by Squat's 5 kg and GZCLP would be wrong
     // for the presses.

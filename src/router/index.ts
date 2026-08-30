@@ -50,6 +50,25 @@ const router = createRouter({
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),
     },
+    // A live session owns the whole viewport: `hideNav` keeps `App.vue` from
+    // rendering the tab bar, which would only offer ways to lose a half-logged
+    // session. What reaches the screen is the session id, never a planned item —
+    // the document is created before navigation, so a reload resolves the same
+    // doc. Both routes sit behind the existing auth + onboarding guard.
+    {
+      path: '/session/strength/:id',
+      name: 'strength-session',
+      component: () => import('@/views/StrengthSessionView.vue'),
+      props: true,
+      meta: { hideNav: true },
+    },
+    {
+      path: '/session/cardio/:id',
+      name: 'cardio-session',
+      component: () => import('@/views/CardioSessionView.vue'),
+      props: true,
+      meta: { hideNav: true },
+    },
   ],
 })
 
