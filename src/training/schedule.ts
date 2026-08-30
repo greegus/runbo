@@ -14,14 +14,14 @@
 
 import { parseProgram } from '@/liftoscript/parser'
 import type { CardioPrescription, ComposedWeek, PlannedItem, Profile, Session } from '@/types'
-import { addDays, inWeek, startOfWeekMonday, WEEK_LENGTH } from '@/utils/date'
+import { inWeek, startOfWeekMonday, WEEK_LENGTH } from '@/utils/date'
 
+import { blockRatio } from './cardioBlock'
 import { type CardioWeekPlan, planCardioWeek } from './cardioPlan'
 import { type ComebackProposal, daysSinceLastSession, proposeComeback } from './comeback'
 import { claimToday, type ComposedWeekPlan, type ComposeWeekInput, composeWeek, weeklyTrackBudget } from './composer'
 import { isHeavyLowerDay } from './gzclp'
 import { rotationDays } from './rotation'
-import { cardioCompletionRatio } from './stats'
 
 /** Everything one week needs, kept together so callers can re-run an override. */
 export interface WeekPlan {
@@ -49,26 +49,15 @@ function countKind(week: ComposedWeek, kind: PlannedItem['kind']): number {
 }
 
 /**
- * How much of last week's cardio actually happened, as the adaptive planner's
- * input.
+ * How many days of a full week the composer will hand to cardio.
  *
- * A profile with nothing logged before this week counts as fully done: the
- * adaptive hold exists for someone who trained and fell short, and holding a
- * brand-new user's very first week back would be nonsense.
- *
- * The divisor is `lastPlannedMinutes` — what last week was actually prescribed —
- * and NOT the mesocycle baseline: a deload week prescribes 60 % of the baseline,
- * so measuring a completed deload against the baseline would score it at ~0.5
- * and hold the following week for no reason. The baseline is only the fallback
- * for a profile written before the field existed.
+ * Exported because the block rollover needs the count without going anywhere
+ * near a composed week. `WEEK_LENGTH` as the cardio-session count is not a week
+ * length: it is an upper bound high enough that the budget's `Math.min` never
+ * bites.
  */
-function lastWeekRatio(profile: Profile, sessions: Session[], weekStart: string): number {
-  const hasHistory = sessions.some((session) => session.status === 'done' && session.date < weekStart)
-  if (!hasHistory) return 1
-
-  const prescribed = profile.cardioTrack.lastPlannedMinutes || profile.cardioTrack.weeklyMinutes
-
-  return cardioCompletionRatio(sessions, addDays(weekStart, -WEEK_LENGTH), prescribed)
+export function plannedCardioDays(availability: Profile['availability']): number {
+  return weeklyTrackBudget(availability, WEEK_LENGTH).cardioDays
 }
 
 /**
@@ -84,10 +73,16 @@ export function planWeek(profile: Profile, sessions: Session[], anchorIso: strin
   // The cardio planner needs to know how many days it will get before the
   // composer knows which prescriptions exist, so ask the budget for the day
   // count first; `composeWeek` re-derives it from the real session list.
-  // WEEK_LENGTH as the cardio-session count is not a week length: it is an
-  // upper bound high enough that the budget's `Math.min` never bites here.
-  const cardioDays = weeklyTrackBudget(profile.availability, WEEK_LENGTH).cardioDays
-  const cardio = planCardioWeek(profile.cardioTrack, lastWeekRatio(profile, sessions, weekStart), cardioDays)
+  //
+  // The adaptive input comes off the stored BLOCK, never off `anchorIso`: the
+  // composing window below is still the calendar week the anchor falls in, but
+  // the mesocycle is not, and measuring the seven days before the anchor made a
+  // preview of next week score this half-logged one and come back held.
+  const cardio = planCardioWeek(
+    profile.cardioTrack,
+    blockRatio(profile.cardioTrack, sessions),
+    plannedCardioDays(profile.availability),
+  )
 
   // Parsed here rather than passed in: `planWeek` takes a Profile, and the day
   // list is a property of the program that profile carries.

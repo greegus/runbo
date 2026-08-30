@@ -22,10 +22,11 @@ import {
 import { useBodyweightStore } from '@/stores/bodyweight'
 import { useProfileStore } from '@/stores/profile'
 import { type SessionDraft, useSessionsStore } from '@/stores/sessions'
+import { planCardioWeek } from '@/training/cardioPlan'
 import type { ReadinessInput } from '@/training/readiness'
-import { planWeek } from '@/training/schedule'
+import { plannedCardioDays } from '@/training/schedule'
 import type { PlannedItem, Session } from '@/types'
-import { addDays, startOfWeekMonday, toIso, WEEK_LENGTH } from '@/utils/date'
+import { startOfWeekMonday, toIso } from '@/utils/date'
 
 /**
  * The home screen: one card, one tap to the bar.
@@ -126,33 +127,38 @@ function onVisible(): void {
 }
 
 /**
- * DECISION: the cardio state is rolled forward here, over weeks that have
- * ENDED, and never over the week on screen — adopting the current week would
- * re-anchor `mesoStartDate` while `planWeek` keeps planning that same week from
- * it, so today's prescription would jump mid-week. `adoptCardioWeek` is
- * idempotent (it refuses a week it has already adopted), so a second tab, a
- * reload or a wrong guess here is a no-op; one week is adopted per snapshot and
- * the listener echo re-fires this watcher until the state reaches this week.
+ * DECISION: the block is rolled forward here, over blocks that have ENDED, and
+ * never over the one on screen — adopting the current block would re-anchor it
+ * while the planner keeps planning from that anchor, so today's prescription
+ * would jump mid-block. `adoptCardioBlock` is idempotent (it refuses an action
+ * the stored anchor no longer matches), so a second tab, a reload or a stale
+ * snapshot is a no-op; one block is adopted per snapshot and the listener echo
+ * re-fires this watcher until the state reaches today.
  *
- * The pending week is derived here because `plannedWeekOf` is private to the
- * profile store, which Phase 7 must not edit. It belongs there as a
- * `pendingCardioWeekStart` getter the moment that file is open for changes.
+ * `planCardioWeek` is called directly rather than through `planWeek`: the write
+ * needs the mesocycle numbers and nothing else, and composing a week around them
+ * only invited the anchor of the composed week and the anchor of the block to
+ * disagree.
  */
 let adopting = false
 
-async function adoptEndedCardioWeeks(): Promise<void> {
+async function adoptEndedCardioBlocks(): Promise<void> {
   const profile = profileStore.profile
   if (!profile || adopting) return
 
-  const cardioTrack = profile.cardioTrack
-  const pending = addDays(cardioTrack.mesoStartDate, WEEK_LENGTH * (Math.max(1, cardioTrack.mesoWeek) - 1))
-  if (pending >= startOfWeekMonday(todayIso.value)) return
+  const action = profileStore.pendingCardioBlock(sessionsStore.weekSessions, todayIso.value)
+  if (action.kind === 'idle') return
 
   adopting = true
   try {
-    await profileStore.adoptCardioWeek(pending, planWeek(profile, sessionsStore.weekSessions, pending).cardio)
+    const plan =
+      action.kind === 'advance'
+        ? planCardioWeek(profile.cardioTrack, action.ratio, plannedCardioDays(profile.availability))
+        : undefined
+
+    await profileStore.adoptCardioBlock(action, plan)
   } catch (error) {
-    console.error('[today] could not adopt the cardio week', error)
+    console.error('[today] could not adopt the cardio block', error)
   } finally {
     adopting = false
   }
@@ -160,7 +166,7 @@ async function adoptEndedCardioWeeks(): Promise<void> {
 
 watch(
   () => [profileStore.profile, sessionsStore.weekSessions] as const,
-  () => void adoptEndedCardioWeeks(),
+  () => void adoptEndedCardioBlocks(),
   {
     immediate: true,
   },

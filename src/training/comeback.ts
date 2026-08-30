@@ -10,6 +10,7 @@ import { multiply, roundWeight } from '@/liftoscript/weight'
 import type { ExerciseState, Profile, Session, WeightValue } from '@/types'
 import { addDays, daysBetween, startOfWeekMonday } from '@/utils/date'
 
+import { blockAnchorOf } from './cardioBlock'
 import { evalContextFromSettings } from './plates'
 import { weeklyCardioMinutes } from './stats'
 
@@ -165,7 +166,11 @@ export function applyComeback(
       ...profile.cardioTrack,
       weeklyMinutes: proposal.cardio.toWeeklyMinutes,
       mesoWeek: 1,
-      mesoStartDate: startOfWeekMonday(proposal.date),
+      // A fresh block, anchored the way every block is: the Monday of the week
+      // the athlete came back in. `mesoStartDate` is deliberately left as the
+      // interrupted block wrote it — nothing reads it once `blockStartDate` is
+      // set, and it goes away with the field.
+      blockStartDate: blockAnchorOf(proposal.date),
       // The gap guarantees the next planned week reads as missed, and the
       // adaptive branch then works off these two. Left as the interrupted block
       // wrote them, they would hold the first week back at the pre-gap volume

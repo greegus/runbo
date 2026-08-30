@@ -49,7 +49,12 @@ export interface Profile {
     weeklyMinutes: number // current mesocycle baseline
     longestSessionMinutes: number
     mesoWeek: number // 1..4
-    mesoStartDate: string // ISO date of week 1 Monday
+    mesoStartDate: string // ISO date of week 1 Monday — legacy, derives `blockStartDate` for profiles written before it
+    // Monday of the week the CURRENT training block opened in. Optional because
+    // there is no migration mechanism: `blockWindowStart` derives it from
+    // `mesoStartDate` + `mesoWeek` for a profile that predates the field, and
+    // the first write of `cardioTrack` stores it for good.
+    blockStartDate?: string | null
     // Both are written back from `planCardioWeek`'s result every week; without
     // them the adaptive step-back and the modality rotation restart each week.
     holdStreak: number // consecutive weeks completed under 70 % of target, default 0

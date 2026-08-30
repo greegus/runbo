@@ -38,8 +38,17 @@ import type { ExerciseState, Profile, Session } from '@/types'
 import { addDays, startOfWeekMonday, toIso, WEEK_LENGTH } from '@/utils/date'
 const HISTORY_PAGE_SIZE = 25
 
-/** The live window: last week, this week and the next, so the composer and the completion ratio both have their input. */
-const LIVE_WEEKS_BEFORE = 1
+/**
+ * The live window: the composer needs this week and the next, and the block
+ * ratio needs the window that fed it.
+ *
+ * TWO weeks back, not one: the block is only rolled forward when the app is
+ * opened, so an athlete who does not open it for a few days ends a block whose
+ * sessions are already two windows old. Bound one week back, the ratio would
+ * read those weeks as zero minutes and hold the volume for a week that was
+ * actually trained.
+ */
+const LIVE_WEEKS_BEFORE = 2
 const LIVE_WEEKS_AFTER = 1
 
 /**

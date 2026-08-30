@@ -25,10 +25,12 @@ import type { ExerciseLine, PrescribedSet, Program } from '@/liftoscript/types'
 import type { CardioPrescription, Profile, Session, SetLog, WeightValue } from '@/types'
 import { addDays, weekdayIndexMondayFirst } from '@/utils/date'
 
+import { cardioBlockAction } from '../cardioBlock'
+import { planCardioWeek } from '../cardioPlan'
 import { applyComeback, type ComebackProposal } from '../comeback'
 import { GZCLP_PROGRAM_SOURCE, GZCLP_ROTATION, gzclpProgram, initialProgramState, nextCursor, tierOf } from '../gzclp'
 import { evalContextFromSettings } from '../plates'
-import { planWeek, resolveToday } from '../schedule'
+import { plannedCardioDays, planWeek, resolveToday } from '../schedule'
 
 const UID = 'sim-user'
 const START_MONDAY = '2026-01-05' // a Monday
@@ -121,6 +123,10 @@ function makeProfile(overrides: Partial<Profile['availability']> = {}): Profile 
       longestSessionMinutes: 90,
       mesoWeek: 1,
       mesoStartDate: START_MONDAY,
+      // No block yet: the legacy derivation off `mesoStartDate` opens block 1 on
+      // START_MONDAY, which is the same answer `start` would give — the first
+      // session lands on it.
+      blockStartDate: null,
       holdStreak: 0,
       rotationCursor: 0,
       lastPlannedMinutes: 0,
@@ -220,7 +226,52 @@ function fmt(value: WeightValue | undefined): string {
   return value ? `${String(Math.round(value.value * 100) / 100)}${value.unit}` : '?'
 }
 
-function runSimulation(availability: Partial<Profile['availability']> = {}): SimResult {
+/**
+ * The block rollover — the one write the app makes to `cardioTrack` outside a
+ * session — run on EVERY day rather than on Mondays.
+ *
+ * The app checks whenever it is opened, so the harness does too: running this 84
+ * times instead of 12 is what proves the anchoring is the block's own and not
+ * accidentally the calendar's. `cardioBlockAction` decides; a block that nobody
+ * trained in only re-anchors, and the mesocycle stands still.
+ */
+function rollCardioBlock(profile: Profile, sessions: Session[], date: string): void {
+  const action = cardioBlockAction(profile.cardioTrack, sessions, date)
+  if (action.kind === 'idle') return
+
+  if (action.kind !== 'advance') {
+    profile.cardioTrack = { ...profile.cardioTrack, blockStartDate: action.to }
+    return
+  }
+
+  // Re-plan the block that just ended off the state that was in force during it,
+  // then persist what the planner says comes next.
+  const ended = planCardioWeek(profile.cardioTrack, action.ratio, plannedCardioDays(profile.availability))
+
+  profile.cardioTrack = {
+    ...profile.cardioTrack,
+    mesoWeek: ended.nextMesoWeek,
+    weeklyMinutes: ended.nextBaseline,
+    holdStreak: ended.holdStreak,
+    rotationCursor: ended.rotationCursor,
+    lastPlannedMinutes: ended.weeklyMinutes,
+    blockStartDate: action.to,
+  }
+}
+
+/**
+ * `blackout` is an extra stretch of days the athlete logs nothing on, on top of
+ * the scripted 12-day gap. `acceptComeback` turns the comeback off, which is how
+ * the long-absence run isolates the block: the comeback is the OTHER mechanism
+ * that answers a long absence, and this file has to be able to watch each of
+ * them on its own.
+ */
+interface SimOptions {
+  blackout?: (date: string) => boolean
+  acceptComeback?: boolean
+}
+
+function runSimulation(availability: Partial<Profile['availability']> = {}, options: SimOptions = {}): SimResult {
   const program = gzclpProgram()
   const profile = makeProfile(availability)
   const sessions: Session[] = []
@@ -233,45 +284,38 @@ function runSimulation(availability: Partial<Profile['availability']> = {}): Sim
 
   let comebackApplied: SimResult['comebackApplied'] = null
 
+  const blackout = options.blackout ?? (() => false)
+  const skipped = (date: string): boolean => isSkipped(date) || blackout(date)
+
   for (let week = 0; week < WEEKS; week += 1) {
     const monday = mondayOf(week)
 
-    // The Monday rollover: re-plan the week that just ended off the state that
-    // was in force during it, then persist what the planner says comes next.
-    // This is the one write the app makes to `cardioTrack` per week.
-    if (week > 0) {
-      const previous = planWeek(profile, sessions, addDays(monday, -WEEK_LENGTH))
-
-      profile.cardioTrack = {
-        ...profile.cardioTrack,
-        mesoWeek: previous.cardio.nextMesoWeek,
-        weeklyMinutes: previous.cardio.nextBaseline,
-        holdStreak: previous.cardio.holdStreak,
-        rotationCursor: previous.cardio.rotationCursor,
-        lastPlannedMinutes: previous.cardio.weeklyMinutes,
-      }
-    }
-
-    const plan = planWeek(profile, sessions, monday)
-    const observation: WeekObservation = {
-      week: week + 1,
-      monday,
-      mesoWeek: profile.cardioTrack.mesoWeek,
-      baseline: profile.cardioTrack.weeklyMinutes,
-      prescribedMinutes: plan.cardio.weeklyMinutes,
-      isDeload: plan.isDeloadWeek,
-      prescriptions: plan.cardio.sessions,
-      completedMinutes: 0,
-    }
-    weeks.push(observation)
-
-    trace.push(
-      `W${String(week + 1).padStart(2, '0')}  meso ${observation.mesoWeek}/4  baseline ${observation.baseline}min  ` +
-        `prescribed ${observation.prescribedMinutes}min${observation.isDeload ? '  [DELOAD]' : ''}`,
-    )
-
     for (let offset = 0; offset < WEEK_LENGTH; offset += 1) {
       const date = addDays(monday, offset)
+
+      rollCardioBlock(profile, sessions, date)
+
+      if (offset === 0) {
+        const plan = planWeek(profile, sessions, date)
+
+        weeks.push({
+          week: week + 1,
+          monday,
+          mesoWeek: profile.cardioTrack.mesoWeek,
+          baseline: profile.cardioTrack.weeklyMinutes,
+          prescribedMinutes: plan.cardio.weeklyMinutes,
+          isDeload: plan.isDeloadWeek,
+          prescriptions: plan.cardio.sessions,
+          completedMinutes: 0,
+        })
+
+        const observed = weeks[weeks.length - 1]
+        trace.push(
+          `W${String(week + 1).padStart(2, '0')}  meso ${observed.mesoWeek}/4  baseline ${observed.baseline}min  ` +
+            `prescribed ${observed.prescribedMinutes}min${observed.isDeload ? '  [DELOAD]' : ''}`,
+        )
+      }
+
       let today = resolveToday(profile, sessions, date)
 
       if (today.comebackProposal) comebackDays.push(date)
@@ -280,7 +324,13 @@ function runSimulation(availability: Partial<Profile['availability']> = {}): Sim
       // back, before logging anything. Accepting rewrites the profile, so the
       // day is resolved again — the reduced prescription has to apply to the
       // session being started, not only to next week.
-      if (today.comebackProposal && !comebackApplied && !isSkipped(date) && today.item) {
+      if (
+        today.comebackProposal &&
+        !comebackApplied &&
+        (options.acceptComeback ?? true) &&
+        !skipped(date) &&
+        today.item
+      ) {
         const applied = applyComeback(profile, today.comebackProposal)
 
         profile.strengthTrack = { ...profile.strengthTrack, programState: applied.programState }
@@ -290,7 +340,7 @@ function runSimulation(availability: Partial<Profile['availability']> = {}): Sim
         today = resolveToday(profile, sessions, date)
       }
 
-      if (!today.item || isSkipped(date)) continue
+      if (!today.item || skipped(date)) continue
 
       if (today.item.kind === 'strength') {
         const programDay = today.item.programDay
@@ -372,7 +422,7 @@ function runSimulation(availability: Partial<Profile['availability']> = {}): Sim
       const prescription = today.item.prescription
       const share = week === HALF_CARDIO_WEEK ? 0.5 : 1
       const minutes = Math.round(prescription.targetMinutes * share)
-      observation.completedMinutes += minutes
+      weeks[weeks.length - 1].completedMinutes += minutes
 
       sessions.push({
         id: `c-${date}`,
@@ -673,6 +723,55 @@ describe('a two-cardio-day week', () => {
     const planned = sim.weeks.filter((week) => week.prescriptions.some((item) => item.kind === 'intervals'))
 
     expect(planned.length).toBeGreaterThan(hard.length)
+  })
+})
+
+/**
+ * Three weeks in which nothing at all is logged — the case the decision behind
+ * the training block exists for, and the one nothing covered before. The
+ * scripted 12-day gap does NOT exercise it: Monday of week 9 is trained, so
+ * every window still holds a session and the block never has to skip.
+ *
+ * The comeback is switched off here on purpose. It is the OTHER answer to a long
+ * absence — it drops the working weights and takes cardio to 70 % — and leaving
+ * it on would hide whether the block moved by itself. Together they must answer
+ * the absence once; this run watches the half that must do nothing.
+ */
+describe('three weeks away', () => {
+  const AWAY_FIRST = mondayOf(1)
+  const AWAY_LAST = addDays(mondayOf(3), 6)
+
+  const away = runSimulation({}, { blackout: (date) => date >= AWAY_FIRST && date <= AWAY_LAST, acceptComeback: false })
+
+  it('really does log nothing for three weeks', () => {
+    expect(away.sessions.filter((session) => session.date >= AWAY_FIRST && session.date <= AWAY_LAST)).toEqual([])
+    expect(away.weeks.slice(1, 4).map((week) => week.completedMinutes)).toEqual([0, 0, 0])
+  })
+
+  it('leaves the mesocycle exactly where the athlete left it', () => {
+    const before = away.weeks[1]
+    const back = away.weeks[4]
+
+    expect(back.mesoWeek).toBe(before.mesoWeek)
+    expect(back.baseline).toBe(before.baseline)
+    expect(back.prescribedMinutes).toBe(before.prescribedMinutes)
+  })
+
+  it('does not walk anyone into a deload while they are away', () => {
+    // Time alone must never advance the mesocycle: three untrained windows are
+    // three weeks of week 2, not the ramp into the week-4 deload.
+    expect(away.weeks.slice(1, 5).map((week) => week.mesoWeek)).toEqual([2, 2, 2, 2])
+    expect(away.weeks.slice(1, 5).map((week) => week.isDeload)).toEqual([false, false, false, false])
+  })
+
+  it('does not read the empty weeks as missed ones either', () => {
+    // A held block would repeat the volume and, on the second "miss", quietly
+    // step the baseline back 10 % — while the comeback card offers 70 % for the
+    // very same event.
+    expect(away.weeks.slice(1, 5).map((week) => week.baseline)).toEqual([150, 150, 150, 150])
+    // 162 is the week-2 ramp off a 150 baseline; a held block would come back
+    // with the 150 it thinks was just missed.
+    expect(away.weeks[4].prescribedMinutes).toBe(162)
   })
 })
 

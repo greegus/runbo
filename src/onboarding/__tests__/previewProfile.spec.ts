@@ -31,6 +31,7 @@ function profile(overrides: Partial<Profile> = {}): Profile {
       longestSessionMinutes: 30,
       mesoWeek: 1,
       mesoStartDate: MONDAY,
+      blockStartDate: MONDAY,
       holdStreak: 0,
       rotationCursor: 0,
       lastPlannedMinutes: 0,
@@ -102,6 +103,23 @@ describe('coerceProfileForPreview', () => {
 
     expect(malformed.cardioTrack.mesoStartDate).toBe(MONDAY)
     expect(missing.cardioTrack.mesoStartDate).toBe(MONDAY)
+  })
+
+  it('nulls a malformed block anchor rather than inventing one', () => {
+    // An anchor the app made up would open a block the athlete has not trained a
+    // day of; `null` is the state that says "no block yet", and the first
+    // session opens one.
+    const malformed = coerceProfileForPreview(
+      profile({ cardioTrack: { ...profile().cardioTrack, blockStartDate: '2026-02-30' } }),
+      TODAY,
+    )
+    const missing = coerceProfileForPreview(
+      profile({ cardioTrack: { ...profile().cardioTrack, blockStartDate: undefined } }),
+      TODAY,
+    )
+
+    expect(malformed.cardioTrack.blockStartDate).toBeNull()
+    expect(missing.cardioTrack.blockStartDate).toBeNull()
   })
 
   it('clamps availability into range and de-duplicates preferred days', () => {

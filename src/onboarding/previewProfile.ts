@@ -3,8 +3,8 @@
  *
  * `planWeek` reads a dozen numeric fields off the profile and the planners
  * degrade a `NaN` to zero rather than throwing — which produces an empty,
- * silently wrong preview instead of a visible error. `plannedWeekOf`/`addDays`
- * do throw on a malformed `mesoStartDate`. Both failure modes land in the
+ * silently wrong preview instead of a visible error. `blockWindowStart`/`addDays`
+ * do throw on a malformed block anchor. Both failure modes land in the
  * middle of onboarding, where the user has typed exactly one field, so the
  * preview is coerced back onto the `createDefaultProfile` defaults here rather
  * than every consumer sprinkling guards over the template.
@@ -96,6 +96,10 @@ export function coerceProfileForPreview(profile: Profile, todayIso: string): Pro
       longestSessionMinutes: nonNegative(cardio.longestSessionMinutes, DEFAULTS.longestSessionMinutes),
       mesoWeek: clampInteger(cardio.mesoWeek, 1, 4, DEFAULTS.mesoWeek),
       mesoStartDate: isIsoDay(cardio.mesoStartDate) ? cardio.mesoStartDate : startOfWeekMonday(todayIso),
+      // `null`, not this week's Monday: an absent block anchor means "no block
+      // has been opened yet", which is a state the planner understands. Making
+      // one up here would open a block the athlete has not trained a day of.
+      blockStartDate: isIsoDay(cardio.blockStartDate) ? cardio.blockStartDate : null,
       holdStreak: nonNegative(cardio.holdStreak, DEFAULTS.holdStreak),
       rotationCursor: nonNegative(cardio.rotationCursor, DEFAULTS.rotationCursor),
       lastPlannedMinutes: nonNegative(cardio.lastPlannedMinutes, DEFAULTS.lastPlannedMinutes),

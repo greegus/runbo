@@ -6,9 +6,9 @@
  * cleared on every uid change, so a snapshot that was already in flight for the
  * previous account cannot repopulate the new one.
  *
- * No rules live here. The cardio state written back by `adoptCardioWeek` is
- * computed by `planCardioWeek`; this store only decides *when* it is safe to
- * persist it.
+ * No rules live here. The block rollover is decided by `cardioBlock.ts` and the
+ * cardio state written back by it is computed by `planCardioWeek`; this store
+ * only decides *when* it is safe to persist them.
  */
 
 import type { FirestoreError } from 'firebase/firestore'
@@ -22,19 +22,9 @@ import {
   saveProfile,
   subscribeToProfile,
 } from '@/services/profileService'
+import { blockWindowStart, type CardioBlockAction, cardioBlockAction } from '@/training/cardioBlock'
 import type { CardioWeekPlan } from '@/training/cardioPlan'
-import type { Profile } from '@/types'
-import { addDays, WEEK_LENGTH } from '@/utils/date'
-
-/**
- * The Monday of the week the stored cardio state describes. `mesoStartDate` is
- * week 1's Monday and `mesoWeek` counts from there, so the two together say
- * which week the planner's numbers have not been advanced past yet — which is
- * what makes `adoptCardioWeek` idempotent across reloads without a new field.
- */
-function plannedWeekOf(cardioTrack: Profile['cardioTrack']): string {
-  return addDays(cardioTrack.mesoStartDate, WEEK_LENGTH * (Math.max(1, cardioTrack.mesoWeek) - 1))
-}
+import type { Profile, Session } from '@/types'
 
 export const useProfileStore = defineStore('profile', () => {
   // shallowRef: the document is replaced wholesale by every snapshot and never
@@ -118,24 +108,54 @@ export const useProfileStore = defineStore('profile', () => {
   }
 
   /**
-   * Persists the state `planCardioWeek` handed back for `plannedWeekStart`.
-   * Without it the adaptive step-back and the modality rotation restart every
-   * week, and `lastPlannedMinutes` — the divisor the completion ratio needs —
-   * is never written at all.
+   * What the stored training block owes reality — the rollover decision, made
+   * where the stored state lives so the view no longer has to re-derive it.
    *
-   * Called once on the week rollover, never per session: a per-session write
-   * would advance the modality cursor several times a week. Returns false when
-   * the week has already been adopted, which is what makes a second call (a
-   * reload, a second tab) a no-op.
+   * The clock and the session list stay with the caller: this store reads
+   * neither, and `cardioBlockAction` is pure.
    */
-  async function adoptCardioWeek(plannedWeekStart: string, plan: CardioWeekPlan): Promise<boolean> {
+  function pendingCardioBlock(sessions: Session[], todayIso: string): CardioBlockAction {
+    const current = profile.value
+    if (!current) return { kind: 'idle' }
+
+    return cardioBlockAction(current.cardioTrack, sessions, todayIso)
+  }
+
+  /**
+   * Persists one block rollover. `plan` is required for an `advance` and is the
+   * plan the block that just ended actually ran: without writing it back, the
+   * adaptive step-back and the modality rotation restart every block, and
+   * `lastPlannedMinutes` — the divisor the completion ratio needs — is never
+   * written at all.
+   *
+   * Called once per block, never per session: a per-session write would advance
+   * the modality cursor several times a week. Returns false when the action no
+   * longer matches what is stored, which is what makes a second call (a reload,
+   * a second tab, a listener echo) a no-op. The guard is string equality against
+   * the stored anchor — no arithmetic, so it cannot disagree with the action it
+   * is guarding the way the old `plannedWeekOf` comparison could.
+   *
+   * `mesoStartDate` is never written again: `blockStartDate` supersedes it, and
+   * `updateDoc` replaces `cardioTrack` wholesale, so the legacy field simply
+   * stops being carried forward once the block schema removes it.
+   */
+  async function adoptCardioBlock(action: CardioBlockAction, plan?: CardioWeekPlan): Promise<boolean> {
     const current = profile.value
     if (!current) throw new Error('No profile loaded')
+    if (action.kind === 'idle') return false
 
     const cardioTrack = current.cardioTrack
-    if (plannedWeekOf(cardioTrack) !== plannedWeekStart) return false
+    if (blockWindowStart(cardioTrack) !== action.from) return false
 
-    const nextWeekStart = addDays(plannedWeekStart, WEEK_LENGTH)
+    // A block nobody trained in re-anchors and touches nothing else. That is the
+    // whole point: an absence is not a missed week, and `comeback.ts` owns it.
+    if (action.kind !== 'advance') {
+      await save({ cardioTrack: { ...cardioTrack, blockStartDate: action.to } })
+
+      return true
+    }
+
+    if (!plan) throw new Error('adoptCardioBlock: advancing a block needs the plan it ran')
 
     await save({
       cardioTrack: {
@@ -144,17 +164,15 @@ export const useProfileStore = defineStore('profile', () => {
         weeklyMinutes: plan.nextBaseline,
         holdStreak: plan.holdStreak,
         rotationCursor: plan.rotationCursor,
-        // What the week just planned actually prescribed, summed over its
-        // sessions — not the baseline, which a deload week never asks for.
+        // What the block just ended actually prescribed, summed over its
+        // sessions — not the baseline, which a deload never asks for.
         lastPlannedMinutes: plan.weeklyMinutes,
-        // Re-anchor so `plannedWeekOf` keeps pointing at the week the state now
-        // describes, whatever `nextMesoWeek` did (hold, ramp, or reset to 1).
-        mesoStartDate: addDays(nextWeekStart, -WEEK_LENGTH * (plan.nextMesoWeek - 1)),
+        blockStartDate: action.to,
       },
     })
 
     return true
   }
 
-  return { profile, error, bind, reset, ensureProfile, save, adoptCardioWeek }
+  return { profile, error, bind, reset, ensureProfile, save, pendingCardioBlock, adoptCardioBlock }
 })

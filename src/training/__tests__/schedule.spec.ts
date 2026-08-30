@@ -54,6 +54,7 @@ function profile(overrides: Partial<Profile> = {}): Profile {
       longestSessionMinutes: 90,
       mesoWeek: 1,
       mesoStartDate: MON,
+      blockStartDate: MON,
       holdStreak: 0,
       rotationCursor: 0,
       lastPlannedMinutes: 0,
@@ -121,8 +122,9 @@ describe('planWeek', () => {
     expect(plan.cardio.weeklyMinutes).toBe(162) // 150 x 1.08, the week-2 ramp
   })
 
-  it('holds volume after a week that was actually missed', () => {
-    // Strength happened last week, cardio did not — that is a real miss.
+  it('holds volume after a block that was actually missed', () => {
+    // Strength happened in the block before this one, cardio did not — that is a
+    // real miss, and the volume repeats instead of ramping.
     const plan = planWeek(
       profile({ cardioTrack: { ...profile().cardioTrack, mesoWeek: 2 } }),
       [strength(addDays(MON, -4), 'A1')],
@@ -130,6 +132,35 @@ describe('planWeek', () => {
     )
 
     expect(plan.cardio.weeklyMinutes).toBe(150)
+  })
+
+  it('does not read an empty block as a missed one', () => {
+    // Nothing at all was logged in the block before this one. That is an
+    // absence, not a failed week — `comeback.ts` owns it — so the volume ramps
+    // on rather than being held and then stepped back 10 % on top of the
+    // comeback's own 70 %.
+    const plan = planWeek(
+      profile({ cardioTrack: { ...profile().cardioTrack, mesoWeek: 2 } }),
+      [strength(addDays(MON, -30), 'A1')],
+      MON,
+    )
+
+    expect(plan.cardio.weeklyMinutes).toBe(162)
+  })
+
+  it('plans the same cardio for next week as for this one', () => {
+    // The adaptive input is the stored BLOCK, not the seven days before the
+    // anchor: asking for next Monday used to measure this half-logged week,
+    // score it under 70 % and hand back a held plan for a week nobody has
+    // trained yet — which is what PlanView and the onboarding preview show.
+    const athlete = profile({ cardioTrack: { ...profile().cardioTrack, mesoWeek: 2, lastPlannedMinutes: 150 } })
+    const halfLogged = [strength(addDays(MON, -4), 'A1'), cardio(addDays(MON, -3), 150), strength(MON, 'A1')]
+
+    const thisWeek = planWeek(athlete, halfLogged, MON)
+    const nextWeek = planWeek(athlete, halfLogged, addDays(MON, 7))
+
+    expect(nextWeek.cardio.sessions).toEqual(thisWeek.cardio.sessions)
+    expect(nextWeek.cardio.weeklyMinutes).toBe(thisWeek.cardio.weeklyMinutes)
   })
 
   it('reports the week the cardio planner considers a deload', () => {
