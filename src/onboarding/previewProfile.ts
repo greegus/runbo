@@ -12,9 +12,7 @@
 import { DEFAULT_STRENGTH_DAYS_PER_WEEK } from '@/training/composer'
 import { GZCLP_PROGRAM_SOURCE } from '@/training/gzclp'
 import type { Modality, Profile } from '@/types'
-import { startOfWeekMonday } from '@/utils/date'
-
-const ISO_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+import { isIsoDay } from '@/utils/date'
 
 const DEFAULTS = {
   weeklyMinutes: 60,
@@ -41,21 +39,16 @@ function clampInteger(value: unknown, min: number, max: number, fallback: number
   return Math.min(max, Math.max(min, Math.trunc(value)))
 }
 
-function isIsoDay(value: unknown): value is string {
-  if (typeof value !== 'string' || !ISO_PATTERN.test(value)) return false
-
-  const [year, month, day] = value.split('-').map(Number)
-  const date = new Date(Date.UTC(year, month - 1, day))
-
-  // `Date.UTC` rolls 2026-02-30 into March; the round-trip is what rejects it.
-  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
-}
-
 /**
  * A structurally complete `Profile` for `planWeek`, built by copying — the
  * argument is the live wizard draft and must never be written to.
+ *
+ * No date argument: every field here is coerced onto a constant default. The
+ * one that needed "today" was the cardio anchor, and the training block does not
+ * invent one — an absent or malformed anchor means "no block yet", which the
+ * planner already understands.
  */
-export function coerceProfileForPreview(profile: Profile, todayIso: string): Profile {
+export function coerceProfileForPreview(profile: Profile): Profile {
   const cardio = profile.cardioTrack
   const availability = profile.availability
   const modalities = (cardio.modalities ?? []).filter(
@@ -95,7 +88,6 @@ export function coerceProfileForPreview(profile: Profile, todayIso: string): Pro
       weeklyMinutes: nonNegative(cardio.weeklyMinutes, DEFAULTS.weeklyMinutes),
       longestSessionMinutes: nonNegative(cardio.longestSessionMinutes, DEFAULTS.longestSessionMinutes),
       mesoWeek: clampInteger(cardio.mesoWeek, 1, 4, DEFAULTS.mesoWeek),
-      mesoStartDate: isIsoDay(cardio.mesoStartDate) ? cardio.mesoStartDate : startOfWeekMonday(todayIso),
       // `null`, not this week's Monday: an absent block anchor means "no block
       // has been opened yet", which is a state the planner understands. Making
       // one up here would open a block the athlete has not trained a day of.

@@ -58,7 +58,7 @@ const profile: Profile = {
     weeklyMinutes: 120,
     longestSessionMinutes: 60,
     mesoWeek: 1,
-    mesoStartDate: WEEK,
+    blockStartDate: WEEK,
     holdStreak: 0,
     rotationCursor: 0,
     lastPlannedMinutes: 0,

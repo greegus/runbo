@@ -30,7 +30,7 @@ function toMinutes(value: unknown): number {
 }
 
 /**
- * Every emit rebuilds the whole slice from the incoming one, so `mesoStartDate`,
+ * Every emit rebuilds the whole slice from the incoming one, so `blockStartDate`,
  * `holdStreak`, `rotationCursor`, `lastPlannedMinutes` and `zones` survive a
  * write that `updateDoc` would otherwise replace wholesale.
  */

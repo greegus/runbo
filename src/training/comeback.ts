@@ -8,7 +8,7 @@
 
 import { multiply, roundWeight } from '@/liftoscript/weight'
 import type { ExerciseState, Profile, Session, WeightValue } from '@/types'
-import { addDays, daysBetween, startOfWeekMonday } from '@/utils/date'
+import { addDays, daysBetween, WEEK_LENGTH } from '@/utils/date'
 
 import { blockAnchorOf } from './cardioBlock'
 import { evalContextFromSettings } from './plates'
@@ -74,17 +74,33 @@ export function comebackFactorsForWeek(week: number): { strength: number; cardio
   return { strength: halfway(STRENGTH_FACTOR), cardio: halfway(CARDIO_FACTOR) }
 }
 
-/** Minutes of the most recent week that had any cardio at all. */
+/**
+ * Minutes of the last seven days that had any cardio in them — the volume the
+ * athlete was actually carrying before they stopped.
+ *
+ * The window ENDS on the last cardio session rather than being a Monday bucket
+ * walked backwards. A real training week straddles the calendar one all the
+ * time — a Saturday long run, a Sunday easy hour, the Monday after — and the
+ * bucket version split it in two, then offered 70 % of whichever half it met
+ * first. Under-reporting here is the one direction that matters: the comeback
+ * exists to be trusted, and a target visibly below what the athlete remembers
+ * doing is the fastest way to lose that.
+ */
 function lastCompletedCardioMinutes(sessions: Session[], todayIso: string): number {
-  let cursor = startOfWeekMonday(todayIso)
+  let latest: string | null = null
 
-  for (let index = 0; index <= CARDIO_LOOKBACK_WEEKS; index++) {
-    const minutes = weeklyCardioMinutes(sessions, cursor)
-    if (minutes > 0) return minutes
-    cursor = addDays(cursor, -7)
+  for (const session of sessions) {
+    if (session.kind !== 'cardio' || session.status !== 'done' || session.date > todayIso) continue
+    if (latest === null || session.date > latest) latest = session.date
   }
 
-  return 0
+  if (latest === null) return 0
+  // The lookback ceiling survives the rewrite: volume from three months ago is
+  // not what the athlete is coming back to, and the caller's baseline fallback
+  // is the better answer once the trail is that cold.
+  if (daysBetween(latest, todayIso) > CARDIO_LOOKBACK_WEEKS * WEEK_LENGTH) return 0
+
+  return weeklyCardioMinutes(sessions, addDays(latest, -(WEEK_LENGTH - 1)))
 }
 
 /**
@@ -167,9 +183,7 @@ export function applyComeback(
       weeklyMinutes: proposal.cardio.toWeeklyMinutes,
       mesoWeek: 1,
       // A fresh block, anchored the way every block is: the Monday of the week
-      // the athlete came back in. `mesoStartDate` is deliberately left as the
-      // interrupted block wrote it — nothing reads it once `blockStartDate` is
-      // set, and it goes away with the field.
+      // the athlete came back in.
       blockStartDate: blockAnchorOf(proposal.date),
       // The gap guarantees the next planned week reads as missed, and the
       // adaptive branch then works off these two. Left as the interrupted block

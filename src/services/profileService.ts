@@ -16,7 +16,6 @@ import { loadDocument, saveDocument, subscribeToDocument, updateDocument } from 
 import { DEFAULT_STRENGTH_DAYS_PER_WEEK } from '@/training/composer'
 import { buildGzclpProgram, DEFAULT_REST_TIMERS, initialProgramState } from '@/training/gzclp'
 import type { Profile } from '@/types'
-import { startOfWeekMonday, toIso } from '@/utils/date'
 
 /** Per side, in kg — a common home-gym inventory and the units default. */
 const DEFAULT_PLATES: Profile['settings']['plates'] = [
@@ -33,12 +32,13 @@ const DEFAULT_PLATES: Profile['settings']['plates'] = [
  * The profile "Skip setup" produces: the built-in GZCLP with every lift left as
  * `?+`, so the first session asks for each working weight.
  *
- * DECISION: `todayIso` is a parameter with a clock-reading default. The
- * cardio mesocycle is anchored to the Monday of the week the user signs up in,
- * and a service may read the clock — but a caller that already knows "today"
- * (onboarding, a test) must be able to pass it rather than race midnight.
+ * DECISION: no date argument, and no clock read. A new profile used to anchor
+ * the cardio mesocycle on the Monday of the week the user signed up in; the
+ * training block replaces that with `blockStartDate: null` — the block opens on
+ * the first session actually trained, so signing up on a Sunday night no longer
+ * burns a window.
  */
-export function createDefaultProfile(uid: string, email: string, todayIso: string = toIso(new Date())): Profile {
+export function createDefaultProfile(uid: string, email: string): Profile {
   const programText = buildGzclpProgram({})
 
   return {
@@ -77,7 +77,10 @@ export function createDefaultProfile(uid: string, email: string, todayIso: strin
       weeklyMinutes: 60,
       longestSessionMinutes: 30,
       mesoWeek: 1,
-      mesoStartDate: startOfWeekMonday(todayIso),
+      // No block until the athlete trains: `cardioBlockAction` opens one on the
+      // week of the first completed session. Anchoring it at sign-up would start
+      // a mesocycle nobody has trained a day of.
+      blockStartDate: null,
       holdStreak: 0,
       rotationCursor: 0,
       lastPlannedMinutes: 0,

@@ -9,7 +9,6 @@ function track(overrides: Partial<CardioTrackState> = {}): CardioTrackState {
     weeklyMinutes: 150,
     longestSessionMinutes: 60,
     mesoWeek: 1,
-    mesoStartDate: '2026-01-05',
     holdStreak: 0,
     rotationCursor: 0,
     lastPlannedMinutes: 0,

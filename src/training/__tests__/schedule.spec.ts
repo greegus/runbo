@@ -53,7 +53,6 @@ function profile(overrides: Partial<Profile> = {}): Profile {
       // separate, deliberately tested behaviour.
       longestSessionMinutes: 90,
       mesoWeek: 1,
-      mesoStartDate: MON,
       blockStartDate: MON,
       holdStreak: 0,
       rotationCursor: 0,

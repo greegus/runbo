@@ -21,9 +21,7 @@ const props = withDefaults(
 // "what is left of this one". Computed rather than watched so a keystroke in the
 // availability form re-composes immediately, and coerced first because a draft
 // mid-wizard still holds empty inputs the planners would read as zero volume.
-const plan = computed(() =>
-  planWeek(coerceProfileForPreview(props.profile, props.todayIso), props.sessions, props.todayIso),
-)
+const plan = computed(() => planWeek(coerceProfileForPreview(props.profile), props.sessions, props.todayIso))
 
 const days = computed(() =>
   plan.value.week.days.map((day) => ({

@@ -15,7 +15,6 @@ function track(overrides: Partial<CardioTrack> = {}): CardioTrack {
     weeklyMinutes: 150,
     longestSessionMinutes: 90,
     mesoWeek: 1,
-    mesoStartDate: BLOCK,
     blockStartDate: BLOCK,
     holdStreak: 0,
     rotationCursor: 0,
@@ -32,6 +31,15 @@ function cardio(date: string, minutes: number): Session {
   return { id: `c-${date}`, uid: 'u1', date, kind: 'cardio', status: 'done', minutes }
 }
 
+/**
+ * A profile written before `blockStartDate` existed. `mesoStartDate` is gone from
+ * `Profile`, so the legacy branch is fed the way Firestore feeds it: an extra
+ * field on the stored object that the type does not describe.
+ */
+function legacyTrack(mesoStartDate: unknown, overrides: Partial<CardioTrack> = {}): CardioTrack {
+  return { ...track({ blockStartDate: null, ...overrides }), mesoStartDate } as CardioTrack
+}
+
 /** What the store writes: the anchor moves, and only an `advance` touches the rest. */
 function anchor(current: CardioTrack, action: CardioBlockAction): CardioTrack {
   return action.kind === 'idle' ? current : { ...current, blockStartDate: action.to }
@@ -39,9 +47,7 @@ function anchor(current: CardioTrack, action: CardioBlockAction): CardioTrack {
 
 describe('blockWindowStart', () => {
   it('prefers the stored anchor', () => {
-    expect(blockWindowStart(track({ blockStartDate: '2026-03-09', mesoStartDate: BLOCK, mesoWeek: 1 }))).toBe(
-      '2026-03-09',
-    )
+    expect(blockWindowStart(legacyTrack(BLOCK, { blockStartDate: '2026-03-09', mesoWeek: 1 }))).toBe('2026-03-09')
   })
 
   it('reproduces the legacy derivation exactly for a profile written before the field', () => {
@@ -50,7 +56,7 @@ describe('blockWindowStart', () => {
     // there. A profile that predates `blockStartDate` therefore translates with
     // no migration and no change of meaning.
     for (const mesoWeek of [1, 2, 3, 4]) {
-      const legacy = track({ blockStartDate: null, mesoStartDate: BLOCK, mesoWeek })
+      const legacy = legacyTrack(BLOCK, { mesoWeek })
       const plannedWeekOf = addDays(BLOCK, BLOCK_LENGTH * (Math.max(1, mesoWeek) - 1))
 
       expect(blockWindowStart(legacy)).toBe(plannedWeekOf)
@@ -58,12 +64,21 @@ describe('blockWindowStart', () => {
   })
 
   it('is null when no block has ever been opened', () => {
-    expect(blockWindowStart(track({ blockStartDate: null, mesoStartDate: '' }))).toBeNull()
+    expect(blockWindowStart(track({ blockStartDate: null }))).toBeNull()
+  })
+
+  it('reads a malformed legacy anchor as no block rather than throwing', () => {
+    // The legacy field is untyped data off the wire — a hand-edited or imported
+    // document can carry anything. `addDays` would throw and take a view down;
+    // "no block yet" is a state the planner already understands.
+    for (const malformed of ['', 'not-a-date', '2026-02-30', 42, null, undefined]) {
+      expect(blockWindowStart(legacyTrack(malformed))).toBeNull()
+    }
   })
 })
 
 describe('cardioBlockAction — opening the first block', () => {
-  const fresh = track({ blockStartDate: null, mesoStartDate: '' })
+  const fresh = track({ blockStartDate: null })
 
   it('does nothing at all before the first session', () => {
     expect(cardioBlockAction(fresh, [], BLOCK)).toEqual({ kind: 'idle' })
@@ -188,7 +203,7 @@ describe('cardioBlockAction — a block nobody trained in', () => {
 
 describe('cardioBlockAction — idempotence', () => {
   it('has nothing left to do once the action is applied', () => {
-    const fresh = track({ blockStartDate: null, mesoStartDate: '' })
+    const fresh = track({ blockStartDate: null })
     const sessions = [strength(addDays(BLOCK, 2)), cardio(addDays(BLOCK, 4), 150)]
 
     const start = cardioBlockAction(fresh, sessions, addDays(BLOCK, 2))

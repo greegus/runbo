@@ -57,7 +57,7 @@ function makeProfile(overrides: Partial<Profile> = {}): Profile {
       weeklyMinutes: 150,
       longestSessionMinutes: 60,
       mesoWeek: 3,
-      mesoStartDate: '2026-07-27',
+      blockStartDate: '2026-07-27',
       holdStreak: 0,
       rotationCursor: 0,
       lastPlannedMinutes: 150,
@@ -141,6 +141,29 @@ describe('proposeComeback', () => {
     expect(proposal?.summary.length).toBeGreaterThan(0)
   })
 
+  it('reads a training week that straddles the calendar week as one week', () => {
+    // Sat 60 + Sun 40 + Mon 50. The Monday buckets this used to walk would have
+    // scored the Monday alone (50) or the weekend alone (100); the athlete
+    // trained 150, and 70 % of 150 is what they should be offered.
+    const straddling = [cardio('c1', '2026-08-08', 60), cardio('c2', '2026-08-09', 40), cardio('c3', '2026-08-10', 50)]
+
+    expect(proposeComeback(makeProfile(), straddling, TODAY)?.cardio).toEqual({
+      fromWeeklyMinutes: 150,
+      toWeeklyMinutes: 105,
+    })
+  })
+
+  it('ignores cardio older than the lookback ceiling', () => {
+    // Nine weeks back: the baseline is a better answer than a number the athlete
+    // no longer recognises, so the fallback takes over.
+    const stale = [cardio('c1', '2026-06-15', 200)]
+
+    expect(proposeComeback(makeProfile(), stale, TODAY)?.cardio).toEqual({
+      fromWeeklyMinutes: 150,
+      toWeeklyMinutes: 105,
+    })
+  })
+
   it('falls back to the planned baseline when no cardio was logged', () => {
     const proposal = proposeComeback(makeProfile(), [strengthSession('s1', '2026-08-12')], TODAY)
 
@@ -171,7 +194,7 @@ describe('applyComeback', () => {
       weeklyMinutes: 70,
       mesoWeek: 1,
       // A fresh block on the Monday of the week the athlete came back in.
-      // `mesoStartDate` is left exactly as the interrupted block wrote it.
+      // A fresh block on the Monday of the week the athlete came back in.
       blockStartDate: '2026-08-24',
       lastPlannedMinutes: 70,
       holdStreak: 0,

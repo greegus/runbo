@@ -122,10 +122,8 @@ function makeProfile(overrides: Partial<Profile['availability']> = {}): Profile 
       // separate, deliberately tested behaviour.
       longestSessionMinutes: 90,
       mesoWeek: 1,
-      mesoStartDate: START_MONDAY,
-      // No block yet: the legacy derivation off `mesoStartDate` opens block 1 on
-      // START_MONDAY, which is the same answer `start` would give — the first
-      // session lands on it.
+      // No block yet. `start` opens block 1 on the Monday of the week the first
+      // session falls in, which is START_MONDAY itself — the athlete trains on it.
       blockStartDate: null,
       holdStreak: 0,
       rotationCursor: 0,

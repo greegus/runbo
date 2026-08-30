@@ -22,7 +22,7 @@
  */
 
 import type { Profile, Session } from '@/types'
-import { addDays, daysBetween, startOfWeekMonday } from '@/utils/date'
+import { addDays, daysBetween, isIsoDay, startOfWeekMonday } from '@/utils/date'
 
 import { cardioCompletionRatio } from './stats'
 
@@ -42,6 +42,20 @@ export const blockAnchorOf = startOfWeekMonday
 
 type CardioTrack = Profile['cardioTrack']
 
+/**
+ * How a profile written before `blockStartDate` still looks on disk.
+ *
+ * DECISION: `mesoStartDate` is gone from `Profile` — nothing writes it any more
+ * and no fixture carries it — but live Firestore documents do, and this module
+ * is the ONE place that must keep understanding it. It is declared here rather
+ * than in `types.ts` so the removal is not quietly undone: a field in the shared
+ * type invites new writers, whereas a local `unknown` says what this is — data
+ * off the wire, in a shape the app no longer controls. That is also why it is
+ * `unknown` and validated with `isIsoDay` instead of being asserted `string`:
+ * the old code trusted it and `addDays` would throw on a hand-edited document.
+ */
+type LegacyCardioTrack = CardioTrack & { mesoStartDate?: unknown }
+
 export type CardioBlockAction =
   /** Nothing to persist: the block is still running, or has not begun. */
   | { kind: 'idle' }
@@ -57,16 +71,19 @@ export type CardioBlockAction =
  * has ever been opened.
  *
  * `blockStartDate` is the field; the fallback is the derivation the profile
- * store used to do inline (`mesoStartDate` is block 1's Monday and `mesoWeek`
- * counts from there), so a profile written before the field existed translates
- * losslessly and needs no migration. The first write of `cardioTrack` stores
- * `blockStartDate` and the legacy branch never runs for that profile again.
+ * store used to do inline over the legacy `mesoStartDate` (block 1's Monday,
+ * with `mesoWeek` counting from there), so a profile written before the field
+ * existed translates losslessly and needs no migration. The first write of
+ * `cardioTrack` stores `blockStartDate` and `updateDoc` replaces the slice
+ * wholesale, so the legacy branch never runs for that profile again.
  */
 export function blockWindowStart(cardioTrack: CardioTrack): string | null {
   if (cardioTrack.blockStartDate) return cardioTrack.blockStartDate
-  if (!cardioTrack.mesoStartDate) return null
 
-  return addDays(cardioTrack.mesoStartDate, BLOCK_LENGTH * (Math.max(1, cardioTrack.mesoWeek) - 1))
+  const legacyStart = (cardioTrack as LegacyCardioTrack).mesoStartDate
+  if (!isIsoDay(legacyStart)) return null
+
+  return addDays(legacyStart, BLOCK_LENGTH * (Math.max(1, cardioTrack.mesoWeek) - 1))
 }
 
 function isDone(session: Session): boolean {

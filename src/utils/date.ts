@@ -41,21 +41,32 @@ export function toIso(date: Date): string {
   return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
+/**
+ * Is `value` a well-formed, existing calendar day?
+ *
+ * The guard every reader of data the app did not just write needs: a Firestore
+ * document, a wizard draft mid-typing, a legacy field. `parseIso` throws on
+ * everything this rejects, and throwing is the wrong answer when the value came
+ * off the wire — the caller wants to fall back, not to crash a view.
+ */
+export function isIsoDay(value: unknown): value is string {
+  if (typeof value !== 'string' || !ISO_PATTERN.test(value)) return false
+
+  const [year, month, day] = value.split('-').map(Number)
+
+  // Date.UTC happily rolls 2026-02-30 over into March; the round-trip rejects it.
+  return fromUtc(new Date(Date.UTC(year, month - 1, day))) === value
+}
+
 /** UTC-midnight instant of an ISO day. Throws on malformed or non-existent days. */
 export function parseIso(iso: string): Date {
-  if (!ISO_PATTERN.test(iso)) {
+  if (!isIsoDay(iso)) {
     throw new Error(`Invalid ISO date: ${iso}`)
   }
 
   const [year, month, day] = iso.split('-').map(Number)
-  const date = new Date(Date.UTC(year, month - 1, day))
 
-  // Date.UTC happily rolls 2026-02-30 over into March — reject instead.
-  if (fromUtc(date) !== iso) {
-    throw new Error(`Invalid ISO date: ${iso}`)
-  }
-
-  return date
+  return new Date(Date.UTC(year, month - 1, day))
 }
 
 export function addDays(iso: string, days: number): string {

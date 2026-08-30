@@ -135,9 +135,9 @@ export const useProfileStore = defineStore('profile', () => {
    * the stored anchor — no arithmetic, so it cannot disagree with the action it
    * is guarding the way the old `plannedWeekOf` comparison could.
    *
-   * `mesoStartDate` is never written again: `blockStartDate` supersedes it, and
-   * `updateDoc` replaces `cardioTrack` wholesale, so the legacy field simply
-   * stops being carried forward once the block schema removes it.
+   * A profile written before `blockStartDate` existed loses its legacy
+   * `mesoStartDate` on this very write: `updateDoc` replaces `cardioTrack`
+   * wholesale, and the slice being spread here no longer carries the field.
    */
   async function adoptCardioBlock(action: CardioBlockAction, plan?: CardioWeekPlan): Promise<boolean> {
     const current = profile.value

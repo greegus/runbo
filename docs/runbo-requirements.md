@@ -89,12 +89,18 @@ friends may follow. This shapes the product:
 
 - **Cardio is prescribed, not just logged.** 4-week mesocycles: weeks 1–3 grow weekly minutes by 8 % each,
   week 4 is a deload at 60 %. After week 4 the week-3 volume becomes the new baseline.
+- **The mesocycle counts training blocks, not calendar weeks.** A block is seven days from its anchor, and it
+  advances only when something was actually trained in it — time alone never pushes anyone into a deload. A
+  block nobody trained in is re-anchored onto the current one and changes nothing else, so an athlete who was
+  away for three months comes back to the mesocycle week they left. Long absences belong to comeback mode,
+  which is the one mechanism that answers them.
 - Mostly Zone 2. One intervals/tempo session per week once volume reaches 120 min/week. The weekend slot
   (or the user's chosen "long day") holds the long session.
 - **Modality rotates** (run → bike → swim among the enabled ones), never the same twice in a row when two or
   more are enabled; swimming never gets the long session unless it is the only modality.
-- **Adaptive**: if less than 70 % of last week's target was completed, volume holds; two such weeks in a row
-  step the baseline back 10 %.
+- **Adaptive**: if less than 70 % of the last block's target was completed, volume holds; two such blocks in a
+  row step the baseline back 10 %. A block with **no** training in it does not count as missed — that is an
+  absence, and holding for it would punish the athlete twice over the comeback's own reduction.
 - **Intensity is expressed in zones** from HR and/or pace — whatever the user provided — always with an RPE and a
   verbal cue fallback ("conversational pace"). HR zones from LTHR (Friel percentages) when known, else from
   max HR (measured or `208 − 0.7 × age`).
@@ -104,7 +110,8 @@ friends may follow. This shapes the product:
 ### Calendar composer
 
 - The composer merges both tracks into the week from the user's **availability**: days per week, preferred
-  days, preferred long-session day. Strength gets up to 3 of the training days, cardio the rest.
+  days, preferred long-session day. Strength gets up to `strengthDaysPerWeek` of the training days (the
+  athlete's own setting, default 3), cardio the rest.
 - **Interference rules**: one session per day; no hard cardio (intervals/tempo) or long session the day
   before a heavy lower-body day (A1, B1, B2); if a long session cannot be placed cleanly it is demoted to an
   easy session of the same length.
@@ -113,13 +120,23 @@ friends may follow. This shapes the product:
   session (overdue strength first, else the next cardio of the week).
 - **Swap today**: replace today's item with the other track's next item; the rest of the week recomposes.
   Nothing is ever skipped — the strength rotation is a cursor, not a calendar.
-- Week starts **Monday**; timezone is fixed to **Europe/Bratislava**.
+- **Calendar week vs. training block.** The **calendar week starts Monday** and is what availability, the
+  planning window and the "this week" tiles mean: "I train Monday, Wednesday, Friday" is a fact about the
+  athlete's life, the plan repeats weekly, and "this week" is what a person means by it. The **training
+  block** is a separate seven-day window — it is *anchored* on a Monday, but it advances only when it was
+  trained in (above), so after any skipped block it no longer lines up with the calendar. The cardio
+  mesocycle and the adaptive ratio run on blocks; nothing else does.
+- **The streak counts sessions, not weeks** — the current unbroken run of completed sessions, broken by a gap
+  wider than the athlete's own day spacing plus one skipped slot, and never surviving a gap long enough to
+  trigger a comeback. Two sessions on the same day count once.
+- Timezone is fixed to **Europe/Bratislava**.
 
 ### Recovery and self-regulation
 
 - **Comeback mode**: after ≥ 10 days (configurable) without any session, Today *offers* (never auto-applies) a
-  comeback: strength at 90 % of current weights (stages kept), cardio at 70 % of last week's volume, ramping
-  back over two weeks.
+  comeback: strength at 90 % of current weights (stages kept), cardio at 70 % of the volume of the last seven
+  days that had cardio in them — a sliding window ending on the last session, so a training week that
+  straddles a Sunday is read whole — ramping back over two weeks.
 - **Readiness check** (optional, skippable) before any session: sleep, energy, soreness, each 1–5. A total of
   ≤ 7 shows a suggestion ("consider skipping the AMRAP set" / "shorten to 70 % of target"). It never mutates
   program state; it is stored on the session for later correlation.

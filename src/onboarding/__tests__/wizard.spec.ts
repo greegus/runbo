@@ -31,7 +31,7 @@ function profile(): Profile {
       weeklyMinutes: 90,
       longestSessionMinutes: 40,
       mesoWeek: 2,
-      mesoStartDate: '2026-08-17',
+      blockStartDate: '2026-08-17',
       holdStreak: 1,
       rotationCursor: 0,
       lastPlannedMinutes: 80,
@@ -87,7 +87,7 @@ describe('stepPatch', () => {
 
     expect(stepPatch(3, draft)).toEqual({ cardioTrack: draft.cardioTrack })
     expect(stepPatch(4, draft)).toEqual({ cardioTrack: draft.cardioTrack })
-    expect(stepPatch(4, draft).cardioTrack?.mesoStartDate).toBe('2026-08-17')
+    expect(stepPatch(4, draft).cardioTrack?.blockStartDate).toBe('2026-08-17')
     expect(stepPatch(3, draft).cardioTrack?.zones).toEqual({ hr: { max: 190 } })
   })
 

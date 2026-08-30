@@ -161,11 +161,14 @@ interface Profile {                           // doc: profiles/{uid}
     weeklyMinutes: number                     // current mesocycle baseline
     longestSessionMinutes: number
     mesoWeek: number                          // 1..4
-    mesoStartDate: string                     // Monday of mesocycle week 1
-    holdStreak: number                        // consecutive weeks under 70 % of target
+    blockStartDate?: string | null            // Monday the CURRENT training block opened on; null = no block yet.
+                                              // NOT a calendar week — the block advances only when it was trained
+                                              // in. Optional: absent means a profile written before the field, and
+                                              // `cardioBlock.ts` derives it from the legacy `mesoStartDate`
+    holdStreak: number                        // consecutive blocks under 70 % of target
     rotationCursor: number                    // index into enabled modalities
-    lastPlannedMinutes: number                // what LAST week prescribed — the adaptive ratio divides by this,
-                                              // not by the baseline, so a completed deload week is not a "miss"
+    lastPlannedMinutes: number                // what the LAST block prescribed — the adaptive ratio divides by
+                                              // this, not by the baseline, so a completed deload is not a "miss"
     zones?: {
       hr?: { max?: number; lthr?: number }
       pace?: { run?: number; bike?: number; swim?: number }   // sec/km, km/h, sec/100 m
@@ -466,12 +469,50 @@ growLongestSession(current, completedMinutes): number
 
 `CardioWeekPlan = { sessions, weeklyMinutes, isDeload, next* }` where the `next*` fields (`nextMesoWeek`,
 `nextBaseline`, `nextHoldStreak`, rotation cursor, planned minutes) are **persisted back to `cardioTrack`**
-when the week is adopted — without that the adaptive step-back and modality rotation restart every week.
+when the block is adopted — without that the adaptive step-back and modality rotation restart every block.
 
 - `mesoWeek` 1–3: `weeklyMinutes = baseline × 1.08^(mesoWeek − 1)`; week 4: `baseline × 0.6`; after week 4 the
   week-3 volume becomes the baseline and `mesoWeek` resets to 1.
-- `lastWeekCompletionRatio = done / lastPlannedMinutes`. `< 0.7` → hold (repeat last week's minutes, do not
-  advance `mesoWeek`); twice consecutively → `baseline × 0.9`, restart `mesoWeek` at current.
+- `lastWeekCompletionRatio = done / lastPlannedMinutes`. `< 0.7` → hold (repeat the last block's minutes, do
+  not advance `mesoWeek`); twice consecutively → `baseline × 0.9`, restart `mesoWeek` at current.
+
+### Training block (`cardioBlock.ts`)
+
+```ts
+BLOCK_LENGTH = 7
+blockAnchorOf = startOfWeekMonday
+blockWindowStart(cardioTrack): string | null
+blockRatio(cardioTrack, sessions): number
+cardioBlockAction(cardioTrack, sessions, todayIso): CardioBlockAction
+```
+
+**The mesocycle walks training blocks, not calendar weeks.** A block is seven days from `blockStartDate`, and
+it only ends when seven days have passed **and something was trained inside it**. Time alone can never push
+anyone into a deload.
+
+`CardioBlockAction` is the whole rollover rule as data, so the store only decides *when* it is safe to write:
+
+| Action | When | What is persisted |
+|---|---|---|
+| `idle` | no block and no session yet; or the window is still running | nothing |
+| `start` | the first completed session ever | `blockStartDate` = the Monday of that session's week |
+| `skip` | the window ended with **nothing** trained in it | `blockStartDate` only — `mesoWeek`, `weeklyMinutes`, `holdStreak`, `lastPlannedMinutes` are untouched |
+| `advance` | the window ended and was trained in | the whole `planCardioWeek` result, plus the next anchor |
+
+- The gate is **any** completed session, not a cardio one: an athlete who lifted three times and skipped every
+  run genuinely missed their cardio and the volume *should* hold. An athlete who did nothing has not failed a
+  block — they were away, and `comeback.ts` owns long absences.
+- A long absence produces **exactly one** `skip`, whatever its length. Three months away is a single write and
+  the athlete returns to the mesocycle week they left.
+- `blockRatio` measures the window **before** the stored block, which is the one `lastPlannedMinutes` is the
+  divisor for. An empty previous window scores **1**, not 0 — scoring an absence as a miss is exactly the
+  double punishment (hold, then a 10 % step back, on top of the comeback's 70 %) this module exists to end.
+- Applying an action and re-asking yields `idle`. That idempotence is what makes a reload, a second tab or a
+  duplicated snapshot safe.
+- A profile written before `blockStartDate` existed carries a legacy `mesoStartDate` (block 1's Monday, with
+  `mesoWeek` counting from there). `blockWindowStart` derives the anchor from it — losslessly, so there is **no
+  migration** — and the first write of `cardioTrack` replaces the slice wholesale and the legacy field is gone.
+  It is read as validated `unknown`, not declared on `Profile`: nothing may write it again.
 - Split for N cardio days: 1 long (≈ 40 % of minutes, capped at `longestSessionMinutes × 1.1`), 1 intervals if
   `weeklyMinutes ≥ 120` (`6 × 3 min work / 2 min rest` at Z4, ≈ 25 % of minutes), remainder as easy Z2 sessions
   (min 20 min each; merge if shorter).
@@ -521,16 +562,25 @@ side"). `evalContextFromSettings(settings, …)` builds the Liftoscript `EvalCon
 
 `estimatedOneRepMax(set)`, `bestSetFor`, `personalRecords(sessions)` (kinds `weight | e1rm | amrapReps`),
 `detectNewRecords(sessions, session)` (used by the completion summary), `weeklyTonnage`, `weeklyCardioMinutes`,
-`cardioCompletionRatio(sessions, weekStart, targetMinutes)`, `currentStreak(profile, sessions, todayIso)`
-(sessions in the current unbroken run — same-day logs count once, and the run ends at the first gap wider
-than `streakGapLimit`: the athlete's own day spacing plus one skipped slot, never past `comebackGapDays`),
-`bodyweightTrend` (7-day rolling average), `weeklyRollup`.
+`cardioCompletionRatio(sessions, windowStart, targetMinutes)` (any 7-day window — the calendar week for the
+tiles, the training block for the adaptive ratio), `currentStreak(profile, sessions, todayIso)` and
+`streakGapLimit(profile)`.
+
+**The streak counts sessions, not weeks.** It is the number of completed sessions in the current unbroken run:
+same-day logs count once, and the run ends at the first gap wider than `streakGapLimit` =
+`min(ceil(7 / daysPerWeek) + 3, comebackGapDays)` — the athlete's own day spacing plus one skipped slot, and
+never past the gap at which the app already offers a comeback. No Monday buckets: a Sunday and the Monday
+after it used to score 2, and so did two sessions thirteen days apart.
+
+`bodyweightTrend` (7-day rolling average — a smoothing window, unrelated to weeks), `weeklyRollup`.
 
 ### Exercises (`exercises.ts`) and dates (`utils/date.ts`)
 
 `EXERCISES` catalog with aliases: `resolveExercise`, `canonicalName`, `modalityOf` (Run/Bike/Swim aliases for
-the cardio extension). Date helpers: `toIso parseIso addDays weekdayIndexMondayFirst startOfWeekMonday
-daysBetween formatHuman` — the only place `Date` is touched.
+the cardio extension). Date helpers: `toIso parseIso isIsoDay addDays weekdayIndexMondayFirst
+startOfWeekMonday daysBetween inWeek formatHuman` plus `WEEK_LENGTH` and `WEEKDAY_LABELS` — the only place
+`Date` is touched. `isIsoDay` is the non-throwing guard for data the app did not just write (a Firestore
+document, a wizard draft mid-typing, a legacy field); `parseIso` throws on everything it rejects.
 
 ---
 
@@ -604,7 +654,9 @@ Views are thin; every rule lives in a pure module.
 - `SignInView` — Google button; not-allowlisted state ("ask for access", shows the signed-in email).
 - `TodayView` — `resolveToday` card: strength day (program day + first exercise's weights), cardio
   prescription (`describePrescription`), or rest; claim-today and swap controls; comeback proposal; deload
-  badge; streak / week tiles (`currentStreak`, `weeklyRollup`); bodyweight quick add.
+  badge; the streak tile (`currentStreak`, in **sessions**) and the "this week" tiles (`weeklyRollup`, over the
+  **calendar** week); bodyweight quick add. It also drives the training-block rollover: `cardioBlockAction` off
+  the stored anchor, adopted through the profile store.
 - `StrengthSessionView` — `TierBlock` per tier, `SetRow` with tap cycling, AMRAP stepper, `PlateHint` per set,
   `RestTimer` (tier default or program timer), readiness sheet on entry, completion summary with
   `progressionSummary` lines and `detectNewRecords`.

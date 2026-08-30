@@ -55,7 +55,7 @@ export function normalizeStep(raw: unknown): StepId {
 /**
  * What leaving `step` commits. Always a whole slice taken from the draft:
  * `updateDoc` replaces nested objects wholesale, so a patch carrying only the
- * fields the step edits would drop `restTimers`, `mesoStartDate`, `holdStreak`
+ * fields the step edits would drop `restTimers`, `blockStartDate`, `holdStreak`
  * and everything else the form never touched.
  */
 export function stepPatch(step: StepId, draft: Profile): Partial<Profile> {

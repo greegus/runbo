@@ -50,7 +50,7 @@ function profile(overrides: Partial<Profile> = {}): Profile {
       weeklyMinutes: 150,
       longestSessionMinutes: 90,
       mesoWeek: 1,
-      mesoStartDate: MON,
+      blockStartDate: MON,
       holdStreak: 0,
       rotationCursor: 0,
       lastPlannedMinutes: 0,

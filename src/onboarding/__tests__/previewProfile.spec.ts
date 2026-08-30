@@ -30,7 +30,6 @@ function profile(overrides: Partial<Profile> = {}): Profile {
       weeklyMinutes: 60,
       longestSessionMinutes: 30,
       mesoWeek: 1,
-      mesoStartDate: MONDAY,
       blockStartDate: MONDAY,
       holdStreak: 0,
       rotationCursor: 0,
@@ -45,7 +44,7 @@ describe('coerceProfileForPreview', () => {
   it('leaves a well-formed profile alone', () => {
     const input = profile()
 
-    expect(coerceProfileForPreview(input, TODAY)).toEqual(input)
+    expect(coerceProfileForPreview(input)).toEqual(input)
   })
 
   it('never mutates its argument', () => {
@@ -53,7 +52,7 @@ describe('coerceProfileForPreview', () => {
       availability: { daysPerWeek: Number.NaN, preferredDays: [9], longSessionDay: -3 },
     })
 
-    coerceProfileForPreview(input, TODAY)
+    coerceProfileForPreview(input)
 
     expect(input.availability).toEqual({ daysPerWeek: Number.NaN, preferredDays: [9], longSessionDay: -3 })
   })
@@ -71,7 +70,6 @@ describe('coerceProfileForPreview', () => {
           lastPlannedMinutes: Number.NaN,
         },
       }),
-      TODAY,
     )
 
     expect(result.cardioTrack.weeklyMinutes).toBe(60)
@@ -83,26 +81,9 @@ describe('coerceProfileForPreview', () => {
   })
 
   it('falls back to running when no modality is selected', () => {
-    const result = coerceProfileForPreview(
-      profile({ cardioTrack: { ...profile().cardioTrack, modalities: [] } }),
-      TODAY,
-    )
+    const result = coerceProfileForPreview(profile({ cardioTrack: { ...profile().cardioTrack, modalities: [] } }))
 
     expect(result.cardioTrack.modalities).toEqual(['run'])
-  })
-
-  it('replaces a missing or malformed mesoStartDate with this week Monday', () => {
-    const malformed = coerceProfileForPreview(
-      profile({ cardioTrack: { ...profile().cardioTrack, mesoStartDate: '2026-02-30' } }),
-      TODAY,
-    )
-    const missing = coerceProfileForPreview(
-      profile({ cardioTrack: { ...profile().cardioTrack, mesoStartDate: undefined as unknown as string } }),
-      TODAY,
-    )
-
-    expect(malformed.cardioTrack.mesoStartDate).toBe(MONDAY)
-    expect(missing.cardioTrack.mesoStartDate).toBe(MONDAY)
   })
 
   it('nulls a malformed block anchor rather than inventing one', () => {
@@ -111,11 +92,9 @@ describe('coerceProfileForPreview', () => {
     // session opens one.
     const malformed = coerceProfileForPreview(
       profile({ cardioTrack: { ...profile().cardioTrack, blockStartDate: '2026-02-30' } }),
-      TODAY,
     )
     const missing = coerceProfileForPreview(
       profile({ cardioTrack: { ...profile().cardioTrack, blockStartDate: undefined } }),
-      TODAY,
     )
 
     expect(malformed.cardioTrack.blockStartDate).toBeNull()
@@ -125,7 +104,6 @@ describe('coerceProfileForPreview', () => {
   it('clamps availability into range and de-duplicates preferred days', () => {
     const result = coerceProfileForPreview(
       profile({ availability: { daysPerWeek: 12, preferredDays: [5, 1, 1, -1, 7, 3.5], longSessionDay: 9 } }),
-      TODAY,
     )
 
     expect(result.availability.daysPerWeek).toBe(7)
@@ -137,7 +115,6 @@ describe('coerceProfileForPreview', () => {
 
     const clamped = coerceProfileForPreview(
       profile({ availability: { daysPerWeek: 5, preferredDays: [0], longSessionDay: 5, strengthDaysPerWeek: 12 } }),
-      TODAY,
     )
 
     expect(clamped.availability.strengthDaysPerWeek).toBe(7)
@@ -151,11 +128,11 @@ describe('coerceProfileForPreview', () => {
         modalities: [],
         weeklyMinutes: Number.NaN,
         longestSessionMinutes: Number.NaN,
-        mesoStartDate: 'not-a-date',
+        blockStartDate: 'not-a-date',
       },
     })
 
-    const plan = planWeek(coerceProfileForPreview(broken, TODAY), [], TODAY)
+    const plan = planWeek(coerceProfileForPreview(broken), [], TODAY)
 
     expect(plan.week.days).toHaveLength(7)
     expect(plan.week.days.some((day) => day.planned?.kind === 'strength')).toBe(true)
