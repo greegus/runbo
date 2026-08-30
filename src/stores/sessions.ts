@@ -35,9 +35,7 @@ import { useProfileStore } from '@/stores/profile'
 import { evalContextFromSettings } from '@/training/plates'
 import { cursorOfDay, nextCursor, rotationDays } from '@/training/rotation'
 import type { ExerciseState, Profile, Session } from '@/types'
-import { addDays, startOfWeekMonday, toIso } from '@/utils/date'
-
-const WEEK_LENGTH = 7
+import { addDays, startOfWeekMonday, toIso, WEEK_LENGTH } from '@/utils/date'
 const HISTORY_PAGE_SIZE = 25
 
 /** The live window: last week, this week and the next, so the composer and the completion ratio both have their input. */

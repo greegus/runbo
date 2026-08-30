@@ -25,7 +25,7 @@ import { type SessionDraft, useSessionsStore } from '@/stores/sessions'
 import type { ReadinessInput } from '@/training/readiness'
 import { planWeek } from '@/training/schedule'
 import type { PlannedItem, Session } from '@/types'
-import { addDays, startOfWeekMonday, toIso } from '@/utils/date'
+import { addDays, startOfWeekMonday, toIso, WEEK_LENGTH } from '@/utils/date'
 
 /**
  * The home screen: one card, one tap to the bar.
@@ -138,7 +138,6 @@ function onVisible(): void {
  * profile store, which Phase 7 must not edit. It belongs there as a
  * `pendingCardioWeekStart` getter the moment that file is open for changes.
  */
-const WEEK_LENGTH = 7
 let adopting = false
 
 async function adoptEndedCardioWeeks(): Promise<void> {

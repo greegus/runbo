@@ -14,7 +14,7 @@
 
 import { parseProgram } from '@/liftoscript/parser'
 import type { CardioPrescription, ComposedWeek, PlannedItem, Profile, Session } from '@/types'
-import { addDays, startOfWeekMonday } from '@/utils/date'
+import { addDays, inWeek, startOfWeekMonday, WEEK_LENGTH } from '@/utils/date'
 
 import { type CardioWeekPlan, planCardioWeek } from './cardioPlan'
 import { type ComebackProposal, daysSinceLastSession, proposeComeback } from './comeback'
@@ -22,8 +22,6 @@ import { claimToday, type ComposedWeekPlan, type ComposeWeekInput, composeWeek, 
 import { isHeavyLowerDay } from './gzclp'
 import { rotationDays } from './rotation'
 import { cardioCompletionRatio } from './stats'
-
-const WEEK_LENGTH = 7
 
 /** Everything one week needs, kept together so callers can re-run an override. */
 export interface WeekPlan {
@@ -44,10 +42,6 @@ export interface TodayResolution {
   comebackProposal: ComebackProposal | null
   /** `0` when nothing was ever logged: a fresh profile has no gap to report. */
   daysSinceLastSession: number
-}
-
-function inWeek(dateIso: string, weekStart: string): boolean {
-  return dateIso >= weekStart && dateIso < addDays(weekStart, WEEK_LENGTH)
 }
 
 function countKind(week: ComposedWeek, kind: PlannedItem['kind']): number {
@@ -90,6 +84,8 @@ export function planWeek(profile: Profile, sessions: Session[], anchorIso: strin
   // The cardio planner needs to know how many days it will get before the
   // composer knows which prescriptions exist, so ask the budget for the day
   // count first; `composeWeek` re-derives it from the real session list.
+  // WEEK_LENGTH as the cardio-session count is not a week length: it is an
+  // upper bound high enough that the budget's `Math.min` never bites here.
   const cardioDays = weeklyTrackBudget(profile.availability, WEEK_LENGTH).cardioDays
   const cardio = planCardioWeek(profile.cardioTrack, lastWeekRatio(profile, sessions, weekStart), cardioDays)
 

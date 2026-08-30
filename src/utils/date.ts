@@ -11,6 +11,14 @@ const ISO_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MS_PER_DAY = 86_400_000
 
 /**
+ * Days in a week. Exported so the planner, the stores and the views all measure
+ * the same window: five private copies of `7` had drifted apart in meaning —
+ * some counted days in a window, some counted weekdays — and only the name says
+ * which is which.
+ */
+export const WEEK_LENGTH = 7
+
+/**
  * Monday-first labels, index-aligned with `weekdayIndexMondayFirst` and with
  * `availability.preferredDays` / `longSessionDay`. Exported because the day
  * picker and the week preview must not each invent their own order — an
@@ -66,6 +74,21 @@ export function startOfWeekMonday(iso: string): string {
 /** Whole days from `isoA` to `isoB`; negative when `isoB` is earlier. */
 export function daysBetween(isoA: string, isoB: string): number {
   return Math.round((parseIso(isoB).getTime() - parseIso(isoA).getTime()) / MS_PER_DAY)
+}
+
+/**
+ * Is `iso` inside the `length`-day window that opens on `startIso`?
+ *
+ * Offset arithmetic rather than a string comparison against `addDays(start,
+ * length)`: the two agree for every well-formed ISO day, but only this one
+ * rejects a malformed `iso` loudly instead of silently sorting it lexically
+ * into or out of the window. Session dates come off the wire, so the loud
+ * version is the one worth keeping.
+ */
+export function inWeek(iso: string, startIso: string, length: number = WEEK_LENGTH): boolean {
+  const offset = daysBetween(startIso, iso)
+
+  return offset >= 0 && offset < length
 }
 
 /** Hand-rolled instead of Intl so the output never depends on the host locale. */

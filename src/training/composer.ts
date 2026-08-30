@@ -20,10 +20,7 @@
  */
 
 import type { CardioPrescription, ComposedWeek, PlannedItem, Profile, Session } from '@/types'
-import { addDays, weekdayIndexMondayFirst } from '@/utils/date'
-
-const WEEK_LENGTH = 7
-const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+import { addDays, WEEK_LENGTH, WEEKDAY_LABELS, weekdayIndexMondayFirst } from '@/utils/date'
 
 /** GZCLP is a three-day-a-week program; more strength days would not be the program. */
 export const MAX_STRENGTH_DAYS = 3
@@ -290,7 +287,7 @@ function weekDates(weekStart: string): string[] {
 }
 
 function label(dateIso: string): string {
-  return `${DAY_LABELS[weekdayIndexMondayFirst(dateIso)]} ${dateIso}`
+  return `${WEEKDAY_LABELS[weekdayIndexMondayFirst(dateIso)]} ${dateIso}`
 }
 
 function describe(prescription: CardioPrescription): string {
@@ -355,7 +352,16 @@ function planTracks(input: ComposeWeekInput, dates: string[], fixed: Map<string,
     .filter(([, item]) => item.kind === 'strength')
     .map(([date]) => weekdayIndexMondayFirst(date))
 
-  const freeWeekdays = training.filter((weekday) => !tracks.has(dates[weekday]))
+  // A weekday index is not an offset into the window: `dates[weekday]` is only
+  // the athlete's Monday-first weekday while `weekStart` happens to be a Monday.
+  // Go through the dates themselves so the layout follows the athlete's real
+  // weekdays whatever day the window opens on.
+  const dateOfWeekday = new Map(dates.map((date) => [weekdayIndexMondayFirst(date), date]))
+
+  const freeWeekdays = training.filter((weekday) => {
+    const date = dateOfWeekday.get(weekday)
+    return date !== undefined && !tracks.has(date)
+  })
   const needStrength = Math.max(0, budget.strengthDays - fixedStrength)
   const needCardio = Math.max(0, budget.cardioDays - fixedCardio)
 
@@ -364,21 +370,40 @@ function planTracks(input: ComposeWeekInput, dates: string[], fixed: Map<string,
   const avoid = input.cardioSessions.some((session) => session.kind === 'long') ? input.availability.longSessionDay : -1
 
   const strengthWeekdays = chooseSpreadDays(freeWeekdays, needStrength, pinnedStrengthWeekdays, avoid)
-  for (const weekday of strengthWeekdays) tracks.set(dates[weekday], 'strength')
+  for (const weekday of strengthWeekdays) {
+    const date = dateOfWeekday.get(weekday)
+    if (date) tracks.set(date, 'strength')
+  }
 
   const rest = freeWeekdays.filter((weekday) => !strengthWeekdays.includes(weekday))
   // The long-session day goes first so a short cardio budget never spends its
   // days elsewhere and leaves the long session homeless.
   const ordered = [...rest].sort(
-    (a, b) => rankForCardio(a, input.availability.longSessionDay) - rankForCardio(b, input.availability.longSessionDay),
+    (a, b) =>
+      rankForCardio(a, dateOfWeekday, dates, input.availability.longSessionDay) -
+      rankForCardio(b, dateOfWeekday, dates, input.availability.longSessionDay),
   )
-  for (const weekday of ordered.slice(0, needCardio)) tracks.set(dates[weekday], 'cardio')
+  for (const weekday of ordered.slice(0, needCardio)) {
+    const date = dateOfWeekday.get(weekday)
+    if (date) tracks.set(date, 'cardio')
+  }
 
   return tracks
 }
 
-function rankForCardio(weekday: number, longSessionDay: number): number {
-  return weekday === longSessionDay ? -1 : weekday
+/**
+ * The long-session day first, then the rest in the order the window visits
+ * them. Ranking on the raw weekday index would order Sunday last even in a
+ * window that opens on Sunday; the position in `dates` is the same number under
+ * a Monday anchor and the honest one under any other.
+ */
+function rankForCardio(
+  weekday: number,
+  dateOfWeekday: Map<number, string>,
+  dates: string[],
+  longSessionDay: number,
+): number {
+  return weekday === longSessionDay ? -1 : dates.indexOf(dateOfWeekday.get(weekday) ?? '')
 }
 
 /** Days before `fromDate` without a logged session cannot happen any more. */
@@ -594,7 +619,7 @@ export function composeWeek(input: ComposeWeekInput): ComposedWeekPlan {
   const plan = assignItems(input, dates, tracks, fixed)
   const training = trainingWeekdays(input.availability)
   plan.explanations.unshift(
-    `Training days: ${training.map((weekday) => DAY_LABELS[weekday]).join(', ')} (${input.availability.daysPerWeek} per week).`,
+    `Training days: ${training.map((weekday) => WEEKDAY_LABELS[weekday]).join(', ')} (${input.availability.daysPerWeek} per week).`,
   )
 
   return plan

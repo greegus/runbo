@@ -272,6 +272,28 @@ describe('composeWeek — default five-day availability', () => {
   })
 })
 
+/**
+ * `planWeek` snaps its anchor to a Monday, so nothing in the app composes a
+ * window that opens mid-week today. The invariant is pinned anyway: the layout
+ * is a fact about the athlete's weekdays, and `planTracks` used to reach it by
+ * indexing the window's dates with a weekday number — the same number only
+ * while Monday is day zero of the window.
+ */
+describe('composeWeek — a window that does not open on a Monday', () => {
+  const plan = composeWeek(input({ weekStart: THU }))
+
+  it("trains on the athlete's weekdays, not on offsets into the window", () => {
+    const trained = plan.days.filter((day) => day.planned).map((day) => weekdayIndexMondayFirst(day.date))
+
+    expect([...trained].sort((a, b) => a - b)).toEqual(availability().preferredDays)
+    // Thursday opens the window, so an offset-indexed layout would have trained
+    // on it and left the Wednesday that closes the window empty.
+    expect(itemAt(plan, THU)).toBeNull()
+    expect(itemAt(plan, SUN)).toBeNull()
+    expect(itemAt(plan, '2026-09-02')).not.toBeNull()
+  })
+})
+
 describe('composeWeek — other budgets', () => {
   it('a three-day week trades one strength day for the single cardio day', () => {
     const plan = composeWeek(

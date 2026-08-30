@@ -17,7 +17,7 @@ import {
   type Weight,
 } from '@/liftoscript/weight'
 import type { BodyweightEntry, ComposedWeek, Profile, Session, SetLog, WeightValue } from '@/types'
-import { addDays, daysBetween, startOfWeekMonday } from '@/utils/date'
+import { addDays, daysBetween, inWeek, startOfWeekMonday } from '@/utils/date'
 
 /** The key a logged exercise's records are grouped under, e.g. `'T1:Squat'`. */
 export function sessionExerciseKey(exercise: { name: string; tier?: 1 | 2 | 3 }): string {
@@ -75,11 +75,6 @@ export interface WeeklyRollup {
 
 function isDone(session: Session): boolean {
   return session.status === 'done'
-}
-
-function inWeek(date: string, weekStart: string): boolean {
-  const offset = daysBetween(weekStart, date)
-  return offset >= 0 && offset < 7
 }
 
 function byDateAscending(sessions: Session[]): Session[] {

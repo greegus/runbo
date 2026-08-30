@@ -24,9 +24,7 @@ import {
 } from '@/services/profileService'
 import type { CardioWeekPlan } from '@/training/cardioPlan'
 import type { Profile } from '@/types'
-import { addDays } from '@/utils/date'
-
-const WEEK_LENGTH = 7
+import { addDays, WEEK_LENGTH } from '@/utils/date'
 
 /**
  * The Monday of the week the stored cardio state describes. `mesoStartDate` is
