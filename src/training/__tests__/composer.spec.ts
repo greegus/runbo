@@ -190,7 +190,7 @@ describe('trainingWeekdays', () => {
 })
 
 describe('weeklyTrackBudget', () => {
-  it('caps strength at three and gives cardio the rest', () => {
+  it('falls back to three strength days for a profile written before the setting existed', () => {
     expect(weeklyTrackBudget(availability({ daysPerWeek: 5 }), 4)).toEqual({
       trainingDays: 5,
       strengthDays: 3,
@@ -206,10 +206,50 @@ describe('weeklyTrackBudget', () => {
     })
   })
 
-  it('keeps all three strength days when there is no cardio to place', () => {
+  it('keeps every asked-for strength day when there is no cardio to place', () => {
     expect(weeklyTrackBudget(availability({ daysPerWeek: 3 }), 0)).toEqual({
       trainingDays: 3,
       strengthDays: 3,
+      cardioDays: 0,
+    })
+  })
+
+  it('spends the whole week on cardio when the athlete asks for no lifting', () => {
+    expect(weeklyTrackBudget(availability({ daysPerWeek: 5, strengthDaysPerWeek: 0 }), 4)).toEqual({
+      trainingDays: 5,
+      strengthDays: 0,
+      cardioDays: 4,
+    })
+  })
+
+  it('honours a lower strength ask and hands the freed days to cardio', () => {
+    expect(weeklyTrackBudget(availability({ daysPerWeek: 5, strengthDaysPerWeek: 2 }), 4)).toEqual({
+      trainingDays: 5,
+      strengthDays: 2,
+      cardioDays: 3,
+    })
+  })
+
+  it('honours a higher strength ask, which the old hard-coded cap forbade', () => {
+    expect(weeklyTrackBudget(availability({ daysPerWeek: 5, strengthDaysPerWeek: 4 }), 4)).toEqual({
+      trainingDays: 5,
+      strengthDays: 4,
+      cardioDays: 1,
+    })
+  })
+
+  it('clamps a strength ask above the training budget, and still keeps cardio a day', () => {
+    expect(weeklyTrackBudget(availability({ daysPerWeek: 4, strengthDaysPerWeek: 6 }), 2)).toEqual({
+      trainingDays: 4,
+      strengthDays: 3,
+      cardioDays: 1,
+    })
+  })
+
+  it('gives the whole week to lifting when the ask exceeds it and there is no cardio', () => {
+    expect(weeklyTrackBudget(availability({ daysPerWeek: 4, strengthDaysPerWeek: 6 }), 0)).toEqual({
+      trainingDays: 4,
+      strengthDays: 4,
       cardioDays: 0,
     })
   })

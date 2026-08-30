@@ -20,7 +20,7 @@ function profile(overrides: Partial<Profile> = {}): Profile {
       notifications: { daily: false, gapNudge: false },
       fcmTokens: [],
     },
-    availability: { daysPerWeek: 5, preferredDays: [0, 1, 2, 4, 5], longSessionDay: 5 },
+    availability: { daysPerWeek: 5, preferredDays: [0, 1, 2, 4, 5], longSessionDay: 5, strengthDaysPerWeek: 3 },
     // A real program: the planner reads the rotation off this text, so an empty
     // one is not a well-formed profile — it is the case the coercion fills in.
     strengthTrack: { goal: { type: 'open' }, programText: GZCLP_PROGRAM_SOURCE, programState: {}, rotationCursor: 0 },
@@ -113,6 +113,16 @@ describe('coerceProfileForPreview', () => {
     expect(result.availability.daysPerWeek).toBe(7)
     expect(result.availability.preferredDays).toEqual([1, 5])
     expect(result.availability.longSessionDay).toBe(6)
+    // Absent is the shape every profile written before the setting existed has;
+    // it must read as the old hard-coded three, not as zero lifting days.
+    expect(result.availability.strengthDaysPerWeek).toBe(3)
+
+    const clamped = coerceProfileForPreview(
+      profile({ availability: { daysPerWeek: 5, preferredDays: [0], longSessionDay: 5, strengthDaysPerWeek: 12 } }),
+      TODAY,
+    )
+
+    expect(clamped.availability.strengthDaysPerWeek).toBe(7)
   })
 
   it('produces a profile planWeek can compose a full week from', () => {

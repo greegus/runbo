@@ -31,6 +31,11 @@ export interface Profile {
     daysPerWeek: number // default 5
     preferredDays: number[] // 0=Mon..6=Sun, default [0, 1, 2, 4, 5]
     longSessionDay: number // default 5 (Sat)
+    // How many of `daysPerWeek` go to lifting; the rest carry cardio. Optional
+    // because there is no migration mechanism: a profile written before this
+    // field existed must keep splitting its week exactly as it did, which is
+    // what `DEFAULT_STRENGTH_DAYS_PER_WEEK` preserves.
+    strengthDaysPerWeek?: number // default 3
   }
   strengthTrack: {
     goal: { type: GoalType } // MVP: { type: 'open' }

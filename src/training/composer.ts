@@ -22,8 +22,8 @@
 import type { CardioPrescription, ComposedWeek, PlannedItem, Profile, Session } from '@/types'
 import { addDays, WEEK_LENGTH, WEEKDAY_LABELS, weekdayIndexMondayFirst } from '@/utils/date'
 
-/** GZCLP is a three-day-a-week program; more strength days would not be the program. */
-export const MAX_STRENGTH_DAYS = 3
+/** GZCLP is written as a three-day-a-week program, so that is where an athlete who never says otherwise starts. */
+export const DEFAULT_STRENGTH_DAYS_PER_WEEK = 3
 
 export type Track = 'strength' | 'cardio'
 
@@ -163,14 +163,28 @@ export interface TrackBudget {
 }
 
 /**
- * How the week's training days split between the tracks. Strength is capped at
- * three; cardio keeps at least one day whenever there is cardio to do, because
- * a week of pure lifting is not what either track is for.
+ * How many of the week's training days the athlete asked to spend lifting. A
+ * profile that predates the setting answers with the old hard-coded cap, so its
+ * weeks keep composing exactly as before.
+ */
+export function strengthDaysPerWeek(availability: Profile['availability']): number {
+  const asked = availability.strengthDaysPerWeek
+
+  return typeof asked === 'number' && Number.isFinite(asked)
+    ? Math.max(0, Math.min(WEEK_LENGTH, Math.trunc(asked)))
+    : DEFAULT_STRENGTH_DAYS_PER_WEEK
+}
+
+/**
+ * How the week's training days split between the tracks. Strength takes as many
+ * days as the athlete asked for — never more than the week has — and cardio
+ * keeps at least one day whenever there is cardio to do, because a week of pure
+ * lifting is not what either track is for.
  */
 export function weeklyTrackBudget(availability: Profile['availability'], cardioSessionCount: number): TrackBudget {
   const trainingDays = weeklyBudget(availability)
 
-  let strengthDays = Math.min(MAX_STRENGTH_DAYS, trainingDays)
+  let strengthDays = Math.min(strengthDaysPerWeek(availability), trainingDays)
   let cardioDays = trainingDays - strengthDays
 
   if (cardioSessionCount > 0 && cardioDays === 0 && trainingDays > 1) {

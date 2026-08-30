@@ -248,6 +248,14 @@ describe('weeklyRollup', () => {
     })
   })
 
+  it('estimates through the composer, so the strength setting is not contradicted', () => {
+    const lifter: Profile = { ...profile, availability: { ...profile.availability, strengthDaysPerWeek: 4 } }
+    const rollup = weeklyRollup(lifter, sessions, WEEK)
+
+    expect(rollup.strength.planned).toBe(4)
+    expect(rollup.cardio.planned).toBe(1)
+  })
+
   it('prefers the composed week as the authority on what was planned', () => {
     const composed: ComposedWeek = {
       weekStart: WEEK,

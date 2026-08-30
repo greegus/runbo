@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Button } from 'vuiii'
 
 import WeekPreview from '@/components/WeekPreview.vue'
+import { strengthDaysPerWeek } from '@/training/composer'
 import type { Profile } from '@/types'
 import { toIso, WEEKDAY_LABELS } from '@/utils/date'
 import StepShell from '@/views/onboarding/steps/StepShell.vue'
@@ -79,9 +80,11 @@ const zoneLines = computed(() => {
 
 const availability = computed(() => {
   const { daysPerWeek, preferredDays, longSessionDay } = props.modelValue.availability
+  const lifting = strengthDaysPerWeek(props.modelValue.availability)
 
   return {
     days: `${daysPerWeek} day${daysPerWeek === 1 ? '' : 's'} a week`,
+    lifting: `Lifting: ${Math.min(lifting, daysPerWeek)} of them`,
     preferred: preferredDays.map((day) => WEEKDAY_LABELS[day]).join(', ') || 'No preference',
     long: WEEKDAY_LABELS[longSessionDay] ?? '—',
   }
@@ -96,6 +99,7 @@ const sections = computed(() => [
     title: 'Week',
     lines: [
       availability.value.days,
+      availability.value.lifting,
       `Preferred: ${availability.value.preferred}`,
       `Long day: ${availability.value.long}`,
     ],

@@ -3,7 +3,7 @@ import { computed, watch } from 'vue'
 import { FormGroup, RadioButtonGroup, Select } from 'vuiii'
 
 import type { Availability } from '@/onboarding/types'
-import { MAX_STRENGTH_DAYS, trainingWeekdays, weeklyTrackBudget } from '@/training/composer'
+import { DEFAULT_STRENGTH_DAYS_PER_WEEK, trainingWeekdays, weeklyTrackBudget } from '@/training/composer'
 import { WEEKDAY_LABELS } from '@/utils/date'
 
 const props = defineProps<{
@@ -18,6 +18,18 @@ const emit = defineEmits<{
 
 const dayOptions = WEEKDAY_LABELS.map((label, index) => ({ value: index, label }))
 const daysPerWeekOptions = [1, 2, 3, 4, 5, 6, 7].map((value) => ({ value, label: String(value) }))
+
+const strengthDays = computed(() => props.modelValue.strengthDaysPerWeek ?? DEFAULT_STRENGTH_DAYS_PER_WEEK)
+
+/**
+ * Lifting days are offered up to the training budget and no further: an option
+ * the composer would immediately clamp away is not an option.
+ */
+const strengthDaysOptions = computed(() => {
+  const ceiling = whole(props.modelValue.daysPerWeek, 5, 1, 7)
+
+  return Array.from({ length: ceiling + 1 }, (_, value) => ({ value, label: String(value) }))
+})
 
 const preferred = computed(() => props.modelValue.preferredDays ?? [])
 
@@ -75,10 +87,20 @@ function whole(value: unknown, fallback: number, min: number, max: number): numb
 // wholesale, so a patch carrying only the edited field would drop the others.
 function patch(changes: Partial<Availability>): void {
   const next = { ...props.modelValue, ...changes }
+  const daysPerWeek = whole(next.daysPerWeek, 5, 1, 7)
 
   emit('update:modelValue', {
     ...next,
-    daysPerWeek: whole(next.daysPerWeek, 5, 1, 7),
+    daysPerWeek,
+    // Clamped against the budget, not just against the week: shrinking the week
+    // otherwise leaves the lifting control pointing at an option it no longer
+    // offers, and nothing looks selected.
+    strengthDaysPerWeek: whole(
+      next.strengthDaysPerWeek ?? DEFAULT_STRENGTH_DAYS_PER_WEEK,
+      DEFAULT_STRENGTH_DAYS_PER_WEEK,
+      0,
+      daysPerWeek,
+    ),
     longSessionDay: whole(next.longSessionDay, 5, 0, 6),
     preferredDays: (next.preferredDays ?? []).map((day) => whole(day, 0, 0, 6)),
   })
@@ -117,6 +139,21 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
         size="large"
         class="min-h-[48px]"
         @update:model-value="(value: number) => patch({ daysPerWeek: value })"
+      />
+    </FormGroup>
+
+    <FormGroup label="Lifting days" hint="How many of those days go to the barbell. The rest carry cardio.">
+      <!-- Named with `aria-label`, not FormGroup's slot id: a `<label for>`
+           cannot name the `role="radiogroup"` div this renders. -->
+      <RadioButtonGroup
+        aria-label="Lifting days"
+        :model-value="strengthDays"
+        :options="strengthDaysOptions"
+        option-label="label"
+        option-value="value"
+        size="large"
+        class="min-h-[48px]"
+        @update:model-value="(value: number) => patch({ strengthDaysPerWeek: value })"
       />
     </FormGroup>
 
@@ -180,17 +217,19 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
       the closest one.
     </p>
 
-    <!-- Read off `weeklyTrackBudget` rather than restated by hand: at three days
-         it keeps one day for cardio and lifts twice, at one day there is no
-         cardio at all — a flat "no cardio below four days" would be a lie. -->
-    <div
-      v-if="modelValue.daysPerWeek <= MAX_STRENGTH_DAYS"
-      class="rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm text-ink-900"
-    >
+    <!-- Read off `weeklyTrackBudget` rather than restated by hand: the split the
+         athlete asked for is not always the split they get — cardio keeps a day
+         whenever there is cardio to do, and the week can be shorter than the ask. -->
+    <div class="rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm text-ink-900">
       At {{ modelValue.daysPerWeek }} {{ modelValue.daysPerWeek === 1 ? 'day' : 'days' }} a week you get
       {{ budget.strengthDays }} lifting {{ budget.strengthDays === 1 ? 'day' : 'days' }} and
-      {{ budget.cardioDays === 0 ? 'no cardio' : `${budget.cardioDays} cardio day` }} — strength is capped at
-      {{ MAX_STRENGTH_DAYS }} days a week. Pick 4 or more days to run both tracks properly.
+      {{
+        budget.cardioDays === 0 ? 'no cardio' : `${budget.cardioDays} cardio day${budget.cardioDays === 1 ? '' : 's'}`
+      }}.
+      <template v-if="budget.strengthDays < strengthDays">
+        You asked for {{ strengthDays }} lifting {{ strengthDays === 1 ? 'day' : 'days' }}; we keep one day for cardio
+        so both tracks keep moving.
+      </template>
     </div>
   </div>
 </template>

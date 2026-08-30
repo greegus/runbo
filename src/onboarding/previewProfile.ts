@@ -1,4 +1,3 @@
-import { GZCLP_PROGRAM_SOURCE } from '@/training/gzclp'
 /**
  * Makes a half-filled wizard draft safe to compose a week from.
  *
@@ -10,6 +9,8 @@ import { GZCLP_PROGRAM_SOURCE } from '@/training/gzclp'
  * preview is coerced back onto the `createDefaultProfile` defaults here rather
  * than every consumer sprinkling guards over the template.
  */
+import { DEFAULT_STRENGTH_DAYS_PER_WEEK } from '@/training/composer'
+import { GZCLP_PROGRAM_SOURCE } from '@/training/gzclp'
 import type { Modality, Profile } from '@/types'
 import { startOfWeekMonday } from '@/utils/date'
 
@@ -24,6 +25,7 @@ const DEFAULTS = {
   lastPlannedMinutes: 0,
   daysPerWeek: 5,
   longSessionDay: 5,
+  strengthDaysPerWeek: DEFAULT_STRENGTH_DAYS_PER_WEEK,
 } as const
 
 const DEFAULT_MODALITIES: Modality[] = ['run']
@@ -72,6 +74,9 @@ export function coerceProfileForPreview(profile: Profile, todayIso: string): Pro
         ...new Set((availability.preferredDays ?? []).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)),
       ].sort((a, b) => a - b),
       longSessionDay: clampInteger(availability.longSessionDay, 0, 6, DEFAULTS.longSessionDay),
+      // Zero lifting days is a legal answer here (a cardio-only block), so this
+      // one floors at 0 rather than at 1 the way `daysPerWeek` does.
+      strengthDaysPerWeek: clampInteger(availability.strengthDaysPerWeek, 0, 7, DEFAULTS.strengthDaysPerWeek),
     },
     strengthTrack: {
       ...profile.strengthTrack,

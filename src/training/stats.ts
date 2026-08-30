@@ -16,8 +16,9 @@ import {
   type Unit,
   type Weight,
 } from '@/liftoscript/weight'
+import { weeklyTrackBudget } from '@/training/composer'
 import type { BodyweightEntry, ComposedWeek, Profile, Session, SetLog, WeightValue } from '@/types'
-import { addDays, daysBetween, inWeek, startOfWeekMonday } from '@/utils/date'
+import { addDays, daysBetween, inWeek, startOfWeekMonday, WEEK_LENGTH } from '@/utils/date'
 
 /** The key a logged exercise's records are grouped under, e.g. `'T1:Squat'`. */
 export function sessionExerciseKey(exercise: { name: string; tier?: 1 | 2 | 3 }): string {
@@ -316,7 +317,8 @@ export function bodyweightTrend(entries: BodyweightEntry[]): BodyweightPoint[] {
  *
  * Pass the composed week whenever there is one — it is the authority on what
  * was planned. Without it the planned counts are estimated from availability
- * with the composer's split rule (strength up to 3 days, cardio the rest).
+ * through the composer's own split rule, so the estimate can never disagree
+ * with what the planner would have prescribed.
  */
 export function weeklyRollup(
   profile: Profile,
@@ -340,16 +342,15 @@ export function weeklyRollup(
       0,
     )
   } else {
-    const budget = profile.availability.daysPerWeek
-    plannedStrength = Math.min(3, budget)
-    plannedCardio = budget - plannedStrength
-    // Cardio always gets at least one slot when a modality is enabled, even if
-    // that means one strength day fewer than the ideal three.
-    if (plannedCardio === 0 && profile.cardioTrack.modalities.length > 0 && plannedStrength > 1) {
-      plannedStrength -= 1
-      plannedCardio = 1
-    }
-    plannedMinutes = profile.cardioTrack.modalities.length > 0 ? profile.cardioTrack.weeklyMinutes : 0
+    const hasCardio = profile.cardioTrack.modalities.length > 0
+    // The composer owns the split rule; restating it here is how the estimate
+    // drifted from the plan once already. `WEEK_LENGTH` stands in for "however
+    // many cardio sessions the week turns out to want" — the real prescriptions
+    // do not exist without a composed week, and the cap must not bite here.
+    const budget = weeklyTrackBudget(profile.availability, hasCardio ? WEEK_LENGTH : 0)
+    plannedStrength = budget.strengthDays
+    plannedCardio = budget.cardioDays
+    plannedMinutes = hasCardio ? profile.cardioTrack.weeklyMinutes : 0
   }
 
   return {

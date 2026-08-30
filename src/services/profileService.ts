@@ -13,6 +13,7 @@ import type { FirestoreError } from 'firebase/firestore'
 
 import { profilesCollection } from '@/constants/firebaseCollections'
 import { loadDocument, saveDocument, subscribeToDocument, updateDocument } from '@/services/firebaseService'
+import { DEFAULT_STRENGTH_DAYS_PER_WEEK } from '@/training/composer'
 import { buildGzclpProgram, DEFAULT_REST_TIMERS, initialProgramState } from '@/training/gzclp'
 import type { Profile } from '@/types'
 import { startOfWeekMonday, toIso } from '@/utils/date'
@@ -59,6 +60,7 @@ export function createDefaultProfile(uid: string, email: string, todayIso: strin
       daysPerWeek: 5,
       preferredDays: [0, 1, 2, 4, 5],
       longSessionDay: 5,
+      strengthDaysPerWeek: DEFAULT_STRENGTH_DAYS_PER_WEEK,
     },
     strengthTrack: {
       goal: { type: 'open' },

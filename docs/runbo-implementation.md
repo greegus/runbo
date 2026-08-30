@@ -146,6 +146,8 @@ interface Profile {                           // doc: profiles/{uid}
     daysPerWeek: number                       // default 5
     preferredDays: number[]                   // 0 = Mon … 6 = Sun, default [0, 1, 2, 4, 5]
     longSessionDay: number                    // default 5 (Sat)
+    strengthDaysPerWeek?: number              // how many of `daysPerWeek` go to lifting; default 3, optional
+                                              // so a profile written before the field keeps today's split
   }
   strengthTrack: {
     goal: { type: GoalType }
@@ -436,8 +438,9 @@ explainPlacement(week): string[]
 Algorithm (deterministic):
 
 1. Training-day budget = `daysPerWeek`, placed on `preferredDays` (fill from Monday if fewer preferred than
-   budget). Strength gets `min(3, budget)` days (`MAX_STRENGTH_DAYS`), cardio the rest (min 1 if any modality
-   is enabled). `trainingWeekdays`, `weeklyTrackBudget`.
+   budget). Strength gets `min(strengthDaysPerWeek, budget)` days — the athlete's setting, defaulting to
+   `DEFAULT_STRENGTH_DAYS_PER_WEEK` (3) for a profile written before the field existed — and cardio the rest
+   (min 1 if any modality is enabled). `trainingWeekdays`, `weeklyTrackBudget`.
 2. Place strength first, spread with ≥ 1 calendar day between them when possible (`chooseSpreadDays`,
    `cyclicGaps`). Assign program days from `rotationCursor`.
 3. Place cardio: long session on `longSessionDay` if it is a training day; the intervals session on a day that
