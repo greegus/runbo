@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { DialogStack, SnackbarStack } from 'vuiii'
 
 import AppNav from '@/components/AppNav.vue'
+import UpdatePrompt from '@/components/UpdatePrompt.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useProfileStore } from '@/stores/profile'
 
@@ -44,6 +45,10 @@ watch(
 
     <AppNav v-if="showNav" />
   </div>
+
+  <!-- Outside the booting branch: a new version is worth offering even on the
+       sign-in screen, and the prompt renders nothing until there is one. -->
+  <UpdatePrompt />
 
   <DialogStack />
   <SnackbarStack />
