@@ -144,7 +144,14 @@ export const useProfileStore = defineStore('profile', () => {
     if (!current) throw new Error('No profile loaded')
     if (action.kind === 'idle') return false
 
-    const cardioTrack = current.cardioTrack
+    // The legacy anchor is dropped HERE rather than trusted to disappear: the
+    // Firestore converter spreads every stored field back onto the object, so a
+    // plain `{ ...cardioTrack }` would write `mesoStartDate` out again and the
+    // profile would carry it for ever.
+    const { mesoStartDate: _legacyAnchor, ...cardioTrack } = current.cardioTrack as typeof current.cardioTrack & {
+      mesoStartDate?: string
+    }
+
     if (blockWindowStart(cardioTrack) !== action.from) return false
 
     // A block nobody trained in re-anchors and touches nothing else. That is the

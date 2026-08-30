@@ -42,13 +42,18 @@ const HISTORY_PAGE_SIZE = 25
  * The live window: the composer needs this week and the next, and the block
  * ratio needs the window that fed it.
  *
- * TWO weeks back, not one: the block is only rolled forward when the app is
- * opened, so an athlete who does not open it for a few days ends a block whose
- * sessions are already two windows old. Bound one week back, the ratio would
- * read those weeks as zero minutes and hold the volume for a week that was
- * actually trained.
+ * THREE weeks back. The block is only rolled forward when the app is opened, so
+ * a block can end well after the fact, and `blockRatio` then reads the window
+ * BEFORE that block — up to `blockStart - 7`. Two weeks back leaves that read
+ * outside the query for anyone who was away a fortnight, and an unreadable
+ * window scores as fully done rather than holding the volume.
+ *
+ * The honest limit: this covers a block that ended up to two weeks late. Past
+ * that the ratio degrades to "no data, assume done", which errs towards letting
+ * the athlete progress rather than holding them back for a week they may well
+ * have trained.
  */
-const LIVE_WEEKS_BEFORE = 2
+const LIVE_WEEKS_BEFORE = 3
 const LIVE_WEEKS_AFTER = 1
 
 /**
@@ -150,6 +155,15 @@ export const useSessionsStore = defineStore('sessions', () => {
   const isLoadingHistory = shallowRef(false)
   const error = shallowRef<FirestoreError | null>(null)
 
+  /**
+   * False until the first snapshot lands. An empty `weekSessions` is ambiguous —
+   * it means either "nothing was trained" or "the listener has not answered yet"
+   * — and the cardio rollover reads absence as a missed block. Without this flag
+   * it would fire on the empty list and freeze the mesocycle for someone who had
+   * in fact trained.
+   */
+  const isLoaded = shallowRef(false)
+
   let unsubscribe: (() => void) | null = null
   let boundUid: string | null = null
   let historyCursor: SessionCursor | null = null
@@ -162,6 +176,7 @@ export const useSessionsStore = defineStore('sessions', () => {
     weekSessions.value = []
     history.value = []
     hasMoreHistory.value = false
+    isLoaded.value = false
     error.value = null
   }
 
@@ -181,7 +196,9 @@ export const useSessionsStore = defineStore('sessions', () => {
       addDays(weekStart, -WEEK_LENGTH * LIVE_WEEKS_BEFORE),
       addDays(weekStart, WEEK_LENGTH * (LIVE_WEEKS_AFTER + 1) - 1),
       (sessions) => {
-        if (boundUid === uid) weekSessions.value = sessions
+        if (boundUid !== uid) return
+        weekSessions.value = sessions
+        isLoaded.value = true
       },
       (listenerError) => {
         // Keep what is already on screen; an offline listener recovers by itself.
@@ -312,6 +329,7 @@ export const useSessionsStore = defineStore('sessions', () => {
 
   return {
     weekSessions,
+    isLoaded,
     history,
     hasMoreHistory,
     isLoadingHistory,

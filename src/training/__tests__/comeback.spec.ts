@@ -194,7 +194,6 @@ describe('applyComeback', () => {
       weeklyMinutes: 70,
       mesoWeek: 1,
       // A fresh block on the Monday of the week the athlete came back in.
-      // A fresh block on the Monday of the week the athlete came back in.
       blockStartDate: '2026-08-24',
       lastPlannedMinutes: 70,
       holdStreak: 0,

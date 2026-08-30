@@ -201,6 +201,34 @@ describe('cardioBlockAction — a block nobody trained in', () => {
   })
 })
 
+describe('cardioBlockAction — an absence with training in the middle', () => {
+  it('stops at the first window that was trained instead of stepping over it', () => {
+    // Window 1 empty, window 2 trained, and the athlete opens the app in window
+    // 4. Jumping straight to the current window would pass over window 2 — a
+    // window whose volume never progressed and whose completion never counted.
+    const sessions = [strength(addDays(BLOCK, BLOCK_LENGTH + 2))]
+    const action = cardioBlockAction(track(), sessions, addDays(BLOCK, BLOCK_LENGTH * 3 + 1))
+
+    expect(action).toEqual({ kind: 'skip', from: BLOCK, to: addDays(BLOCK, BLOCK_LENGTH) })
+
+    // And the next pass, from there, advances that trained window rather than
+    // skipping it too.
+    const next = cardioBlockAction(
+      track({ blockStartDate: addDays(BLOCK, BLOCK_LENGTH) }),
+      sessions,
+      addDays(BLOCK, BLOCK_LENGTH * 3 + 1),
+    )
+
+    expect(next.kind).toBe('advance')
+  })
+
+  it('still collapses a wholly empty absence into one skip', () => {
+    const action = cardioBlockAction(track(), [strength(addDays(BLOCK, -3))], addDays(BLOCK, BLOCK_LENGTH * 5 + 2))
+
+    expect(action).toEqual({ kind: 'skip', from: BLOCK, to: addDays(BLOCK, BLOCK_LENGTH * 5) })
+  })
+})
+
 describe('cardioBlockAction — idempotence', () => {
   it('has nothing left to do once the action is applied', () => {
     const fresh = track({ blockStartDate: null })

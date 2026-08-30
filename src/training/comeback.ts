@@ -185,10 +185,13 @@ export function applyComeback(
       // A fresh block, anchored the way every block is: the Monday of the week
       // the athlete came back in.
       blockStartDate: blockAnchorOf(proposal.date),
-      // The gap guarantees the next planned week reads as missed, and the
-      // adaptive branch then works off these two. Left as the interrupted block
-      // wrote them, they would hold the first week back at the pre-gap volume
-      // and step the baseline back another 10 % on top of the comeback's 70 %.
+      // The comeback restarts the mesocycle at week 1 on its own reduced
+      // baseline, so these two must describe the comeback and not the block it
+      // interrupted: `lastPlannedMinutes` is the divisor the first ratio uses,
+      // and a `holdStreak` carried over would step the baseline back another
+      // 10 % on top of the 70 % the comeback already applied. (The gap itself no
+      // longer scores as a miss — an untrained window is a `skip`, and this
+      // module owns absences.)
       lastPlannedMinutes: proposal.cardio.toWeeklyMinutes,
       holdStreak: 0,
     },

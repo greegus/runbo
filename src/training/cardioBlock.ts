@@ -78,7 +78,10 @@ export type CardioBlockAction =
  * wholesale, so the legacy branch never runs for that profile again.
  */
 export function blockWindowStart(cardioTrack: CardioTrack): string | null {
-  if (cardioTrack.blockStartDate) return cardioTrack.blockStartDate
+  // Validated like the legacy field, and for the same reason: a hand-edited or
+  // half-written document must degrade to "no block yet" — a state this module
+  // already knows how to start from — rather than throw inside `addDays`.
+  if (isIsoDay(cardioTrack.blockStartDate)) return cardioTrack.blockStartDate
 
   const legacyStart = (cardioTrack as LegacyCardioTrack).mesoStartDate
   if (!isIsoDay(legacyStart)) return null
@@ -136,9 +139,12 @@ export function blockRatio(cardioTrack: CardioTrack, sessions: Session[]): numbe
   const start = blockWindowStart(cardioTrack)
   if (start === null) return 1
 
+  // An untrained previous window scores as done rather than as a miss. `skip`
+  // already refused to move the block for it, and holding the volume here would
+  // punish the same absence twice. This also covers a first block, which has no
+  // previous window at all.
   const previous = addDays(start, -BLOCK_LENGTH)
-  const hasHistory = sessions.some((session) => isDone(session) && session.date < start)
-  if (!hasHistory || !trainedIn(sessions, previous)) return 1
+  if (!trainedIn(sessions, previous)) return 1
 
   return cardioCompletionRatio(sessions, previous, cardioTrack.lastPlannedMinutes || cardioTrack.weeklyMinutes)
 }
@@ -170,7 +176,16 @@ export function cardioBlockAction(cardioTrack: CardioTrack, sessions: Session[],
   if (elapsed < BLOCK_LENGTH) return { kind: 'idle' }
 
   if (!trainedIn(sessions, start)) {
-    return { kind: 'skip', from: start, to: addDays(start, BLOCK_LENGTH * Math.floor(elapsed / BLOCK_LENGTH)) }
+    // Skip only the windows that were genuinely empty. Jumping straight to
+    // today's window would step over a window in the middle that WAS trained,
+    // and that window is owed an `advance` — its volume never progressed and
+    // its completion never counted. So walk forward while nothing was done and
+    // stop at the first trained window, which the next pass then advances.
+    const current = addDays(start, BLOCK_LENGTH * Math.floor(elapsed / BLOCK_LENGTH))
+    let to = addDays(start, BLOCK_LENGTH)
+    while (to < current && !trainedIn(sessions, to)) to = addDays(to, BLOCK_LENGTH)
+
+    return { kind: 'skip', from: start, to }
   }
 
   return {

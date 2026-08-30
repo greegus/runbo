@@ -195,6 +195,31 @@ describe('currentStreak', () => {
     availability: { ...profile.availability, daysPerWeek },
   })
 
+  it('ends the run at an interior gap, not at the oldest session it can find', () => {
+    // Five training days with a ten-day hole in the middle. At five days a week
+    // the limit is 5, so only the three days after the hole are the current run.
+    // Without this the loop that walks backwards is never exercised: every other
+    // case here has at most two distinct days, so it runs at most once.
+    const sessions = [
+      cardio('c1', '2026-08-01', 30),
+      cardio('c2', '2026-08-02', 30),
+      cardio('c3', '2026-08-12', 30),
+      cardio('c4', '2026-08-14', 30),
+      cardio('c5', '2026-08-15', 30),
+    ]
+
+    expect(currentStreak(athlete(5), sessions, '2026-08-17')).toBe(3)
+  })
+
+  it('treats a gap to today of exactly the limit as still running', () => {
+    // The boundary on the gap to TODAY, which is a different comparison from the
+    // gap between two sessions and was otherwise only tested well inside it.
+    const sessions = [cardio('c1', '2026-08-10', 30)]
+
+    expect(currentStreak(athlete(5), sessions, '2026-08-15')).toBe(1) // exactly 5 days
+    expect(currentStreak(athlete(5), sessions, '2026-08-16')).toBe(0) // one day too many
+  })
+
   it('sizes the tolerated gap from the athlete, capped by the comeback threshold', () => {
     expect(streakGapLimit(athlete(5))).toBe(5) // ceil(7/5) + 3
     expect(streakGapLimit(athlete(1))).toBe(10) // ceil(7/1) + 3, but the comeback caps it

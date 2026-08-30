@@ -146,6 +146,12 @@ async function adoptEndedCardioBlocks(): Promise<void> {
   const profile = profileStore.profile
   if (!profile || adopting) return
 
+  // An empty session list before the first snapshot is not an absence. The
+  // rollover reads "nothing in the window" as a missed block, so acting on a
+  // list that has not arrived yet would skip a block the athlete had trained
+  // and freeze their mesocycle where it stood.
+  if (!sessionsStore.isLoaded) return
+
   const action = profileStore.pendingCardioBlock(sessionsStore.weekSessions, todayIso.value)
   if (action.kind === 'idle') return
 
@@ -165,7 +171,7 @@ async function adoptEndedCardioBlocks(): Promise<void> {
 }
 
 watch(
-  () => [profileStore.profile, sessionsStore.weekSessions] as const,
+  () => [profileStore.profile, sessionsStore.weekSessions, sessionsStore.isLoaded] as const,
   () => void adoptEndedCardioBlocks(),
   {
     immediate: true,
