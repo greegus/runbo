@@ -521,8 +521,10 @@ side"). `evalContextFromSettings(settings, …)` builds the Liftoscript `EvalCon
 
 `estimatedOneRepMax(set)`, `bestSetFor`, `personalRecords(sessions)` (kinds `weight | e1rm | amrapReps`),
 `detectNewRecords(sessions, session)` (used by the completion summary), `weeklyTonnage`, `weeklyCardioMinutes`,
-`cardioCompletionRatio(sessions, weekStart, targetMinutes)`, `currentStreak`, `bodyweightTrend` (7-day rolling
-average), `weeklyRollup`.
+`cardioCompletionRatio(sessions, weekStart, targetMinutes)`, `currentStreak(profile, sessions, todayIso)`
+(sessions in the current unbroken run — same-day logs count once, and the run ends at the first gap wider
+than `streakGapLimit`: the athlete's own day spacing plus one skipped slot, never past `comebackGapDays`),
+`bodyweightTrend` (7-day rolling average), `weeklyRollup`.
 
 ### Exercises (`exercises.ts`) and dates (`utils/date.ts`)
 

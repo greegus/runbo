@@ -9,6 +9,7 @@ import {
   estimatedOneRepMax,
   personalRecords,
   sessionExerciseKey,
+  streakGapLimit,
   weeklyCardioMinutes,
   weeklyRollup,
   weeklyTonnage,
@@ -187,28 +188,64 @@ describe('weekly volume', () => {
 })
 
 describe('currentStreak', () => {
-  it('counts consecutive weeks with at least one session', () => {
-    const sessions = [cardio('c1', '2026-08-10', 30), cardio('c2', '2026-08-19', 30)]
-
-    expect(currentStreak(sessions, '2026-08-21')).toBe(2)
+  /** The fixture profile, re-cut for the two settings the streak reads. */
+  const athlete = (daysPerWeek: number, comebackGapDays = 10): Profile => ({
+    ...profile,
+    settings: { ...profile.settings, comebackGapDays },
+    availability: { ...profile.availability, daysPerWeek },
   })
 
-  it('keeps the streak alive across the week boundary while the new week is empty', () => {
-    const sessions = [cardio('c1', '2026-08-16', 30), cardio('c2', '2026-08-23', 30)]
-
-    // Sunday, then Monday of the next (still empty) week — the streak holds.
-    expect(currentStreak(sessions, '2026-08-23')).toBe(2)
-    expect(currentStreak(sessions, '2026-08-24')).toBe(2)
+  it('sizes the tolerated gap from the athlete, capped by the comeback threshold', () => {
+    expect(streakGapLimit(athlete(5))).toBe(5) // ceil(7/5) + 3
+    expect(streakGapLimit(athlete(1))).toBe(10) // ceil(7/1) + 3, but the comeback caps it
+    expect(streakGapLimit(athlete(1, 6))).toBe(6)
   })
 
-  it('breaks once a whole week passes with nothing logged', () => {
-    const sessions = [cardio('c1', '2026-08-23', 30)]
+  it('counts the sessions in the run, and survives a gap equal to the limit', () => {
+    // 08-10 → 08-15 is exactly the five days a five-day-a-week athlete tolerates.
+    const sessions = [cardio('c1', '2026-08-10', 30), cardio('c2', '2026-08-15', 30)]
 
-    expect(currentStreak(sessions, '2026-08-31')).toBe(0)
+    expect(currentStreak(athlete(5), sessions, '2026-08-17')).toBe(2)
+  })
+
+  it('breaks on a gap one day past the limit', () => {
+    const sessions = [cardio('c1', '2026-08-09', 30), cardio('c2', '2026-08-15', 30)]
+
+    expect(currentStreak(athlete(5), sessions, '2026-08-17')).toBe(1)
+  })
+
+  it('counts two sessions on the same day once', () => {
+    const sessions = [
+      cardio('c1', '2026-08-15', 30),
+      strength('s1', '2026-08-15', [set(100, 5, 5)]),
+      cardio('c2', '2026-08-13', 30),
+    ]
+
+    expect(currentStreak(athlete(5), sessions, '2026-08-17')).toBe(2)
+  })
+
+  it('lets a once-a-week athlete take seven days where a five-day one may not', () => {
+    const sessions = [cardio('c1', '2026-08-08', 30), cardio('c2', '2026-08-15', 30)]
+
+    expect(currentStreak(athlete(1), sessions, '2026-08-17')).toBe(2)
+    expect(currentStreak(athlete(5), sessions, '2026-08-17')).toBe(1)
+  })
+
+  it('never outlives a gap the comeback card is already offering to fix', () => {
+    const sessions = [cardio('c1', '2026-08-08', 30), cardio('c2', '2026-08-15', 30)]
+
+    // Same seven-day gap, but this athlete gets a comeback proposal after five.
+    expect(currentStreak(athlete(1, 5), sessions, '2026-08-17')).toBe(1)
+  })
+
+  it('is zero once the last session is further back than the limit', () => {
+    const sessions = [cardio('c1', '2026-08-08', 30), cardio('c2', '2026-08-10', 30)]
+
+    expect(currentStreak(athlete(5), sessions, '2026-08-17')).toBe(0)
   })
 
   it('is zero without any completed session', () => {
-    expect(currentStreak([cardio('c1', '2026-08-19', 30, { status: 'active' })], '2026-08-21')).toBe(0)
+    expect(currentStreak(athlete(5), [cardio('c1', '2026-08-19', 30, { status: 'active' })], '2026-08-21')).toBe(0)
   })
 })
 

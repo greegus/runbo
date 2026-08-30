@@ -86,7 +86,7 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
     explanation: plan.week.explanations[0] ?? null,
     activeSession: todaysSessions.find((session) => session.status === 'active') ?? null,
     doneSession,
-    streak: currentStreak(sessions, todayIso),
+    streak: currentStreak(profile, sessions, todayIso),
     rollup: weeklyRollup(profile, sessions, startOfWeekMonday(todayIso), plan.week),
   }
 }

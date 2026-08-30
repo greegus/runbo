@@ -390,7 +390,7 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
       </div>
 
       <div class="grid grid-cols-2 gap-3">
-        <StatTile label="Streak" :value="model.streak" unit="weeks" icon="check" emphasis />
+        <StatTile label="Streak" :value="model.streak" unit="sessions" icon="check" emphasis />
         <StatTile
           label="Strength"
           :value="`${model.rollup.strength.done}/${model.rollup.strength.planned}`"

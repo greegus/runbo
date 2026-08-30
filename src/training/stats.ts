@@ -18,7 +18,9 @@ import {
 } from '@/liftoscript/weight'
 import { weeklyTrackBudget } from '@/training/composer'
 import type { BodyweightEntry, ComposedWeek, Profile, Session, SetLog, WeightValue } from '@/types'
-import { addDays, daysBetween, inWeek, startOfWeekMonday, WEEK_LENGTH } from '@/utils/date'
+import { daysBetween, inWeek, WEEK_LENGTH } from '@/utils/date'
+
+import { DEFAULT_GAP_DAYS } from './comeback'
 
 /** The key a logged exercise's records are grouped under, e.g. `'T1:Squat'`. */
 export function sessionExerciseKey(exercise: { name: string; tier?: 1 | 2 | 3 }): string {
@@ -270,27 +272,61 @@ export function cardioCompletionRatio(sessions: Session[], weekStart: string, ta
 // ---------------------------------------------------------------------------
 
 /**
- * Consecutive Monday-weeks with at least one completed session, counted back
- * from today.
+ * One skipped slot of slack, in days.
  *
- * The current week gets a grace period: while it is still empty the streak is
- * measured from last week, so it does not read as broken every Monday morning.
- * It breaks only once a whole week passes with nothing logged.
+ * Deliberately a constant and not a multiple of the athlete's own spacing: the
+ * slack a five-day-a-week athlete needs is not two days because their slots are
+ * two days apart, it is "life happened over a weekend". Scaling it would hand a
+ * once-a-week athlete a fortnight of tolerance and give a daily athlete less
+ * than a long weekend — the opposite of what either of them means by a streak.
  */
-export function currentStreak(sessions: Session[], todayIso: string): number {
-  const active = new Set(
-    sessions
-      .filter((session) => isDone(session) && session.date <= todayIso)
-      .map((session) => startOfWeekMonday(session.date)),
-  )
+const STREAK_SLACK_DAYS = 3
 
-  const thisWeek = startOfWeekMonday(todayIso)
-  let cursor = active.has(thisWeek) ? thisWeek : addDays(thisWeek, -7)
-  let streak = 0
+/**
+ * The longest gap between two sessions the streak survives.
+ *
+ * Their own `daysPerWeek` says how far apart their slots sit, so that spacing
+ * plus one skipped slot is what "unbroken" means for them. The comeback
+ * threshold is a hard ceiling: a streak must never outlive a gap the comeback
+ * card is already on screen offering to fix.
+ */
+export function streakGapLimit(profile: Profile): number {
+  const perWeek = Math.max(0, Math.trunc(profile.availability.daysPerWeek || 0))
+  // No training days configured means no spacing to derive; only the ceiling
+  // is left to say anything.
+  const spacing = perWeek > 0 ? Math.ceil(WEEK_LENGTH / perWeek) : Infinity
 
-  while (active.has(cursor)) {
+  return Math.min(spacing + STREAK_SLACK_DAYS, profile.settings.comebackGapDays || DEFAULT_GAP_DAYS)
+}
+
+/**
+ * How many completed sessions are in the athlete's current unbroken run.
+ *
+ * Counted in SESSIONS, not weeks: the old Monday-bucket count read a Sunday and
+ * the Monday after it as a two-week streak, and a Monday and a Sunday thirteen
+ * days later as the same number. Two sessions on one day are one link in the
+ * chain, not two — the run is about showing up, not about logging.
+ *
+ * The run ends at the first gap wider than `streakGapLimit`, today included:
+ * if the athlete is already past the limit the streak is 0 before the sessions
+ * behind it are even looked at.
+ */
+export function currentStreak(profile: Profile, sessions: Session[], todayIso: string): number {
+  const limit = streakGapLimit(profile)
+
+  const days = [
+    ...new Set(
+      sessions.filter((session) => isDone(session) && session.date <= todayIso).map((session) => session.date),
+    ),
+  ].sort()
+
+  const last = days[days.length - 1]
+  if (last === undefined || daysBetween(last, todayIso) > limit) return 0
+
+  let streak = 1
+  for (let index = days.length - 1; index > 0; index -= 1) {
+    if (daysBetween(days[index - 1]!, days[index]!) > limit) break
     streak += 1
-    cursor = addDays(cursor, -7)
   }
 
   return streak
