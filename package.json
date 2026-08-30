@@ -12,7 +12,9 @@
     "lint": "oxlint --fix",
     "format": "oxfmt",
     "seed:allowlist": "node scripts/seedAllowlist.mjs",
-    "check:rules": "firebase emulators:exec --only firestore --project demo-runbo \"node scripts/checkRules.mjs\""
+    "check:rules": "firebase emulators:exec --only firestore --project demo-runbo \"node scripts/checkRules.mjs\"",
+    "lint:ci": "oxlint",
+    "deploy": "npm run build && firebase deploy --only hosting,firestore"
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",

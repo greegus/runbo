@@ -59,7 +59,8 @@ Phases 0–3 are implemented (see *Phases & status* at the end); module signatur
 
 ## Environment & stack
 
-- Location: `~/Projects/runbo`, private GitHub repo, branch `master`. No CI; deploys are manual.
+- Location: `~/Projects/runbo`, GitHub repo `greegus/runbo`, branch `master`. A push to `master` deploys
+  (`.github/workflows/deploy.yml`); `npm run deploy` still deploys by hand.
 - Vue 3.5 (Composition API, `<script setup lang="ts">`), TypeScript 6, Vite 8, Tailwind 4 (`@tailwindcss/vite`),
   Pinia 4, vue-router 5, vitest 4, oxlint / oxfmt.
 - Runtime deps: `firebase`, `vuiii` (beta), `@mdi/js`, `uuid`. Dev: `vite-plugin-pwa`.
@@ -718,14 +719,26 @@ in MVP — the user installs from the browser menu.
   non-allowlisted user cannot read anything but `config`.
 - **Functions** (Phase 10): unit tests for the Strava mapper (sport types, dedup, date handling) with recorded
   activity JSON; the webhook run end-to-end in the emulator.
-- **Manual acceptance** per phase (see below) — there is no component test suite, no Playwright and no CI.
+- **Manual acceptance** per phase (see below) — there is no component test suite and no Playwright, so no
+  `.vue` file is covered by an automated test. CI runs type-check, lint and the unit tests before it deploys;
+  it proves the code compiles and the pure modules behave, not that a screen works.
 
 ---
 
 ## Deployment & operations
 
-- Manual: `npm run deploy` = `vite build` + `firebase deploy` (hosting, rules, indexes, functions). Functions
-  have lint + build as predeploy.
+- **CI** (`.github/workflows/deploy.yml`): a push to `master` — which is how a merged PR arrives — runs
+  type-check, `lint:ci` and the tests, and only then builds and deploys hosting plus the Firestore rules and
+  indexes. Deploys queue rather than cancel, because interrupting `firebase deploy` half-way is worse than
+  waiting. Phase 10 must add `functions` to the deploy target.
+  - `lint:ci` is `oxlint` with no `--fix`: the local `lint` script rewrites files, which in CI would silently
+    patch a finding and report success.
+  - Auth is a service account JSON in the `FIREBASE_SERVICE_ACCOUNT` secret, written under `RUNNER_TEMP` and
+    removed afterwards. The project comes from `.firebaserc`, so the repo stays the one source of truth.
+  - The `VITE_APP_FIREBASE_*` values are repository secrets because Vite bakes them into the bundle at build
+    time. They are not sensitive — they ship to every browser — but they are kept out of the repo so it does
+    not carry one project's identity.
+- Manual: `npm run deploy` = build + `firebase deploy --only hosting,firestore`.
 - Secrets: Strava client id/secret and the webhook verify token via `firebase functions:secrets:set`. Never in
   the repo or `.env`.
 - Webhook subscription is created once per environment with a `curl` to Strava's push-subscriptions endpoint

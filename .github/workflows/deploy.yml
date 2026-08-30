@@ -1,0 +1,121 @@
+# Deploys runbo to Firebase on every push to master (which is how a merged PR
+# arrives too). Verification runs first and gates the deploy: the whole point of
+# automating this is that a broken master cannot reach the athlete.
+#
+# WHAT THIS NEEDS, once, in GitHub → Settings → Secrets and variables → Actions:
+#
+#   FIREBASE_SERVICE_ACCOUNT   the JSON key of a service account on runbo-d2dff
+#                              with the "Firebase Hosting Admin", "Cloud Datastore
+#                              Index Admin" and "Firebase Rules Admin" roles.
+#                              Paste the whole file as the secret's value.
+#
+#   VITE_APP_FIREBASE_API_KEY, _AUTH_DOMAIN, _PROJECT_ID, _STORAGE_BUCKET,
+#   _MESSAGING_SENDER_ID, _APP_ID, _MEASUREMENT_ID
+#                              the same values as your .env.local. Vite bakes
+#                              these into the bundle at build time, so the build
+#                              needs them; they are not secrets in the security
+#                              sense (they ship to every browser) but they are
+#                              kept here rather than committed so the repo does
+#                              not carry one project's identity.
+#
+# The project deployed to is whatever `.firebaserc` names as default, so the repo
+# stays the single source of truth for that.
+
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  # Lets you re-run a deploy from the Actions tab without an empty commit.
+  workflow_dispatch:
+
+# Deploys queue rather than cancel: interrupting `firebase deploy` half-way is a
+# worse outcome than waiting for the previous one to finish.
+concurrency:
+  group: deploy-master
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type-check
+        run: npm run type-check
+
+      # `npm run lint` is `oxlint --fix`, which would silently rewrite files in
+      # CI and report success. `lint:ci` is the same linter with no --fix, so a
+      # finding fails the build instead of being quietly patched over.
+      - name: Lint
+        run: npm run lint:ci
+
+      - name: Test
+        run: npm test
+
+  deploy:
+    name: Deploy to Firebase
+    needs: verify
+    runs-on: ubuntu-latest
+    # Environments give you a place to require an approval later, and record
+    # what was deployed when.
+    environment:
+      name: production
+      url: https://runbo-d2dff.web.app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          VITE_APP_FIREBASE_API_KEY: ${{ secrets.VITE_APP_FIREBASE_API_KEY }}
+          VITE_APP_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_APP_FIREBASE_AUTH_DOMAIN }}
+          VITE_APP_FIREBASE_PROJECT_ID: ${{ secrets.VITE_APP_FIREBASE_PROJECT_ID }}
+          VITE_APP_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_APP_FIREBASE_STORAGE_BUCKET }}
+          VITE_APP_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_APP_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_APP_FIREBASE_APP_ID: ${{ secrets.VITE_APP_FIREBASE_APP_ID }}
+          VITE_APP_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_APP_FIREBASE_MEASUREMENT_ID }}
+        run: npm run build
+
+      # Fail here rather than let `firebase deploy` publish an empty site: a
+      # build that produced no index.html has gone wrong in a way the exit code
+      # did not catch.
+      - name: Check the build produced something
+        run: test -s dist/index.html
+
+      - name: Write the service account key
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT is not set — see the comment at the top of this file."
+            exit 1
+          fi
+          # Written under RUNNER_TEMP, which is outside the workspace and wiped
+          # with the runner, so the key cannot be picked up by a later step that
+          # archives the working directory.
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-key.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-key.json" >> "$GITHUB_ENV"
+
+      # Hosting plus the Firestore rules and indexes — the three things that
+      # exist today. Functions arrive in Phase 10 and will need adding here.
+      - name: Deploy
+        run: npx --yes firebase-tools@13 deploy --only hosting,firestore --non-interactive
+
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-key.json"
