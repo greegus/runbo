@@ -225,15 +225,18 @@ watch(
       </div>
 
       <!-- The grid is the CURRENT week trimmed to the frontier so it agrees with
-           the Today card: a past day that holds no session cannot happen any
-           more, and its work has already rolled forward. A past or future week
-           takes no frontier — today's date says nothing about either. -->
+           NO frontier, on any week including this one. The frontier answers
+           "what do I do now" by dropping past days that never happened — and
+           this screen answers the other question: what the week asked for and
+           what came of it. Trimmed, a Sunday visit showed seven Rest days under
+           tiles reading "0/3 sessions" — the same screen contradicting itself.
+           A missed day belongs here, shown as planned and not done. -->
       <WeekPreview
         :profile="profile"
         :today-iso="todayIso"
         :sessions="sessionsStore.weekSessions"
         :anchor-iso="anchorIso"
-        :from-date="isCurrentWeek ? todayIso : null"
+        :from-date="null"
         show-status
         link-sessions
       />

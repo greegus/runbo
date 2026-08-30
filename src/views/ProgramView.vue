@@ -44,12 +44,24 @@ const dirty = computed(() => draft.value !== (profile.value?.strengthTrack.progr
  * rule, for the same reason: this document is still being listened to, and a
  * snapshot arriving mid-edit (our own save echoing back, another device) must
  * not overwrite what is being typed.
+ *
+ * `seeded` is separate from `dirty` because the two disagree exactly once, at
+ * the start: an empty draft differs from the stored program, so it READS as an
+ * unsaved edit, and the clean-only guard would then refuse the very first seed.
+ * The editor stayed empty, the page opened claiming unsaved changes, and Save
+ * offered to drop every lift's state — a destructive default on a screen nobody
+ * had touched.
  */
+let seeded = false
+
 watch(
   profile,
   (next) => {
     if (!next) return
-    if (!dirty.value) draft.value = next.strengthTrack.programText
+    if (!seeded || !dirty.value) {
+      draft.value = next.strengthTrack.programText
+      seeded = true
+    }
   },
   { immediate: true },
 )
