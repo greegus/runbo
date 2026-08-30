@@ -60,6 +60,8 @@ export interface ExerciseLine {
   equipment?: string // the part after the comma, e.g. 'Barbell'
   description?: string // joined `//` comment lines directly above this line
   setVariations: SetGroup[][]
+  /** `/ ...t3: Lat Pulldown[1]` — sets copied from another line by `resolveReuse`. */
+  reuseSets?: ReuseRef
   sections: Sections
   loc: Loc
 }
@@ -104,6 +106,23 @@ export interface WarmupSet {
   count: number
   reps: number
   weight: WeightExpr
+  loc: Loc
+}
+
+/**
+ * `...t1: Squat`, `...Squat[1]`, `...Squat[2:1]` — a pointer at another line.
+ *
+ * The brackets are COORDINATES, not a variation index: one number is a day in
+ * the current week, two are a week and a day. (Liftosaur documents none of this;
+ * it was read out of `plannerExerciseEvaluator.ts`.) Left unresolved by the
+ * parser and filled in by `resolveReuse`, because a reference may point at a
+ * line that has not been parsed yet.
+ */
+export interface ReuseRef {
+  label?: string
+  name: string
+  week?: number
+  day?: number
   loc: Loc
 }
 
@@ -169,6 +188,12 @@ export interface CustomProgression {
   kind: 'custom'
   stateInit: StateInit[]
   script: Stmt[]
+  /**
+   * `progress: custom(increase: 2.5kg) { ...t1: Squat }` — run THAT line's
+   * script with THIS line's `stateInit`. That split is the whole point: GZCLP
+   * gives every lift the same logic and its own increment.
+   */
+  reuseFrom?: ReuseRef
   loc: Loc
 }
 
@@ -319,6 +344,11 @@ export type ScriptValue = ScriptScalar | ScriptScalar[]
 
 /** Names a script may read. `weights` and friends are arrays, 1-indexed in script. */
 export const READONLY_VARS = [
+  // Liftosaur cycles an exercise's descriptions through this. runbo renders no
+  // descriptions, so it is carried as an ordinary state number and read by
+  // nothing — but scripts in real programs assign to it, and rejecting it would
+  // reject Liftosaur's own GZCLP.
+  'descriptionIndex',
   'weights',
   'completedWeights',
   'reps',
@@ -330,12 +360,35 @@ export const READONLY_VARS = [
   'setVariationIndex',
   'week',
   'day',
+  'dayInWeek',
   'rm1',
   'bodyweight',
 ] as const
 
+/**
+ * Shorthands Liftosaur documents alongside the long names. Real programs use
+ * them freely — the stock GZCLP writes `weights[ns]` — so a parser that only
+ * knows the long form rejects the very programs it exists to import. The parser
+ * rewrites these to the canonical name, so nothing downstream sees an alias.
+ */
+export const VAR_ALIASES: Record<string, string> = {
+  w: 'weights',
+  r: 'reps',
+  cr: 'completedReps',
+  ns: 'numberOfSets',
+}
+
 /** Names a script may assign to. Everything else is a diagnostic. */
-export const WRITABLE_VARS = ['weights', 'reps', 'minReps', 'RPE', 'timers', 'setVariationIndex', 'rm1'] as const
+export const WRITABLE_VARS = [
+  'weights',
+  'reps',
+  'minReps',
+  'RPE',
+  'timers',
+  'setVariationIndex',
+  'rm1',
+  'descriptionIndex',
+] as const
 
 /** Bare names that hold a per-set array and therefore accept `[n]`. */
 export const ARRAY_VARS = [

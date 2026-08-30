@@ -7,10 +7,6 @@
 Squat / 5x5 / 100kg / update: custom() {~ weights = 100kg ~}
 /// superset
 Bench Press / 5x5 / 60kg / superset: Barbell Row
-/// reuse
-Front Squat / ...Squat
-/// reuse (with a set-variation selector)
-Paused Bench Press / ...Bench Press[2:1]
 /// weekRepetition
 Deadlift[1-4] / 5x5 / 120kg
 /// exerciseVariations

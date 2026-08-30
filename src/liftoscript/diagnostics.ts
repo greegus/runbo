@@ -31,7 +31,6 @@ export function createDiagnostic(
 export type UnsupportedConstructId =
   | 'updateCustom'
   | 'superset'
-  | 'reuse'
   | 'weekRepetition'
   | 'exerciseVariations'
   | 'crossExerciseState'
@@ -69,14 +68,6 @@ export const UNSUPPORTED_CONSTRUCTS: UnsupportedConstruct[] = [
     example: 'Squat / 5x5 / 100kg / superset: Bench Press',
     pattern: /\bsuperset\s*:/,
     message: 'Supersets are not supported. Write each exercise on its own line; they are performed in order.',
-  },
-  {
-    id: 'reuse',
-    label: 'reuse (...Name)',
-    example: 'Front Squat / ...Squat',
-    pattern: /\.\.\.\s*\S/,
-    message:
-      'Reusing another exercise (`...Name`, `...Name[2:1]`) is not supported. Write the sets and the progression out in full on this line.',
   },
   {
     id: 'weekRepetition',

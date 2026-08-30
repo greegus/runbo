@@ -298,9 +298,25 @@ DURATION     := NUMBER ('s'|'min'|'m')
 `Swim / 8x100m @Z3 / rest: 30s`, `Run / 5km @Z2`. Modality comes from the exercise name (Run / Bike / Swim
 and aliases Running, Cycling, Ride, Swimming; see `training/exercises.ts`).
 
-**Not supported (diagnostic required):** `update: custom`, `superset:`, reuse (`...Name`, `...Name[2:1]`),
-week repetition (`Name[1-4]`), exercise variations (`A | B | C`), cross-exercise state (`state[1].x`),
-`descriptionIndex`, bodyweight-exercise math. The list is `UNSUPPORTED_CONSTRUCTS` in `diagnostics.ts`.
+**Reuse** (`src/liftoscript/resolveReuse.ts`) — added in August 2026 when the first real Liftosaur program
+arrived and used it on six of its ten lines. Two forms, resolved in a second pass because a line may point at
+one not yet read:
+
+- `/ ...t3: Lat Pulldown[1]` copies the target's SETS (deep copy, so the two lines stay independent);
+- `progress: custom(increase: 2.5kg) { ...t1: Squat }` copies the target's SCRIPT but keeps the reusing line's
+  own `stateInit`. That split is the feature: GZCLP runs one progression for every lift, each with its own
+  increment.
+
+Brackets are COORDINATES, not a variation index: one number is a day, two are `[week:day]`. They narrow the
+search rather than being required, so a program pasted as a single day still resolves `...Squat[1]`. Reuse may
+not chain, and an unresolvable reference is a diagnostic — never a silently empty exercise. The serializer
+writes reuse out expanded, since by then the AST holds what the line actually does.
+
+**Not supported (diagnostic required):** `update: custom`, `superset:`, week repetition (`Name[1-4]`),
+exercise variations (`A | B | C`), cross-exercise state (`state[1].x`), a `descriptionIndex:` SECTION, and
+bodyweight-exercise math. The list is `UNSUPPORTED_CONSTRUCTS` in `diagnostics.ts`. The subset grows only when
+a real program needs it — reuse, `ns` and `descriptionIndex`-as-a-variable are what that rule has bought so
+far.
 
 ### Script language (inside `{~ ~}`)
 
@@ -308,8 +324,12 @@ Statements: assignment (`=`, `+=`, `-=`, `*=`, `/=`), `if` / `else if` / `else`,
 Operators: `+ - * / %`, comparisons, `&& || !`. Values: numbers, weights (`5kg`), percentages.
 
 Read-only: `weights[n]`, `completedWeights[n]`, `reps[n]`, `completedReps[n]`, `RPE[n]`, `completedRPE[n]`,
-`amraps[n]`, `numberOfSets`, `setVariationIndex`, `week`, `day`, `rm1`, `bodyweight`.
-Writable: `weights`, `reps`, `minReps`, `RPE`, `timers`, `setVariationIndex`, `rm1`, `state.x`, `var.x`.
+`amraps[n]`, `numberOfSets`, `setVariationIndex`, `week`, `day`, `dayInWeek`, `rm1`, `bodyweight`.
+Writable: `weights`, `reps`, `minReps`, `RPE`, `timers`, `setVariationIndex`, `rm1`, `descriptionIndex`,
+`state.x`, `var.x`. runbo renders no descriptions, so `descriptionIndex` is carried and read by nothing — it
+exists because real programs assign to it.
+Shorthands Liftosaur documents and we accept, rewritten to the long name at parse time: `w` → `weights`,
+`r` → `reps`, `cr` → `completedReps`, `ns` → `numberOfSets`.
 Bare assignment (`weights += 5kg`) applies to all sets; indexed to one. **Arrays are 1-indexed.**
 Comparisons on whole arrays (`completedReps >= reps`) mean "every element satisfies".
 

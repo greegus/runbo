@@ -250,7 +250,12 @@ function serializeSections(sections: Sections): string[] {
 
 /** `60s|30s` — the right side is `?` when the program leaves the rest open. */
 function serializeTimer(group: SetGroup): string | undefined {
-  if (group.setTimerSec === undefined) return undefined
+  // A rest with no set timer is written bare (`90s`), the way `60% 90s` arrives.
+  // Without this the rest silently vanished on the way back out, because the
+  // `a|b` form has nothing to put on its left.
+  if (group.setTimerSec === undefined) {
+    return group.restTimerSec === undefined ? undefined : `${formatNumber(group.restTimerSec)}s`
+  }
   // Seconds on both sides, always: `1min|30s` is a legal but jarring way to
   // write back the `60s|30s` the user typed.
   const rest = group.restTimerSec === undefined ? '?' : `${formatNumber(group.restTimerSec)}s`

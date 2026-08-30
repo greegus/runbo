@@ -1,4 +1,11 @@
-import { EXPECTED_UNSUPPORTED, gzclpBuiltin, gzclpStock, misc, unsupported } from '@/liftoscript/__tests__/fixtures'
+import {
+  EXPECTED_UNSUPPORTED,
+  gzclpBuiltin,
+  gzclpLiftosaurReal,
+  gzclpStock,
+  misc,
+  unsupported,
+} from '@/liftoscript/__tests__/fixtures'
 import { unsupportedMessage } from '@/liftoscript/diagnostics'
 import { buildGzclpProgram } from '@/training/gzclp'
 
@@ -171,5 +178,86 @@ T3: Lat Pulldown / 3x15 / 45kg / progress: lp(2.5kg)
     const { program } = adoptProgramText(gzclpBuiltin)
 
     expect(Object.keys(detectWeights(program))).toHaveLength(Object.keys(GZCLP_WEIGHTS).length)
+  })
+})
+
+describe('a real Liftosaur GZCLP', () => {
+  /**
+   * The only real-world program this repo has, pasted verbatim. It exercises
+   * every construct the engine grew for it: `ns`, `descriptionIndex`, sets and
+   * progression reuse, and a `60% 90s` weight-plus-rest segment.
+   */
+  const REAL_WEIGHTS: Record<string, number> = {
+    'T1:Squat': 77.5,
+    'T2:Bench Press': 40,
+    'T1:Overhead Press': 32.5,
+    'T2:Deadlift': 62.5,
+    'T1:Bench Press': 50,
+    'T2:Squat': 57.5,
+    'T1:Deadlift': 70,
+    'T2:Overhead Press': 22.5,
+  }
+
+  /** The athlete's own paste has a bare `DAY 3` where a comment was meant. */
+  const corrected = gzclpLiftosaurReal.replace(/^DAY 3$/m, '// DAY 3')
+
+  it('reports the athlete\'s stray heading, and nothing else', () => {
+    const { diagnostics } = adoptProgramText(gzclpLiftosaurReal)
+
+    expect(diagnostics).toHaveLength(1)
+    expect(diagnostics[0].message).toContain('has no sets')
+    // The message has to name the fix: "expected at least one set" would send
+    // someone hunting for a broken exercise instead of an uncommented heading.
+    expect(diagnostics[0].message).toContain('comment it out')
+  })
+
+  it('adopts once that heading is commented out', () => {
+    const adopted = adoptProgramText(corrected)
+
+    expect(adopted.diagnostics).toEqual([])
+    expect(adopted.adopted).toBe(true)
+    expect(Object.keys(adopted.programState)).toHaveLength(10)
+  })
+
+  it('keeps every declared working weight', () => {
+    const { programState } = adoptProgramText(corrected)
+
+    for (const [key, value] of Object.entries(REAL_WEIGHTS)) {
+      expect(programState[key].weights, key).toEqual([{ value, unit: 'kg' }])
+    }
+    // Its T3 lines are written `60% 90s` — a percentage of a weight the text
+    // never states, so they stay unknown rather than inventing a number.
+    expect(programState['T3:Lat Pulldown'].weights).toEqual([])
+    expect(programState['T3:Bent Over Row'].weights).toEqual([])
+  })
+
+  it('gives each reused progression its own state, not the source lift\'s', () => {
+    // Six lines run Squat's script via `{ ...t1: Squat }`. If reuse copied the
+    // state too, every lift would jump by Squat's 5 kg and GZCLP would be wrong
+    // for the presses.
+    const { programState } = adoptProgramText(corrected)
+
+    expect(programState['T1:Squat'].state.increase).toEqual({ value: 5, unit: 'kg' })
+    expect(programState['T1:Overhead Press'].state.increase).toEqual({ value: 2.5, unit: 'kg' })
+    expect(programState['T1:Bench Press'].state.increase).toEqual({ value: 2.5, unit: 'kg' })
+  })
+
+  it('still finds every weight even when the program will not parse', () => {
+    // The fallback's promise, tested against the uncorrected paste.
+    expect(
+      Object.fromEntries(
+        Object.entries(adoptProgramText(gzclpLiftosaurReal).detected).map(([key, entry]) => [key, entry.weight.value]),
+      ),
+    ).toEqual(REAL_WEIGHTS)
+  })
+
+  it('carries those weights onto the built-in GZCLP', () => {
+    const { programState } = gzclpFallback(adoptProgramText(gzclpLiftosaurReal).detected)
+
+    for (const [key, value] of Object.entries(REAL_WEIGHTS)) {
+      expect(programState[key].weights[0], key).toEqual({ value, unit: 'kg' })
+      expect(programState[key].askWeight, key).toBeUndefined()
+    }
+    expect(programState['T3:Lat Pulldown'].askWeight).toBe(true)
   })
 })

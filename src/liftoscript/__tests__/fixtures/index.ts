@@ -6,13 +6,14 @@
 import type { UnsupportedConstructId } from '../../diagnostics'
 import cardio from './cardio.txt?raw'
 import gzclpBuiltin from './gzclp-builtin.txt?raw'
+import gzclpLiftosaurReal from './gzclp-liftosaur-real.txt?raw'
 import gzclpStock from './gzclp-stock.txt?raw'
 import misc from './misc.txt?raw'
 import unsupported from './unsupported.txt?raw'
 
-export { cardio, gzclpBuiltin, gzclpStock, misc, unsupported }
+export { cardio, gzclpBuiltin, gzclpLiftosaurReal, gzclpStock, misc, unsupported }
 
-export const fixtures = { cardio, gzclpBuiltin, gzclpStock, misc, unsupported }
+export const fixtures = { cardio, gzclpBuiltin, gzclpLiftosaurReal, gzclpStock, misc, unsupported }
 
 /**
  * Which diagnostic `unsupported.txt` must produce, and on which line. The `///`
@@ -21,11 +22,17 @@ export const fixtures = { cardio, gzclpBuiltin, gzclpStock, misc, unsupported }
 export const EXPECTED_UNSUPPORTED: { id: UnsupportedConstructId; line: number }[] = [
   { id: 'updateCustom', line: 7 },
   { id: 'superset', line: 9 },
-  { id: 'reuse', line: 11 },
-  { id: 'reuse', line: 13 },
-  { id: 'weekRepetition', line: 15 },
-  { id: 'exerciseVariations', line: 17 },
-  { id: 'crossExerciseState', line: 19 },
-  { id: 'descriptionIndex', line: 21 },
-  { id: 'bodyweightMath', line: 23 },
+  { id: 'weekRepetition', line: 11 },
+  { id: 'exerciseVariations', line: 13 },
+  { id: 'crossExerciseState', line: 15 },
+  { id: 'descriptionIndex', line: 17 },
+  { id: 'bodyweightMath', line: 19 },
 ]
+
+/**
+ * Fixtures that are SUPPOSED to fail parsing, so the round-trip sweeps skip
+ * them: a program the parser rejects has no AST to serialize back. Named by the
+ * property rather than one hardcoded name, so adding another failing fixture
+ * does not silently break the sweeps.
+ */
+export const PROGRAMS_WITH_ERRORS = new Set(['unsupported', 'gzclpLiftosaurReal'])

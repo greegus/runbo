@@ -1,6 +1,6 @@
 import { parseProgram } from '../parser'
 import { serializeProgram } from '../serialize'
-import { fixtures } from './fixtures'
+import { fixtures, PROGRAMS_WITH_ERRORS } from './fixtures'
 
 /**
  * The serializer normalises (standalone weight segments move onto the set
@@ -24,11 +24,15 @@ describe('parse → serialize → parse is stable', () => {
     it(`round-trips ${name}`, () => {
       const first = parseProgram(source)
 
-      // `unsupported.txt` exists to produce diagnostics; it has nothing to round-trip.
+      // Some fixtures exist to produce diagnostics; they have nothing to
+      // round-trip. Assert the failure was expected rather than just skipping,
+      // so a fixture that starts failing by accident still fails the suite.
       if (first.diagnostics.some((diagnostic) => diagnostic.severity === 'error')) {
-        expect(name).toBe('unsupported')
+        expect(PROGRAMS_WITH_ERRORS.has(name), `${name} produced errors`).toBe(true)
         return
       }
+
+      expect(PROGRAMS_WITH_ERRORS.has(name), `${name} parses cleanly`).toBe(false)
 
       const text = serializeProgram(first.program)
       const second = parseProgram(text)

@@ -94,6 +94,68 @@ export function detectWeights(program: Program): GzclpSeed {
   return seed
 }
 
+/** Segment keywords that carry their own numbers — never the working weight. */
+const SECTION_PREFIX = /^(progress|warmup|rest|id|used|update)\s*:/i
+
+/** `[label:] Name[, equipment] / …` — the shape of an exercise line. */
+const EXERCISE_LINE = /^\s*(?:([A-Za-z][A-Za-z0-9]*)\s*:\s*)?([^/,:]+?)\s*(?:,[^/]*)?\/(.*)$/
+
+const ABSOLUTE_WEIGHT = /(\d+(?:\.\d+)?)\s*(kg|lb)\b/i
+
+/**
+ * The working weights read straight from the TEXT, line by line.
+ *
+ * The AST is the better source and stays authoritative — but it only holds
+ * lines the parser accepted, and a line carrying one unsupported construct is
+ * dropped whole, weight included. Liftosaur's own GZCLP puts `...t1: Squat`
+ * reuse on six of its ten lines, so reading only the AST loses most of an
+ * athlete's numbers precisely when the fallback exists to save them.
+ *
+ * Deliberately shallow: it does not try to understand a line, only to find the
+ * first absolute weight outside a section and outside a `{~ ~}` script body.
+ * Percentages are ignored for the same reason `declaredWeight` ignores them.
+ */
+export function detectWeightsInText(source: string): GzclpSeed {
+  const seed: GzclpSeed = {}
+  let inScript = false
+
+  for (const raw of source.split('\n')) {
+    // A script body may hold `state.increase: 5kg` and any number of weights
+    // that are not the working weight, so skip it entirely.
+    if (inScript) {
+      if (raw.includes('~}')) inScript = false
+      continue
+    }
+    if (raw.includes('{~')) {
+      inScript = !raw.includes('~}')
+      continue
+    }
+
+    const line = raw.trim()
+    if (!line || line.startsWith('//') || line.startsWith('#')) continue
+
+    const match = EXERCISE_LINE.exec(line)
+    if (!match) continue
+
+    const [, label, name, rest] = match
+    const key = exerciseKey({ label: label || undefined, name: name.trim() })
+    if (seed[key]) continue
+
+    for (const segment of rest.split('/')) {
+      const text = segment.trim()
+      if (!text || SECTION_PREFIX.test(text)) continue
+
+      const weight = ABSOLUTE_WEIGHT.exec(text)
+      if (!weight) continue
+
+      seed[key] = { weight: { value: Number(weight[1]), unit: weight[2].toLowerCase() as 'kg' | 'lb' } }
+      break
+    }
+  }
+
+  return seed
+}
+
 /** The keys the program mentions but has no weight for, first line wins, in order. */
 function askWeightKeysOf(program: Program, detected: GzclpSeed): string[] {
   const keys: string[] = []
@@ -118,7 +180,10 @@ function askWeightKeysOf(program: Program, detected: GzclpSeed): string[] {
  */
 export function adoptProgramText(source: string): AdoptedProgram {
   const { program, diagnostics } = parseProgram(source)
-  const detected = detectWeights(program)
+  // AST first because it understands what it read; the text scan then fills in
+  // the lines the parser threw away. Order matters — a parsed weight must never
+  // be overwritten by the shallower reading.
+  const detected = { ...detectWeightsInText(source), ...detectWeights(program) }
   const askWeightKeys = askWeightKeysOf(program, detected)
 
   const base: AdoptedProgram = {

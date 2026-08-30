@@ -249,9 +249,10 @@ Squat / 5x5 / 100kg / progress: lp(5kg)
 
   it('matches a program line written under a catalog alias and a lower-case tier label', () => {
     // The importer canonicalizes every logged name ('OHP' -> 'Overhead Press'),
-    // and the parser keeps the label the athlete typed. Neither spelling may
-    // detach the history — and the key written into `programState` stays the
-    // program's own, because that is what the engine reads.
+    // and the athlete may have typed the tier in either case. Neither spelling
+    // may detach the history. The key is whatever `exerciseKey` produces — it
+    // upper-cases the tier — and because writer and reader both go through that
+    // one function, the state stays reachable.
     const aliased = `# Week 1
 ## A1
 t1: OHP / 5x3+ / 6x2+ / 45kg / progress: lp(2.5kg)
@@ -262,10 +263,10 @@ t1: OHP / 5x3+ / 6x2+ / 45kg / progress: lp(2.5kg)
     )
 
     expect(result.report.unmatched).toEqual([])
-    const press = derivationFor(result, 't1:OHP')
+    const press = derivationFor(result, 'T1:OHP')
     expect(press.keyResolution).toBe('logged')
     expect(press.weight.value).toEqual(kg(50))
-    expect(result.programState['t1:OHP'].weights).toEqual([kg(52.5)])
+    expect(result.programState['T1:OHP'].weights).toEqual([kg(52.5)])
   })
 
   it('reads the weight from the most recent session that completed anything', () => {

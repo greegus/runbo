@@ -507,7 +507,12 @@ export function runScript(script: Stmt[], scope: ScriptScope, ctx: EvalContext):
  * logged session entry can rebuild the key without re-parsing the program.
  */
 export function exerciseKey(exercise: { label?: string; name: string }): string {
-  return exercise.label ? `${exercise.label}:${exercise.name}` : exercise.name
+  // The label is upper-cased because Liftosaur's own programs write `t1:` while
+  // ours writes `T1:`, and the two must be one key: a lowercase `t1:Squat`
+  // arriving from an imported program would otherwise miss the built-in's
+  // `T1:Squat` and land as a lift with no weight — silently, since a missing key
+  // reads as "never entered" rather than as an error.
+  return exercise.label ? `${exercise.label.toUpperCase()}:${exercise.name}` : exercise.name
 }
 
 /**

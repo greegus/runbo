@@ -13,6 +13,7 @@ import {
   UNSUPPORTED_CONSTRUCTS,
   unsupportedDiagnostic,
 } from './diagnostics'
+import { resolveReuse } from './resolveReuse'
 import { type Token, tokenize } from './tokenizer'
 import {
   ARRAY_VARS,
@@ -31,11 +32,13 @@ import {
   type ParseResult,
   type Program,
   type Progression,
+  type ReuseRef,
   READONLY_VARS,
   type Sections,
   type SetGroup,
   type StateInit,
   type Stmt,
+  VAR_ALIASES,
   type VarRef,
   type VarScope,
   type WarmupSet,
@@ -206,6 +209,8 @@ export function parseProgram(source: string): ParseResult {
     description = []
   }
 
+  resolveReuse(program, diagnostics, ctx.lineAt)
+
   diagnostics.sort((a, b) => a.line - b.line || a.col - b.col)
 
   return { program, diagnostics }
@@ -363,9 +368,19 @@ function parseExerciseLine(tokens: Token[], ctx: ParseCtx): ExerciseLine | null 
       continue
     }
 
+    // `/ ...t3: Lat Pulldown[1]` stands where the sets would be; `resolveReuse`
+    // copies them in once the whole program is parsed.
+    if (segment[0]?.value === '...') {
+      const ref = parseReuseRef(new Cursor(segment), ctx)
+      if (ref) exercise.reuseSets = ref
+      continue
+    }
+
     const parsed = parseSetSpec(segment, ctx)
-    if (parsed.kind === 'weight') sharedWeight = parsed.weight
-    else if (parsed.kind === 'timer') {
+    if (parsed.kind === 'weight') {
+      sharedWeight = parsed.weight
+      if (parsed.restTimerSec !== undefined) sharedRestTimer = parsed.restTimerSec
+    } else if (parsed.kind === 'timer') {
       sharedSetTimer = parsed.setTimerSec
       sharedRestTimer = parsed.restTimerSec
     } else if (parsed.kind === 'sets' && parsed.groups.length > 0) {
@@ -385,8 +400,17 @@ function parseExerciseLine(tokens: Token[], ctx: ParseCtx): ExerciseLine | null 
     }
   }
 
-  if (exercise.setVariations.length === 0) {
-    report(ctx, 'Expected at least one set, e.g. `/ 3x8`.', loc)
+  if (exercise.setVariations.length === 0 && !exercise.reuseSets) {
+    // A line with no `/` at all is almost never a broken exercise — it is a
+    // heading someone forgot to comment out. Saying "expected sets" sends them
+    // looking for the wrong mistake.
+    report(
+      ctx,
+      segments.length === 0
+        ? `\`${name}\` has no sets. If this is a heading, comment it out with \`//\` or make it a day with \`## ${name}\`.`
+        : 'Expected at least one set, e.g. `/ 3x8`.',
+      loc,
+    )
   }
 
   return exercise
@@ -536,7 +560,7 @@ function parseWarmup(tokens: Token[], ctx: ParseCtx, loc: Loc): WarmupSet[] | 'n
 
 type SetSpec =
   | { kind: 'sets'; groups: SetGroup[] }
-  | { kind: 'weight'; weight: WeightExpr }
+  | { kind: 'weight'; weight: WeightExpr; restTimerSec?: number }
   | { kind: 'timer'; setTimerSec?: number; restTimerSec?: number }
 
 function parseSetSpec(segment: Token[], ctx: ParseCtx): SetSpec {
@@ -546,6 +570,12 @@ function parseSetSpec(segment: Token[], ctx: ParseCtx): SetSpec {
     const only = parts[0]
     const standaloneWeight = wholeWeight(only)
     if (standaloneWeight) return { kind: 'weight', weight: standaloneWeight }
+
+    // `60% 90s` — a weight for every set followed by the rest between them.
+    // Liftosaur's GZCLP writes its T3 line this way.
+    const weightThenRest = wholeWeightWithRest(only)
+    if (weightThenRest) return { kind: 'weight', ...weightThenRest }
+
     const standaloneTimer = wholeTimer(only)
     if (standaloneTimer) return { kind: 'timer', ...standaloneTimer }
   }
@@ -565,6 +595,20 @@ function wholeWeight(tokens: Token[]): WeightExpr | undefined {
     return weightExprFrom(Number(tokens[0].value), tokens[1].value, tokens[0].loc)
   }
   return undefined
+}
+
+/** `60% 90s` / `100kg 2min` — a weight plus the rest that follows every set. */
+function wholeWeightWithRest(tokens: Token[]): { weight: WeightExpr; restTimerSec: number } | undefined {
+  if (tokens.length !== 4) return undefined
+
+  const weight = wholeWeight(tokens.slice(0, 2))
+  if (!weight) return undefined
+
+  const [value, unit] = tokens.slice(2)
+  if (value.type !== 'number' || unit.type !== 'unit') return undefined
+  if (unit.value !== 's' && unit.value !== 'min' && unit.value !== 'h') return undefined
+
+  return { weight, restTimerSec: toSeconds(Number(value.value), unit.value) }
 }
 
 /** `60s|30s` written as a whole segment — a timer for every set. */
@@ -657,6 +701,16 @@ function parseSetGroup(tokens: Token[], ctx: ParseCtx): SetGroup | null {
     if (timer) {
       group.setTimerSec = timer.setTimerSec
       group.restTimerSec = timer.restTimerSec
+      continue
+    }
+
+    // A lone duration after the load is the rest between sets — `3x15 60% 90s`.
+    // Only after `parseTimer` has had its chance, so `60s|30s` still wins.
+    if (token.type === 'number' && ['s', 'min', 'h'].includes(cursor.peek(1)?.value ?? '')) {
+      const unit = cursor.peek(1)!.value
+      cursor.next()
+      cursor.next()
+      group.restTimerSec = toSeconds(Number(token.value), unit)
       continue
     }
 
@@ -880,6 +934,55 @@ function parseSum(cursor: Cursor, ctx: ParseCtx, loc: Loc): Progression {
   }
 }
 
+/**
+ * `...t1: Squat`, `...Squat[1]`, `...Squat[2:1]`, with the leading `...` already
+ * in front of the cursor. One bracket number is a day, two are week and day.
+ */
+function parseReuseRef(cursor: Cursor, ctx: ParseCtx): ReuseRef | undefined {
+  const start = cursor.loc()
+  if (!cursor.eat('...')) return undefined
+
+  // The name runs to `[` or the end — it may contain spaces ('Lat Pulldown') and
+  // an optional `label:` prefix, so it is read as text rather than as tokens.
+  const parts: string[] = []
+  while (!cursor.atEnd() && cursor.peek()!.value !== '[' && cursor.peek()!.value !== '}') {
+    parts.push(cursor.next()!.value)
+  }
+
+  const raw = parts
+    .join(' ')
+    .replace(/\s*:\s*/g, ': ')
+    .trim()
+  if (!raw) {
+    report(ctx, 'Expected an exercise name after `...`.', start)
+    return undefined
+  }
+
+  const colon = raw.indexOf(':')
+  const label = colon === -1 ? undefined : raw.slice(0, colon).trim()
+  const name = (colon === -1 ? raw : raw.slice(colon + 1)).trim()
+
+  const ref: ReuseRef = { name, loc: start }
+  if (label) ref.label = label
+
+  if (cursor.eat('[')) {
+    const numbers: number[] = []
+    while (!cursor.atEnd() && cursor.peek()!.value !== ']') {
+      const token = cursor.next()!
+      if (token.type === 'number') numbers.push(Number(token.value))
+    }
+    if (!cursor.eat(']')) report(ctx, 'Expected `]`.', cursor.loc())
+
+    if (numbers.length === 1) ref.day = numbers[0]
+    else if (numbers.length >= 2) {
+      ref.week = numbers[0]
+      ref.day = numbers[1]
+    }
+  }
+
+  return ref
+}
+
 function parseCustom(cursor: Cursor, ctx: ParseCtx, loc: Loc): Progression {
   const stateInit: StateInit[] = []
 
@@ -907,6 +1010,17 @@ function parseCustom(cursor: Cursor, ctx: ParseCtx, loc: Loc): Progression {
       stateInit.push({ name: name.value, value, loc: name.loc })
     }
     if (!cursor.eat(')')) report(ctx, 'Expected `)`.', cursor.loc())
+  }
+
+  // `custom(...) { ...t1: Squat }` — single braces, and a reference instead of a
+  // body. The script comes from there; `stateInit` above stays this line's own.
+  if (cursor.peek()?.value === '{' && cursor.peek(1)?.value === '...') {
+    cursor.next()
+    const reuseFrom = parseReuseRef(cursor, ctx)
+    if (!cursor.eat('}')) report(ctx, 'Expected `}` after the reused exercise.', cursor.loc())
+    return reuseFrom
+      ? { kind: 'custom', stateInit, script: [], reuseFrom, loc }
+      : { kind: 'custom', stateInit, script: [], loc }
   }
 
   if (!cursor.eat('{~')) {
@@ -1209,12 +1323,17 @@ function varRefFrom(raw: string, loc: Loc, ctx: ParseCtx): VarRef {
     return { type: 'var', scope: 'var', name, loc }
   }
 
-  if (!KNOWN_VARS.has(raw)) {
+  // Aliases are resolved here, at the only place a bare name enters the AST, so
+  // the evaluator, the serializer and every downstream check keep dealing with
+  // exactly one spelling per variable.
+  const name = VAR_ALIASES[raw] ?? raw
+
+  if (!KNOWN_VARS.has(name)) {
     report(
       ctx,
       `Unknown variable \`${raw}\`. Use \`state.${raw}\` to persist it or \`var.${raw}\` for a scratch value.`,
       loc,
     )
   }
-  return { type: 'var', scope: 'bare', name: raw, loc }
+  return { type: 'var', scope: 'bare', name, loc }
 }

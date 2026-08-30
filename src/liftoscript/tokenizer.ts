@@ -230,6 +230,15 @@ export function tokenize(source: string): TokenizeResult {
       continue
     }
 
+    // `...Name` reuse. One token rather than three dots, because every parser
+    // that had to spell it as "three consecutive puncts" would also have to
+    // guard against `1.5` and `state.inc` arriving the same way.
+    if (source.startsWith('...', index)) {
+      push('punct', '...', loc)
+      advance(3)
+      continue
+    }
+
     const pair = source.slice(index, index + 2)
     if (TWO_CHAR_OPERATORS.includes(pair)) {
       push('operator', pair, loc)

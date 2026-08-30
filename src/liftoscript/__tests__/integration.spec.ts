@@ -16,7 +16,7 @@ import { evaluateSession, exerciseKey, prescribe } from '../evaluator'
 import { parseProgram } from '../parser'
 import { serializeProgram } from '../serialize'
 import type { EvalContext, PrescribedSet, Program } from '../types'
-import { cardio, EXPECTED_UNSUPPORTED, fixtures, gzclpBuiltin, unsupported } from './fixtures'
+import { cardio, EXPECTED_UNSUPPORTED, fixtures, gzclpBuiltin, PROGRAMS_WITH_ERRORS, unsupported } from './fixtures'
 
 /** The kg defaults from `Profile.settings`: a 20 kg bar, 1.25 kg smallest plate. */
 const ctx: EvalContext = {
@@ -185,7 +185,7 @@ describe('the cardio extension', () => {
 })
 
 describe('parse -> serialize -> parse', () => {
-  const clean = Object.entries(fixtures).filter(([name]) => name !== 'unsupported')
+  const clean = Object.entries(fixtures).filter(([name]) => !PROGRAMS_WITH_ERRORS.has(name))
 
   it.each(clean)('is stable for %s', (_name, source) => {
     const first = parseProgram(source)
