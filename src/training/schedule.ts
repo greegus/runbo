@@ -5,18 +5,22 @@
  * Pure and date-free — `todayIso` comes in from the caller, so the whole screen
  * can be replayed for any day in a test.
  *
- * DECISION: the rotation is GZCLP's. The MVP ships exactly one program, and the
- * program day names (`A1`…`B2`) plus the heavy-lower rule both live in
- * `gzclp.ts`. Imported programs (Phase 5) will hand their own day list in here.
+ * The rotation is the ATHLETE'S. GZCLP is the program the MVP ships, not the
+ * shape the app assumes: the day list and the heavy-lower rule are both read off
+ * whatever program the profile carries, so a pasted three-day split cycles three
+ * days. A program that does not parse schedules no strength — the session screen
+ * is where that is explained, with the parser's own diagnostics.
  */
 
+import { parseProgram } from '@/liftoscript/parser'
 import type { CardioPrescription, ComposedWeek, PlannedItem, Profile, Session } from '@/types'
 import { addDays, startOfWeekMonday } from '@/utils/date'
 
 import { type CardioWeekPlan, planCardioWeek } from './cardioPlan'
 import { type ComebackProposal, daysSinceLastSession, proposeComeback } from './comeback'
 import { claimToday, type ComposedWeekPlan, type ComposeWeekInput, composeWeek, weeklyTrackBudget } from './composer'
-import { GZCLP_ROTATION, isHeavyLowerDay } from './gzclp'
+import { isHeavyLowerDay } from './gzclp'
+import { rotationDays } from './rotation'
 import { cardioCompletionRatio } from './stats'
 
 const WEEK_LENGTH = 7
@@ -89,13 +93,18 @@ export function planWeek(profile: Profile, sessions: Session[], anchorIso: strin
   const cardioDays = weeklyTrackBudget(profile.availability, WEEK_LENGTH).cardioDays
   const cardio = planCardioWeek(profile.cardioTrack, lastWeekRatio(profile, sessions, weekStart), cardioDays)
 
+  // Parsed here rather than passed in: `planWeek` takes a Profile, and the day
+  // list is a property of the program that profile carries.
+  const { program, diagnostics } = parseProgram(profile.strengthTrack.programText)
+  const programDays = diagnostics.some((diagnostic) => diagnostic.severity === 'error') ? [] : rotationDays(program)
+
   const input: ComposeWeekInput = {
     weekStart,
     availability: profile.availability,
     rotationCursor: profile.strengthTrack.rotationCursor,
-    programDays: [...GZCLP_ROTATION],
+    programDays,
     cardioSessions: cardio.sessions,
-    heavyLowerDays: (programDay: string) => isHeavyLowerDay(programDay),
+    heavyLowerDays: (programDay: string) => isHeavyLowerDay(programDay, program),
     completedSessions: sessions.filter((session) => session.status === 'done' && inWeek(session.date, weekStart)),
     ...(fromDate ? { fromDate } : {}),
   }

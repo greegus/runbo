@@ -428,7 +428,12 @@ function assignItems(
 ): ComposedWeekPlan {
   const explanations: string[] = []
   const planned = new Map<string, PlannedItem>()
-  const programDays = input.programDays.length > 0 ? input.programDays : ['Workout']
+  // No day list means no program to run — a profile whose text does not parse,
+  // or one that has no strength at all. Inventing a "Workout" day here used to
+  // hide that: the week looked normal until the session screen refused to start,
+  // which is the worst place to find out. An empty rotation now simply schedules
+  // no strength, and the cardio budget takes the days.
+  const programDays = input.programDays
 
   // --- strength -------------------------------------------------------------
   const slots: StrengthSlot[] = []
@@ -444,6 +449,10 @@ function assignItems(
       explanations.push(`${label(date)}: ${existing.programDay} — already logged, left where it is.`)
       continue
     }
+
+    // Nothing to rotate through: leave the day unplanned rather than divide by
+    // zero. A session already logged above still stands — it happened.
+    if (programDays.length === 0) continue
 
     const position = (input.rotationCursor + step) % programDays.length
     const programDay = programDays[position]

@@ -32,8 +32,8 @@ import {
   subscribeToSessionsInRange,
 } from '@/services/sessionsService'
 import { useProfileStore } from '@/stores/profile'
-import { GZCLP_ROTATION, nextCursor } from '@/training/gzclp'
 import { evalContextFromSettings } from '@/training/plates'
+import { cursorOfDay, nextCursor, rotationDays } from '@/training/rotation'
 import type { ExerciseState, Profile, Session } from '@/types'
 import { addDays, startOfWeekMonday, toIso } from '@/utils/date'
 
@@ -77,9 +77,9 @@ function cloneProgramState(programState: Record<string, ExerciseState>): Record<
  * a claim or a swap moved the week off the stored cursor. `nextCursor` only
  * moves forward, which is why the undo path resolves the day instead of it.
  */
-function cursorOfDay(programDay: string | undefined): number | null {
-  const index = GZCLP_ROTATION.indexOf(programDay as (typeof GZCLP_ROTATION)[number])
-  return index >= 0 ? index : null
+function rotationOf(profile: Profile): string[] {
+  const { program, diagnostics } = parseProgram(profile.strengthTrack.programText)
+  return diagnostics.some((diagnostic) => diagnostic.severity === 'error') ? [] : rotationDays(program)
 }
 
 /** The `week` / `day` slot the evaluator needs to resolve the exercise line actually trained. */
@@ -237,6 +237,7 @@ export const useSessionsStore = defineStore('sessions', () => {
 
     if (session.kind === 'strength') {
       const { programState, summary } = evaluateStrengthSession(profile, session, stateSnapshot)
+      const days = rotationOf(profile)
 
       finished.stateSnapshot = stateSnapshot
       finished.progressionSummary = summary
@@ -246,7 +247,10 @@ export const useSessionsStore = defineStore('sessions', () => {
           ...profile.strengthTrack,
           programState,
           // Once per finished strength session, never on a cardio one.
-          rotationCursor: nextCursor(cursorOfDay(session.programDay) ?? profile.strengthTrack.rotationCursor),
+          rotationCursor: nextCursor(
+            days,
+            cursorOfDay(days, session.programDay) ?? profile.strengthTrack.rotationCursor,
+          ),
         },
       }
     }
@@ -289,7 +293,7 @@ export const useSessionsStore = defineStore('sessions', () => {
         ...profile.strengthTrack,
         programState: latest.stateSnapshot,
         // Back to the day this session was: `nextCursor` only moves forward.
-        rotationCursor: cursorOfDay(latest.programDay) ?? profile.strengthTrack.rotationCursor,
+        rotationCursor: cursorOfDay(rotationOf(profile), latest.programDay) ?? profile.strengthTrack.rotationCursor,
       },
       updatedAt: serverTimestamp(),
     })

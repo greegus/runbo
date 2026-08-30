@@ -1,3 +1,4 @@
+import { GZCLP_PROGRAM_SOURCE } from '@/training/gzclp'
 /**
  * Makes a half-filled wizard draft safe to compose a week from.
  *
@@ -74,6 +75,11 @@ export function coerceProfileForPreview(profile: Profile, todayIso: string): Pro
     },
     strengthTrack: {
       ...profile.strengthTrack,
+      // The planner reads the rotation off the program text, so a draft that has
+      // not reached the program step yet would preview a week with no strength
+      // in it. The built-in is what "skip setup" writes anyway, which makes it
+      // the honest stand-in rather than a guess.
+      programText: profile.strengthTrack.programText?.trim() ? profile.strengthTrack.programText : GZCLP_PROGRAM_SOURCE,
       // DECISION: not in the contract's list, but the cursor indexes the
       // program-day array — a `NaN` here names no day at all.
       rotationCursor: clampInteger(profile.strengthTrack.rotationCursor, 0, Number.MAX_SAFE_INTEGER, 0),

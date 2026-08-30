@@ -1,6 +1,7 @@
 import type { CardioPrescription, Profile, Session } from '@/types'
 import { addDays } from '@/utils/date'
 
+import { GZCLP_PROGRAM_SOURCE } from '../gzclp'
 import { cardioOf, planWeek, resolveToday } from '../schedule'
 
 const MON = '2026-08-24'
@@ -33,7 +34,9 @@ function profile(overrides: Partial<Profile> = {}): Profile {
     availability: { daysPerWeek: 5, preferredDays: [0, 1, 2, 4, 5], longSessionDay: 5 },
     strengthTrack: {
       goal: { type: 'open' },
-      programText: '',
+      // A real program, because the rotation is read off it: the planner follows
+      // the athlete's own day list, so an empty program schedules no strength.
+      programText: GZCLP_PROGRAM_SOURCE,
       programState: {
         'T1:Squat': { weights: [{ value: 100, unit: 'kg' }], setVariationIndex: 1, state: {} },
       },
@@ -134,6 +137,46 @@ describe('planWeek', () => {
     expect(planWeek(profile({ cardioTrack: { ...profile().cardioTrack, mesoWeek: 4 } }), [], MON).isDeloadWeek).toBe(
       true,
     )
+  })
+})
+
+describe('a program that is not GZCLP', () => {
+  const pushPull = `# Week 1
+## Push
+T1: Bench Press / 5x3+ / 60kg / progress: none
+## Pull
+T1: Bent Over Row / 5x3+ / 50kg / progress: none
+## Legs
+T1: Squat / 5x3+ / 100kg / progress: none
+`
+
+  it('rotates the days the athlete actually wrote', () => {
+    // The cursor is an index into the athlete's program, not into GZCLP. A
+    // three-day split cycles three days; hardcoding four would train them on a
+    // day their program does not have.
+    const week = planWeek(
+      profile({ strengthTrack: { ...profile().strengthTrack, programText: pushPull } }),
+      [],
+      MON,
+    ).week
+
+    const strengthDays = week.days
+      .map((day) => day.planned)
+      .filter((planned) => planned?.kind === 'strength')
+      .map((planned) => (planned as { programDay: string }).programDay)
+
+    expect(strengthDays).toEqual(['Push', 'Pull', 'Legs'])
+  })
+
+  it('schedules no strength at all when the program does not parse', () => {
+    // Silently falling back to GZCLP would prescribe a workout the athlete never
+    // wrote. The session screen explains the parse failure; the week just has no
+    // strength in it.
+    const broken = profile({
+      strengthTrack: { ...profile().strengthTrack, programText: 'T1: Squat / ...Nothing Here' },
+    })
+
+    expect(planWeek(broken, [], MON).week.days.some((day) => day.planned?.kind === 'strength')).toBe(false)
   })
 })
 

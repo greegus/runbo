@@ -1,3 +1,4 @@
+import { GZCLP_PROGRAM_SOURCE } from '@/training/gzclp'
 import { planWeek } from '@/training/schedule'
 import type { Profile } from '@/types'
 
@@ -20,7 +21,9 @@ function profile(overrides: Partial<Profile> = {}): Profile {
       fcmTokens: [],
     },
     availability: { daysPerWeek: 5, preferredDays: [0, 1, 2, 4, 5], longSessionDay: 5 },
-    strengthTrack: { goal: { type: 'open' }, programText: '', programState: {}, rotationCursor: 0 },
+    // A real program: the planner reads the rotation off this text, so an empty
+    // one is not a well-formed profile — it is the case the coercion fills in.
+    strengthTrack: { goal: { type: 'open' }, programText: GZCLP_PROGRAM_SOURCE, programState: {}, rotationCursor: 0 },
     cardioTrack: {
       goal: { type: 'open' },
       modalities: ['run'],
