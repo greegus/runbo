@@ -9,6 +9,7 @@ const TUE = '2026-08-25'
 const WED = '2026-08-26'
 const THU = '2026-08-27'
 const SAT = '2026-08-29'
+const SUN = '2026-08-30'
 
 const SEED = {
   'T1:Squat': { weight: { value: 100, unit: 'kg' as const } },
@@ -143,6 +144,19 @@ describe('claimedOutcome / swappedOutcome', () => {
     const outcome = claimedOutcome(model)
     expect(outcome.item).toEqual(model.catchUp)
     expect(typeof outcome.explanation === 'string' || outcome.explanation === null).toBe(true)
+  })
+
+  it('counts the whole week in the tiles, not what is left of it', () => {
+    // Sunday, nothing logged. The planner drops every past day that never
+    // happened — right for "what do I do now", wrong for the tiles: they would
+    // report a week that asked for three strength days and two cardio sessions
+    // as having planned nothing at all.
+    const model = buildToday(profile(), [], SUN)
+
+    expect(model.rollup.strength.planned).toBeGreaterThan(0)
+    expect(model.rollup.cardio.plannedMinutes).toBeGreaterThan(0)
+    // And the frontier is still doing its job for the decision itself.
+    expect(model.resolution.isRestDay).toBe(true)
   })
 
   it('flips today to the other track and keeps the week seven days long', () => {

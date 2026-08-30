@@ -66,6 +66,13 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
   const plan = planWeek(profile, sessions, todayIso, todayIso)
   const resolution = resolveToday(profile, sessions, todayIso)
 
+  // The tiles describe the WHOLE week, so they are composed without the frontier.
+  // `plan` above drops every past day that was never logged — right for "what do
+  // I do now", wrong for "what did this week ask of me": by Sunday it had thrown
+  // the week away and the tiles read "0 of 0 planned" for a week with three
+  // strength days and 132 minutes of cardio in it.
+  const wholeWeek = planWeek(profile, sessions, todayIso).week
+
   const todaysSessions = sessions.filter((session) => session.date === todayIso)
   const doneSession = todaysSessions.find((session) => session.status === 'done') ?? null
   const hasDoneSession = doneSession !== null
@@ -87,7 +94,7 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
     activeSession: todaysSessions.find((session) => session.status === 'active') ?? null,
     doneSession,
     streak: currentStreak(profile, sessions, todayIso),
-    rollup: weeklyRollup(profile, sessions, startOfWeekMonday(todayIso), plan.week),
+    rollup: weeklyRollup(profile, sessions, startOfWeekMonday(todayIso), wholeWeek),
   }
 }
 
