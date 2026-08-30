@@ -738,6 +738,9 @@ in MVP — the user installs from the browser menu.
   - The `VITE_APP_FIREBASE_*` values are repository secrets because Vite bakes them into the bundle at build
     time. They are not sensitive — they ship to every browser — but they are kept out of the repo so it does
     not carry one project's identity.
+  - `scripts/setupCiSecrets.sh` puts all of it in place: it copies the client config out of `.env.local` and
+    creates a `github-deploy` service account holding only the four roles a deploy needs, then uploads its key
+    and deletes it. Run it yourself — it mints a credential.
 - Manual: `npm run deploy` = build + `firebase deploy --only hosting,firestore`.
 - Secrets: Strava client id/secret and the webhook verify token via `firebase functions:secrets:set`. Never in
   the repo or `.env`.
