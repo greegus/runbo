@@ -114,6 +114,11 @@ async function resolveSession(): Promise<void> {
   const found = known ?? (await loadSession(props.id))
 
   if (!found) {
+    // Not "missing" — possibly "not readable yet". Today routes here as soon as
+    // it has an id, without waiting for the server to acknowledge the write, so
+    // a first miss is the normal case. The live snapshot below re-resolves.
+    if (!sessionsStore.isLoaded) return
+
     phase.value = 'missing'
     return
   }
@@ -323,13 +328,14 @@ onMounted(() => {
   void resolveSession()
 })
 
-// A cold load of a session URL renders before the live window arrives; the
-// direct read above covers it, but once the snapshot lands it may be the first
-// sighting of a document that was still being created.
+// A cold load of a session URL renders before the live window arrives, and Today
+// routes here before the write is acknowledged. Either way the snapshot may be
+// the first sighting of the document, so re-resolve until something is resolved
+// — 'loading' counts, or a first miss would wait for a retry that never comes.
 watch(
-  () => sessionsStore.weekSessions,
+  () => [sessionsStore.weekSessions, sessionsStore.isLoaded] as const,
   () => {
-    if (phase.value === 'missing') void resolveSession()
+    if (phase.value === 'loading' || phase.value === 'missing') void resolveSession()
   },
 )
 

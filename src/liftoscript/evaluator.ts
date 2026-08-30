@@ -718,6 +718,14 @@ function buildScope(
     setVariationIndex: exerciseState.setVariationIndex,
     week: ctx.week,
     day: ctx.day,
+    // `dayInWeek` and `descriptionIndex` exist so a real Liftosaur program runs.
+    // runbo renders no descriptions, so the index is seeded, assignable and read
+    // by nothing — but leaving it out is worse than ignoring it: the parser
+    // accepts the name, so the script would reach the evaluator, throw at
+    // runtime, and the session would come back "unchanged" with no weight moved
+    // and nothing on screen to say why.
+    dayInWeek: ctx.day,
+    descriptionIndex: 1,
     rm1: estimate1RM(sessionLog, working, ctx),
     bodyweight: ctx.bodyweight ? asWeightValue(ctx.bodyweight) : weight(0, ctx.units),
   }

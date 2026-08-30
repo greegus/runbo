@@ -194,17 +194,24 @@ async function resolve(): Promise<void> {
   resolving.value = true
   notFound.value = false
 
-  // The live window covers [weekStart-7, weekStart+13], which is where a session
-  // started minutes ago always is; the fetch is for a cold load of a URL.
+  // The live window covers the dates a session started minutes ago falls in; the
+  // fetch is for a cold load of a URL.
   const local = sessionsStore.weekSessions.find((item) => item.id === props.id)
   const doc = local ?? (await loadSession(props.id))
 
-  resolving.value = false
-
   if (!doc) {
+    // Not "missing" — possibly "not readable yet". Today routes here the moment
+    // it has an id, without waiting for the server to acknowledge the write, so
+    // a first miss is the normal case rather than an error. Declaring it gone
+    // would throw away a session the athlete is standing in the gym to start.
+    if (!sessionsStore.isLoaded) return
+
+    resolving.value = false
     notFound.value = true
     return
   }
+
+  resolving.value = false
 
   if (doc.kind !== 'strength') {
     await router.replace({ name: 'cardio-session', params: { id: doc.id } })
@@ -406,6 +413,16 @@ function formatPrevious(record: NewRecord): string {
 // A cold load onto this URL renders before the profile snapshot lands; the
 // guard waits for auth, not for the document this screen reads.
 watch(() => props.id, resolve, { immediate: true })
+
+// The live snapshot is the other way the document can arrive. Re-resolving on it
+// is what turns the race above into a wait: the session appears the moment
+// Firestore answers, and only a genuinely absent id survives to `notFound`.
+watch(
+  () => [sessionsStore.weekSessions, sessionsStore.isLoaded] as const,
+  () => {
+    if (session.value === null) void resolve()
+  },
+)
 
 onMounted(() => document.addEventListener('visibilitychange', onVisibilityChange))
 

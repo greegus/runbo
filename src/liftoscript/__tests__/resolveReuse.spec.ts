@@ -192,3 +192,68 @@ t3: Bent Over Row / ...t3: Lat Pulldown[1]
     expect(serializeProgram(again.program)).toBe(text)
   })
 })
+
+describe('the variables a real program assigns to', () => {
+  /**
+   * The parser accepting a name is only half of supporting it. `descriptionIndex`
+   * reached the evaluator with no value, the script threw, and `evaluateSession`
+   * did what it does on a runtime failure: returned the state untouched. On
+   * screen that read "unchanged" — so every session on an imported program
+   * silently failed to move a weight or a stage, and nothing said why.
+   */
+  const withDescriptionIndex = `# Week 1
+## Day 1
+t1: Squat / 5x3+ / 6x2+ / 100kg / progress: custom(increase: 5kg) {~
+  if (descriptionIndex == 1) {
+    descriptionIndex = 2
+  }
+  if (completedReps >= reps) {
+    weights = weights[ns] + state.increase
+  } else {
+    setVariationIndex += 1
+  }
+~}
+`
+
+  const sets = (completed: number[]) =>
+    completed.map((reps, index) => ({
+      prescribedReps: 3,
+      isAmrap: index === completed.length - 1,
+      completedReps: reps,
+      weight: weight(100, 'kg'),
+    }))
+
+  it('runs a script that reads and writes descriptionIndex', () => {
+    const { program, diagnostics } = parse(withDescriptionIndex)
+    expect(diagnostics).toEqual([])
+
+    const state = { weights: [weight(100, 'kg')], setVariationIndex: 1, state: { increase: weight(5, 'kg') } }
+    const hit = evaluateSession(program, 'T1:Squat', state, sets([3, 3, 3, 3, 3]), ctx)
+
+    expect(hit.diagnostics).toEqual([])
+    expect(hit.nextState.weights[0]).toEqual({ value: 105, unit: 'kg' })
+  })
+
+  it('advances the stage on a miss rather than reporting nothing changed', () => {
+    const { program } = parse(withDescriptionIndex)
+    const state = { weights: [weight(100, 'kg')], setVariationIndex: 1, state: { increase: weight(5, 'kg') } }
+    const miss = evaluateSession(program, 'T1:Squat', state, sets([2, 3, 3, 3, 3]), ctx)
+
+    expect(miss.diagnostics).toEqual([])
+    expect(miss.nextState.setVariationIndex).toBe(2)
+  })
+
+  it('supplies dayInWeek, which the grammar also accepts', () => {
+    const { program, diagnostics } = parse(`# Week 1
+## Day 1
+t1: Squat / 5x3+ / 100kg / progress: custom() {~ if (dayInWeek > 0) { weights += 1kg } ~}
+`)
+    expect(diagnostics).toEqual([])
+
+    const state = { weights: [weight(100, 'kg')], setVariationIndex: 1, state: {} }
+    const result = evaluateSession(program, 'T1:Squat', state, sets([3]), ctx)
+
+    expect(result.diagnostics).toEqual([])
+    expect(result.nextState.weights[0]).toEqual({ value: 101, unit: 'kg' })
+  })
+})
