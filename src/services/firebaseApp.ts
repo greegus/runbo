@@ -42,7 +42,9 @@ export const db = initializeFirestore(firebaseApp, {
 // every other Firebase module imports — is what guarantees that ordering.
 if (import.meta.env.DEV && import.meta.env.VITE_USE_EMULATOR) {
   // DECISION: ports are hardcoded from `firebase.json`; a second source of
-  // truth in the env would only be a way for the two to disagree.
-  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
+  // truth in the env would only be a way for the two to disagree. Auth sits on
+  // 9098 rather than the 9099 default so runbo's emulator can run alongside
+  // another project's — change both places together or sign-in will hang.
+  connectAuthEmulator(auth, 'http://127.0.0.1:9098', { disableWarnings: true })
   connectFirestoreEmulator(db, '127.0.0.1', 8080)
 }
