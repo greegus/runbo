@@ -246,7 +246,14 @@ function useFallback(): void {
           <!-- Named with `aria-label`, not FormGroup's slot id: a `<label for>`
                cannot name the `role="radiogroup"` div this renders. -->
           <FormGroup v-if="row.tier !== 3" label="Stage">
-            <RadioButtonGroup v-model="row.stage" aria-label="Stage" class="min-h-[48px]" :options="STAGE_OPTIONS" />
+            <RadioButtonGroup
+              v-model="row.stage"
+              aria-label="Stage"
+              class="min-h-[48px]"
+              :options="STAGE_OPTIONS"
+              option-label="label"
+              option-value="value"
+            />
           </FormGroup>
         </div>
 

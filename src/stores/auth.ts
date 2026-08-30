@@ -19,7 +19,7 @@ import type { User } from 'firebase/auth'
 import { defineStore } from 'pinia'
 import { shallowRef } from 'vue'
 
-import { isAllowlisted } from '@/services/allowlistService'
+import { type AllowlistStatus, isAllowlisted } from '@/services/allowlistService'
 import { onAuthChanged, signInWithGoogle, signOutUser } from '@/services/firebaseService'
 import { useProfileStore } from '@/stores/profile'
 import { useSessionsStore } from '@/stores/sessions'
@@ -39,6 +39,13 @@ export const useAuthStore = defineStore('auth', () => {
   // the SDK a proxy of itself.
   const user = shallowRef<User | null>(null)
   const status = shallowRef<AuthStatus>('loading')
+
+  // Why the reason is kept rather than folded into `status`: "you are not on
+  // the list", "the list does not exist" and "the list could not be read" all
+  // block sign-in, but only the first is about the user. Telling someone to ask
+  // for access when the truth is a missing document or a dead connection sends
+  // them to the wrong person with the wrong question.
+  const accessStatus = shallowRef<AllowlistStatus | null>(null)
 
   let initPromise: Promise<void> | null = null
 
@@ -76,13 +83,17 @@ export const useAuthStore = defineStore('auth', () => {
       if (ticket !== sequence) return
 
       if (!check.allowed) {
-        // DECISION: a failed allowlist read ('unavailable') lands here too. The
-        // rules deny every other collection to a caller they cannot verify, so
-        // there is nothing else to show, and this is the one state that offers
-        // a way out (sign in with another account).
+        // Every failure to verify lands on 'notAllowlisted' — the rules deny
+        // every other collection to a caller they cannot verify, so there is
+        // nothing else to show, and this is the one state that offers a way out.
+        // `accessStatus` carries WHY, so the screen can stop blaming the user
+        // for a missing document or an unreachable database.
+        accessStatus.value = check.status
         status.value = 'notAllowlisted'
         return
       }
+
+      accessStatus.value = check.status
 
       await useProfileStore().bind(nextUser.uid, nextUser.email ?? '')
       if (ticket !== sequence) return
@@ -137,5 +148,5 @@ export const useAuthStore = defineStore('auth', () => {
     await signOutUser()
   }
 
-  return { user, status, init, signIn, signOut }
+  return { user, status, accessStatus, init, signIn, signOut }
 })

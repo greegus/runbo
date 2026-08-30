@@ -327,7 +327,15 @@ async function onNext(): Promise<void> {
 
             <FormGroup label="Next workout">
               <template #default="{ id }">
-                <Select :id="id" v-model="cursorValue" class="min-h-[48px]" type="number" :options="cursorOptions" />
+                <Select
+                  :id="id"
+                  v-model="cursorValue"
+                  class="min-h-[48px]"
+                  type="number"
+                  :options="cursorOptions"
+                  option-label="label"
+                  option-value="value"
+                />
               </template>
             </FormGroup>
 

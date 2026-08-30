@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { FirebaseError } from 'firebase/app'
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button, Icon, useSubmitAction } from 'vuiii'
 
@@ -8,6 +8,35 @@ import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+/**
+ * Three different things stop a sign-in here, and only one of them is about the
+ * person reading the screen. Saying "ask the owner to add you" when the
+ * allowlist document is missing, or when the database could not be reached,
+ * sends them to the wrong person with the wrong question — and it is exactly
+ * the kind of wrong-but-plausible message that costs an hour to see through.
+ */
+const accessTitle = computed(() => {
+  switch (authStore.accessStatus) {
+    case 'missingConfig':
+      return 'Access has not been set up yet.'
+    case 'unavailable':
+      return 'Access could not be checked.'
+    default:
+      return 'This account does not have access yet.'
+  }
+})
+
+const accessDetail = computed(() => {
+  switch (authStore.accessStatus) {
+    case 'missingConfig':
+      return 'The allowlist has not been created, so nobody can get in yet — this is a setup step, not a decision about you.'
+    case 'unavailable':
+      return 'The allowlist could not be read. Check your connection and try again; if it keeps failing, the database is unreachable.'
+    default:
+      return 'Ask the app owner to add this address to the allowlist, then sign in again.'
+  }
+})
 
 /**
  * A user who closes the popup gets no toast at all — the store resolves those
@@ -53,10 +82,10 @@ watch(
       <div class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm">
         <Icon name="alert" size="large" class="shrink-0 text-accent-600" />
         <div>
-          <p class="font-semibold text-ink-900">This account does not have access yet.</p>
+          <p class="font-semibold text-ink-900">{{ accessTitle }}</p>
           <p class="mt-1 text-ink-500">
             Signed in as <span class="font-medium text-ink-900">{{ authStore.user?.email }}</span
-            >. Ask the app owner to add this address to the allowlist, then sign in again.
+            >. {{ accessDetail }}
           </p>
         </div>
       </div>

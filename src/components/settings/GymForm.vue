@@ -143,6 +143,8 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
       <RadioButtonGroup
         :model-value="modelValue.units"
         :options="UNIT_OPTIONS"
+        option-label="label"
+        option-value="value"
         size="large"
         class="min-h-[48px]"
         @update:model-value="setUnits"

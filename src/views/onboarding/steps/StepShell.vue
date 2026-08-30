@@ -12,6 +12,8 @@ const props = withDefaults(
     description?: string
     nextLabel?: string
     nextDisabled?: boolean
+    /** Why the step cannot be left. Shown whenever `nextDisabled` is set. */
+    nextBlockedReason?: string | null
     busy?: boolean
     error?: string | null
     canSkip?: boolean
@@ -21,6 +23,7 @@ const props = withDefaults(
     description: '',
     nextLabel: 'Continue',
     nextDisabled: false,
+    nextBlockedReason: null,
     busy: false,
     error: null,
     canSkip: true,
@@ -82,6 +85,17 @@ const percent = computed(() => Math.round((props.step / LAST_STEP) * 100))
            none` — the button stays tabbable and Enter still fires @click, so the
            guard has to be on the handler or an invalid step could be committed
            from the keyboard. -->
+      <!-- A disabled Continue with nothing next to it is a dead end: the athlete
+           can see they are stuck and not what to change. Whatever disables the
+           step has to say why. -->
+      <p
+        v-if="nextDisabled && nextBlockedReason"
+        role="status"
+        class="mb-3 rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-700"
+      >
+        {{ nextBlockedReason }}
+      </p>
+
       <Button
         :label="nextLabel"
         size="large"

@@ -164,6 +164,8 @@ function plateHint(draft: LiftSeedDraft): string {
               class="min-h-[48px]"
               :model-value="row.draft.stage"
               :options="STAGE_OPTIONS"
+              option-label="label"
+              option-value="value"
               @update:model-value="patch(row.index, { stage: $event as number })"
             />
           </FormGroup>

@@ -250,6 +250,8 @@ watch(
                 class="min-h-[48px]"
                 :model-value="row.unit"
                 :options="UNIT_OPTIONS"
+                option-label="label"
+                option-value="value"
                 @update:model-value="patch(row.key, { unit: $event as 'kg' | 'lb' })"
               />
             </template>
@@ -268,6 +270,8 @@ watch(
                 type="number"
                 :model-value="row.stage"
                 :options="stageOptions(row)"
+                option-label="label"
+                option-value="value"
                 @update:model-value="patch(row.key, { stage: $event as number })"
               />
             </template>

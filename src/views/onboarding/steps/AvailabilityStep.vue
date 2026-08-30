@@ -30,6 +30,7 @@ const emit = defineEmits<{
 const todayIso = toIso(new Date())
 
 const isValid = ref(true)
+const blockedReason = ref<string | null>(null)
 
 function update(availability: Availability): void {
   emit('update:modelValue', { ...props.modelValue, availability })
@@ -49,6 +50,7 @@ const previewProfile = computed(() => props.modelValue)
     :busy="busy"
     :error="error"
     :next-disabled="!isValid"
+    :next-blocked-reason="blockedReason"
     @next="$emit('next')"
     @back="$emit('back')"
     @skip="$emit('skip')"
@@ -57,6 +59,7 @@ const previewProfile = computed(() => props.modelValue)
       :model-value="modelValue.availability"
       @update:model-value="update"
       @update:valid="isValid = $event"
+      @update:blocked-reason="blockedReason = $event"
     />
 
     <template #aside>

@@ -13,6 +13,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: Availability]
   'update:valid': [value: boolean]
+  'update:blockedReason': [value: string | null]
 }>()
 
 const dayOptions = WEEKDAY_LABELS.map((label, index) => ({ value: index, label }))
@@ -39,23 +40,48 @@ const budget = computed(() => weeklyTrackBudget(props.modelValue, 7))
 
 const longSessionOutsidePlan = computed(() => !resolvedDays.value.includes(props.modelValue.longSessionDay))
 
-const isValid = computed(() => {
+/**
+ * Null when the step may be left. `patch` coerces every value this form writes,
+ * so this can only fire on a profile that arrived malformed from somewhere else
+ * — and then it says which field, because a mute disabled button is a dead end.
+ */
+const blockedReason = computed<string | null>(() => {
   const { daysPerWeek, longSessionDay } = props.modelValue
 
-  return (
-    Number.isInteger(daysPerWeek) &&
-    daysPerWeek >= 1 &&
-    daysPerWeek <= 7 &&
-    Number.isInteger(longSessionDay) &&
-    longSessionDay >= 0 &&
-    longSessionDay <= 6
-  )
+  if (!Number.isInteger(daysPerWeek) || daysPerWeek < 1 || daysPerWeek > 7) {
+    return 'Pick how many days a week you can train.'
+  }
+  if (!Number.isInteger(longSessionDay) || longSessionDay < 0 || longSessionDay > 6) {
+    return 'Pick a day for your long session.'
+  }
+  return null
 })
+
+const isValid = computed(() => blockedReason.value === null)
+
+/**
+ * Coerced on the way in, not merely validated on the way out. These values come
+ * from our own controls, so anything that is not a whole number is a bug in the
+ * form — and blocking the athlete behind a disabled button because of it is the
+ * worst way to hand that bug to them.
+ */
+function whole(value: unknown, fallback: number, min: number, max: number): number {
+  const parsed = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.min(Math.max(Math.round(parsed), min), max)
+}
 
 // Every emit rebuilds the whole slice: `updateDoc` replaces nested objects
 // wholesale, so a patch carrying only the edited field would drop the others.
 function patch(changes: Partial<Availability>): void {
-  emit('update:modelValue', { ...props.modelValue, ...changes })
+  const next = { ...props.modelValue, ...changes }
+
+  emit('update:modelValue', {
+    ...next,
+    daysPerWeek: whole(next.daysPerWeek, 5, 1, 7),
+    longSessionDay: whole(next.longSessionDay, 5, 0, 6),
+    preferredDays: (next.preferredDays ?? []).map((day) => whole(day, 0, 0, 6)),
+  })
 }
 
 function toggleDay(day: number): void {
@@ -71,6 +97,7 @@ function labelsOf(days: number[]): string {
 }
 
 watch(isValid, (value) => emit('update:valid', value), { immediate: true })
+watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate: true })
 </script>
 
 <template>
@@ -85,6 +112,8 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
         aria-label="Days per week"
         :model-value="modelValue.daysPerWeek"
         :options="daysPerWeekOptions"
+        option-label="label"
+        option-value="value"
         size="large"
         class="min-h-[48px]"
         @update:model-value="(value: number) => patch({ daysPerWeek: value })"
@@ -134,6 +163,8 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
           :id="id"
           :model-value="modelValue.longSessionDay"
           :options="dayOptions"
+          option-label="label"
+          option-value="value"
           type="number"
           size="large"
           class="min-h-[48px]"
