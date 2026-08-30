@@ -151,6 +151,15 @@ export const useSessionsStore = defineStore('sessions', () => {
   // shallowRef: both lists are replaced wholesale by a snapshot or a page.
   const weekSessions = shallowRef<Session[]>([])
   const history = shallowRef<Session[]>([])
+  /**
+   * Every session the athlete has, oldest first, `done` and `active` alike.
+   * Deliberately separate from `history`: HistoryView pages that list at its own
+   * pace, and Progress paging it out from under the athlete mid-scroll would be
+   * two screens fighting over one array.
+   */
+  const allSessions = shallowRef<Session[]>([])
+  const isAllLoaded = shallowRef(false)
+  const isLoadingAll = shallowRef(false)
   const hasMoreHistory = shallowRef(false)
   const isLoadingHistory = shallowRef(false)
   const error = shallowRef<FirestoreError | null>(null)
@@ -167,16 +176,27 @@ export const useSessionsStore = defineStore('sessions', () => {
   let unsubscribe: (() => void) | null = null
   let boundUid: string | null = null
   let historyCursor: SessionCursor | null = null
+  /**
+   * The in-flight exhaustive page. Progress and the JSON export both ask for
+   * every session, and without this the collection would be paged twice over.
+   */
+  let allHistoryRequest: Promise<Session[]> | null = null
+  /** Bumped by every invalidation and every new run, so a stale run can tell. */
+  let allHistoryToken = 0
 
   function reset(): void {
     unsubscribe?.()
     unsubscribe = null
     boundUid = null
     historyCursor = null
+    allHistoryRequest = null
     weekSessions.value = []
     history.value = []
+    allSessions.value = []
     hasMoreHistory.value = false
     isLoaded.value = false
+    isAllLoaded.value = false
+    isLoadingAll.value = false
     error.value = null
   }
 
@@ -228,6 +248,83 @@ export const useSessionsStore = defineStore('sessions', () => {
     } finally {
       isLoadingHistory.value = false
     }
+  }
+
+  /**
+   * Pages `listSessionHistory` to exhaustion. Idempotent: a second caller while
+   * one run is in flight gets the same promise, and a resolved run is returned
+   * from memory unless `force` says the athlete has changed something.
+   */
+  /**
+   * Drops the memoised full history. Every write that changes what a full read
+   * would return has to call this: the memo is keyed on nothing but a boolean,
+   * so a finished or deleted session would otherwise stay in the charts and, far
+   * worse, in the export the athlete keeps as their backup.
+   */
+  function invalidateAllHistory(): void {
+    allHistoryToken += 1
+    allHistoryRequest = null
+    isAllLoaded.value = false
+    allSessions.value = []
+  }
+
+  async function loadAllHistory(options?: { force?: boolean }): Promise<Session[]> {
+    const profile = requireProfile()
+
+    if (options?.force) {
+      invalidateAllHistory()
+    } else {
+      if (isAllLoaded.value) return allSessions.value
+      if (allHistoryRequest) return allHistoryRequest
+    }
+
+    // Captured at entry and re-checked before publishing: this runs for as long
+    // as the athlete's whole history takes to page, and a sign-out or an account
+    // switch inside that window would otherwise land one account's sessions in
+    // the next account's charts and export. The live listener already guards
+    // this way.
+    const uid = profile.id
+
+    const token = (allHistoryToken += 1)
+
+    isLoadingAll.value = true
+    const request = (async () => {
+      try {
+        const collected: Session[] = []
+        let cursor: SessionCursor | null = null
+
+        for (;;) {
+          const page = await listSessionHistory(profile.id, HISTORY_PAGE_SIZE, cursor)
+          collected.push(...page.sessions)
+          cursor = page.cursor
+          if (!page.hasMore || cursor === null) break
+        }
+
+        // The query is newest first; every consumer here reads a timeline.
+        const ordered = collected.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+
+        // Stale either way: a different account, or a write that invalidated
+        // this run while it was paging. Return what was read, publish nothing.
+        if (boundUid !== uid || allHistoryToken !== token) return ordered
+
+        allSessions.value = ordered
+        isAllLoaded.value = true
+
+        return ordered
+      } finally {
+        // Only if this run is still the current one. A `force` call that started
+        // while this was in flight owns the handle now, and clearing it here
+        // would strand every caller sharing that newer request.
+        if (allHistoryToken === token) {
+          isLoadingAll.value = false
+          allHistoryRequest = null
+        }
+      }
+    })()
+
+    allHistoryRequest = request
+
+    return request
   }
 
   function resetHistory(): void {
@@ -288,6 +385,9 @@ export const useSessionsStore = defineStore('sessions', () => {
     }
 
     await batch.commit()
+    // The memoised full history is what the charts and the export read; a
+    // finished session that is not in it is a backup missing a workout.
+    invalidateAllHistory()
 
     return finished
   }
@@ -306,6 +406,8 @@ export const useSessionsStore = defineStore('sessions', () => {
     if (!latest.stateSnapshot) {
       // A cardio session moves no program state; nothing to restore.
       await deleteSession(latest.id)
+      invalidateAllHistory()
+
       return latest
     }
 
@@ -323,6 +425,9 @@ export const useSessionsStore = defineStore('sessions', () => {
     })
 
     await batch.commit()
+    // Without this the export would still carry the session the athlete just
+    // destroyed, and its count would disagree with its contents.
+    invalidateAllHistory()
 
     return latest
   }
@@ -331,12 +436,16 @@ export const useSessionsStore = defineStore('sessions', () => {
     weekSessions,
     isLoaded,
     history,
+    allSessions,
+    isAllLoaded,
+    isLoadingAll,
     hasMoreHistory,
     isLoadingHistory,
     error,
     bind,
     reset,
     loadMoreHistory,
+    loadAllHistory,
     resetHistory,
     startSession,
     finishSession,

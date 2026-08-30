@@ -4,6 +4,7 @@ import { Button, Card, FormGroup, Icon, Input, useSubmitAction } from 'vuiii'
 
 import AvailabilityForm from '@/components/settings/AvailabilityForm.vue'
 import CardioForm from '@/components/settings/CardioForm.vue'
+import ExportDataCard from '@/components/settings/ExportDataCard.vue'
 import GymForm from '@/components/settings/GymForm.vue'
 import ZonesForm from '@/components/settings/ZonesForm.vue'
 import type { Availability, CardioTrack, CardioZones, GymSettings, ZonesDraft } from '@/onboarding/types'
@@ -544,7 +545,7 @@ function setComebackGap(value: unknown): void {
       </Card>
 
       <Card title="Export your data">
-        <p class="text-sm text-ink-500">Downloading everything as JSON arrives in a later phase.</p>
+        <ExportDataCard />
       </Card>
 
       <Button
