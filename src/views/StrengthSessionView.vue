@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
-import { Button, Icon, IconButton, useDialogStack } from 'vuiii'
+import { Button, Icon, IconButton, TabsNav, useDialogStack } from 'vuiii'
 
 import DiagnosticsList from '@/components/DiagnosticsList.vue'
 import ReadinessSheet from '@/components/ReadinessSheet.vue'
@@ -121,6 +121,67 @@ const dayLabel = computed(() => {
 const isDone = computed(() => session.value?.status === 'done' || finished.value !== null)
 
 const summarySession = computed(() => finished.value ?? (session.value?.status === 'done' ? session.value : null))
+
+/**
+ * One lift at a time. Twelve `TierBlock`s stacked made the screen a scroll hunt
+ * between sets — the thing you need next is never the thing on screen. The strip
+ * carries each lift's progress so "where am I" is answered without opening it.
+ */
+const activeKey = ref<string | null>(null)
+
+const tabs = computed(() =>
+  (plan.value?.exercises ?? []).map((exercise, index) => {
+    const sets = logged.value[index] ?? []
+    const done = loggedCount(sets)
+
+    return {
+      key: exercise.key,
+      label: `${exercise.tier ? `T${exercise.tier}` : ''} ${exercise.name} · ${done}/${sets.length}`.trim(),
+    }
+  }),
+)
+
+const activeIndex = computed(() => {
+  const index = (plan.value?.exercises ?? []).findIndex((exercise) => exercise.key === activeKey.value)
+  return index >= 0 ? index : 0
+})
+
+/**
+ * Falls back to the first lift rather than being seeded: the plan is rebuilt
+ * from the profile and is not available when the document is hydrated, so a
+ * seeded key would either be null or wrong on a cold load of a session URL.
+ */
+const selectedTab = computed<string | undefined>({
+  get: () => tabs.value[activeIndex.value]?.key,
+  set: (key) => {
+    activeKey.value = key ?? null
+  },
+})
+
+const activeExercise = computed(() => plan.value?.exercises[activeIndex.value] ?? null)
+
+/** The lift after this one, so a finished block offers the obvious next move. */
+const nextExercise = computed(() => plan.value?.exercises[activeIndex.value + 1] ?? null)
+
+function goToNext(): void {
+  const next = nextExercise.value
+  if (next) activeKey.value = next.key
+}
+
+/**
+ * Follow the selection with the strip. Clicking a tab scrolls it into view by
+ * itself because the browser follows focus; changing it from "Next" moves no
+ * focus, so the athlete would advance to a lift whose tab is off screen.
+ */
+watch(selectedTab, (key) => {
+  if (!key) return
+
+  void nextTick(() => {
+    document
+      .getElementById(`exercise-tab-${key}`)
+      ?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' })
+  })
+})
 
 const totalSets = computed(() => logged.value.reduce((count, sets) => count + sets.length, 0))
 const doneSets = computed(() => logged.value.reduce((count, sets) => count + loggedCount(sets), 0))
@@ -543,20 +604,45 @@ onBeforeRouteLeave(() => {
       </div>
 
       <!-- The live session. -->
-      <div v-else-if="plan" class="flex-1 px-4 py-4">
-        <div class="flex flex-col gap-4">
+      <div v-else-if="plan" class="flex-1">
+        <!-- Sticky: between sets the athlete looks up to find where they are,
+             and a strip that has scrolled away answers nothing. It scrolls
+             horizontally on its own so a twelve-lift day does not wrap into a
+             wall of chips. -->
+        <div class="sticky top-0 z-10 border-b border-ink-200 bg-white">
+          <TabsNav
+            v-model="selectedTab"
+            :tabs="tabs"
+            id-base="exercise"
+            class="overflow-x-auto [&_[role=tab]]:min-h-[48px]"
+            aria-label="Exercises in this session"
+          />
+        </div>
+
+        <div class="px-4 py-4">
           <TierBlock
-            v-for="(exercise, index) in plan.exercises"
-            :key="exercise.key"
-            :exercise="exercise"
-            :model-value="logged[index] ?? []"
+            v-if="activeExercise"
+            :key="activeExercise.key"
+            :exercise="activeExercise"
+            :model-value="logged[activeIndex] ?? []"
             :settings="profile.settings"
-            :collapsed="collapsed[index] ?? false"
+            :collapsed="collapsed[activeIndex] ?? false"
             :busy="busy"
-            @update:model-value="setExerciseSets(index, $event)"
-            @update:collapsed="collapsed[index] = $event"
-            @update:weight="setWeight(index, $event)"
-            @first-log="onFirstLog(index, $event)"
+            @update:model-value="setExerciseSets(activeIndex, $event)"
+            @update:collapsed="collapsed[activeIndex] = $event"
+            @update:weight="setWeight(activeIndex, $event)"
+            @first-log="onFirstLog(activeIndex, $event)"
+          />
+
+          <!-- The obvious next move once a lift is done, so finishing one does
+               not send the athlete back to the strip to hunt for the next. -->
+          <Button
+            v-if="nextExercise"
+            class="mt-4 min-h-[48px]"
+            variant="outlined"
+            block
+            :label="`Next: ${nextExercise.tier ? `T${nextExercise.tier} ` : ''}${nextExercise.name}`"
+            @click="goToNext()"
           />
         </div>
 
