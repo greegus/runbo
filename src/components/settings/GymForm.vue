@@ -210,7 +210,7 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
               step="0.25"
               min="0"
               size="large"
-              class="min-h-[48px] w-24 text-lg"
+              class="min-h-[48px] w-28 text-lg"
               :aria-label="`Plate weight in ${modelValue.units}`"
               :aria-describedby="rowError(index) ? `plate-error-${index}` : undefined"
               :invalid="rowError(index) !== null"
@@ -229,21 +229,16 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
                 :title="`Fewer ${plate.weight} ${modelValue.units} pairs`"
                 @click="stepPlateCount(index, -1)"
               />
-              <Input
-                :model-value="plate.count"
-                type="number"
-                value-as-number
-                inputmode="numeric"
-                step="1"
-                min="1"
-                size="large"
-                class="min-h-[48px] w-16 text-center text-lg"
+              <!-- Text, not an input. A `size="large"` field carries 27px of
+                   padding a side, so inside the 64px this row can spare there
+                   were 8px left for the digits and the count rendered
+                   invisible. It is 1-4 pairs with a button on either side —
+                   nothing here needs a keyboard. -->
+              <output
+                class="w-12 text-center text-lg font-semibold tabular-nums text-ink-900"
                 :aria-label="`Pairs of ${plate.weight} ${modelValue.units} plates`"
-                :aria-describedby="rowError(index) ? `plate-error-${index}` : undefined"
-                :invalid="rowError(index) !== null"
-                @focus="selectAll"
-                @update:model-value="setPlateCount(index, $event)"
-              />
+                >{{ plate.count }}</output
+              >
               <IconButton
                 icon="plus"
                 variant="outlined"
