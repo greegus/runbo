@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { IconButton } from 'vuiii'
+import { Icon } from 'vuiii'
 
 import { format } from '@/liftoscript/weight'
 import { resetSet, setAmrapReps, skipSet, startsRest, tapSet } from '@/session/setCycle'
@@ -147,32 +147,51 @@ function onStep(delta: number): void {
       v-else
       class="rounded-xl border-2 px-4 py-3"
       :class="[
-        set.phase === 'done' ? 'border-accent-600 bg-accent-50' : '',
+        set.phase === 'done' ? 'border-accent-600 bg-accent-600 text-white' : '',
         set.phase === 'untouched' ? 'border-ink-300 bg-white' : '',
         set.phase === 'skipped' ? 'border-dashed border-ink-300 bg-ink-50 text-ink-400' : '',
         disabled ? 'opacity-50' : '',
       ]"
     >
       <div class="flex flex-wrap items-baseline gap-x-2 text-sm">
-        <span class="font-semibold text-ink-500">Set {{ setNumber }}</span>
-        <span class="font-semibold text-ink-900 tabular-nums">{{ repTarget }} reps</span>
-        <span class="text-ink-600 tabular-nums">{{ weightLabel }}</span>
-        <span v-if="set.label" class="text-ink-500">{{ set.label }}</span>
+        <span class="font-semibold" :class="set.phase === 'done' ? 'text-white' : 'text-ink-500'">
+          Set {{ setNumber }}
+        </span>
+        <span class="font-semibold tabular-nums" :class="set.phase === 'done' ? 'text-white' : 'text-ink-900'">
+          {{ repTarget }} reps
+        </span>
+        <span class="tabular-nums" :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-600'">
+          {{ weightLabel }}
+        </span>
+        <span v-if="set.label" :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-500'">
+          {{ set.label }}
+        </span>
       </div>
 
-      <PlateHint v-if="plateSettings" :weight="set.weight" :settings="plateSettings" class="mt-0.5" />
+      <PlateHint
+        v-if="plateSettings"
+        :weight="set.weight"
+        :settings="plateSettings"
+        class="mt-0.5"
+        :class="set.phase === 'done' ? 'text-accent-100!' : ''"
+      />
 
       <div class="mt-3 flex items-center justify-between gap-3">
-        <IconButton
-          icon="minus"
-          variant="outlined"
-          size="large"
-          class="min-h-[48px] min-w-[48px]"
-          aria-label="One rep fewer"
+        <button
+          type="button"
+          class="flex min-h-[48px] min-w-[48px] items-center justify-center rounded-lg border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+          :class="
+            set.phase === 'done'
+              ? 'border-white/50 text-white focus-visible:outline-white'
+              : 'border-ink-300 text-ink-700 focus-visible:outline-accent-600'
+          "
           :disabled="disabled"
           :aria-disabled="disabled"
+          aria-label="One rep fewer"
           @click="onStep(-1)"
-        />
+        >
+          <Icon name="minus" size="large" />
+        </button>
 
         <!-- Tapping the numeral confirms the set at the prescription; once
              confirmed it is a no-op, so a stray tap cannot destroy a typed number. -->
@@ -187,33 +206,39 @@ function onStep(delta: number): void {
           <span
             class="text-5xl leading-none font-bold tabular-nums"
             :class="[
-              set.phase === 'done' ? 'text-accent-600' : 'text-ink-300',
+              set.phase === 'done' ? 'text-white' : 'text-ink-300',
               set.phase === 'skipped' ? 'text-ink-300 line-through' : '',
             ]"
           >
             {{ set.phase === 'skipped' ? '—' : amrapReps }}
           </span>
-          <span class="mt-1 text-xs uppercase" :class="set.phase === 'done' ? 'text-accent-700' : 'text-ink-500'">
+          <span class="mt-1 text-xs uppercase" :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-500'">
             {{ set.phase === 'done' ? 'reps done' : set.phase === 'skipped' ? 'skipped' : 'tap to log' }}
           </span>
         </button>
 
-        <IconButton
-          icon="plus"
-          variant="outlined"
-          size="large"
-          class="min-h-[48px] min-w-[48px]"
-          aria-label="One rep more"
+        <button
+          type="button"
+          class="flex min-h-[48px] min-w-[48px] items-center justify-center rounded-lg border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+          :class="
+            set.phase === 'done'
+              ? 'border-white/50 text-white focus-visible:outline-white'
+              : 'border-ink-300 text-ink-700 focus-visible:outline-accent-600'
+          "
           :disabled="disabled"
           :aria-disabled="disabled"
+          aria-label="One rep more"
           @click="onStep(1)"
-        />
+        >
+          <Icon name="plus" size="large" />
+        </button>
       </div>
 
       <div class="mt-2 flex justify-end gap-4">
         <button
           type="button"
-          class="min-h-[48px] px-2 text-sm font-medium text-ink-600 underline"
+          class="min-h-[48px] px-2 text-sm font-medium underline"
+          :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-600'"
           :disabled="disabled"
           :aria-disabled="disabled"
           @click="commit(skipSet(set))"
@@ -222,7 +247,8 @@ function onStep(delta: number): void {
         </button>
         <button
           type="button"
-          class="min-h-[48px] px-2 text-sm font-medium text-ink-600 underline"
+          class="min-h-[48px] px-2 text-sm font-medium underline"
+          :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-600'"
           :disabled="disabled"
           :aria-disabled="disabled"
           @click="commit(resetSet(set))"
