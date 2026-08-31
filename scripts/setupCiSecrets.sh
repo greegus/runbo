@@ -115,18 +115,18 @@ echo
 echo "Secrets now on $REPO:"
 gh secret list --repo "$REPO"
 
-cat <<'NOTE'
+cat <<NOTE
 
 Done. Two things this script cannot do for you, both in the Firebase console:
 
   1. Enable Firestore — the API is off on this project, so a deploy of rules and
      indexes will fail until a database exists:
-       https://console.firebase.google.com/project/PROJECT/firestore
+       https://console.firebase.google.com/project/$PROJECT/firestore
   2. Enable Google sign-in, and add your production domain to the authorised
      domains list:
-       https://console.firebase.google.com/project/PROJECT/authentication/providers
+       https://console.firebase.google.com/project/$PROJECT/authentication/providers
 
 And create the allowlist document by hand once Firestore exists — collection
-`config`, document `allowlist`, field `emails` (array), your address lowercase.
+"config", document "allowlist", field "emails" (array), your address lowercase.
 Without it every account, including yours, lands on the ask-for-access screen.
 NOTE
