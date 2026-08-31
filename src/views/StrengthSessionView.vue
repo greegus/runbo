@@ -22,6 +22,7 @@ import { useSessionsStore } from '@/stores/sessions'
 import type { ReadinessInput } from '@/training/readiness'
 import { detectNewRecords, type NewRecord } from '@/training/stats'
 import type { Session, WeightValue } from '@/types'
+import { playRestAlert, primeRestAlert } from '@/utils/restAlert'
 
 /**
  * The strength session screen.
@@ -303,6 +304,10 @@ function setWeight(index: number, weight: WeightValue): void {
 function onFirstLog(exerciseIndex: number, payload: { setIndex: number; restSec: number }): void {
   const exercise = plan.value?.exercises[exerciseIndex]
 
+  // Synchronously inside the tap, because this is the last gesture before the
+  // clock runs out and mobile audio will not start without one.
+  primeRestAlert()
+
   clearRestLinger()
   restSeconds.value = payload.restSec
   restLabel.value = exercise ? `${exercise.tier ? `T${exercise.tier} ` : ''}${exercise.name} rest` : 'Rest'
@@ -329,6 +334,7 @@ function clearRestLinger(): void {
 }
 
 function onRestDone(): void {
+  playRestAlert()
   clearRestLinger()
   restLingerTimer = setTimeout(() => {
     restLingerTimer = undefined
