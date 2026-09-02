@@ -33,6 +33,14 @@ const props = withDefaults(
     explanation?: string | null
     busy?: boolean
     error?: string | null
+    /** What the card calls its day: 'Today', 'Yesterday', 'Mon, 24 Aug'. */
+    dayLabel?: string
+    /**
+     * Whether the day is behind, here or ahead. It only changes the copy: a
+     * backfilled day is logged rather than started, and "earlier today" is a
+     * lie about last Monday.
+     */
+    dayTense?: 'past' | 'today' | 'future'
   }>(),
   {
     isDeloadWeek: false,
@@ -46,6 +54,8 @@ const props = withDefaults(
     explanation: null,
     busy: false,
     error: null,
+    dayLabel: 'Today',
+    dayTense: 'today',
   },
 )
 
@@ -73,7 +83,14 @@ const showClaim = computed(() => props.isRestDay && props.catchUp !== null && pr
  */
 const isDone = computed(() => props.doneSession !== null && props.activeSession === null)
 
-const primaryLabel = computed(() => (props.activeSession ? 'Resume session' : 'Start session'))
+const isToday = computed(() => props.dayTense === 'today')
+
+const primaryLabel = computed(() => {
+  if (props.activeSession) return 'Resume session'
+
+  // A past day is not started, it is written down.
+  return props.dayTense === 'past' ? 'Log session' : 'Start session'
+})
 
 /** The catch-up line is the domain's own sentence, never assembled here. */
 const catchUpCardio = computed(() =>
@@ -106,7 +123,7 @@ function swap(): void {
 <template>
   <section class="flex flex-col gap-4 rounded-xl border border-ink-200 bg-white p-4" aria-labelledby="today-card-title">
     <header class="flex flex-wrap items-center gap-2">
-      <h2 id="today-card-title" class="text-sm font-medium text-ink-500">Today</h2>
+      <h2 id="today-card-title" class="text-sm font-medium text-ink-500">{{ props.dayLabel }}</h2>
 
       <!-- A lighter week is planned, not a mistake. -->
       <span
@@ -133,6 +150,7 @@ function swap(): void {
       v-else-if="props.item?.kind === 'cardio'"
       :prescription="props.item.prescription"
       :zones="props.zones"
+      :label="props.dayLabel"
     />
 
     <!-- Rest -->
@@ -147,13 +165,15 @@ function swap(): void {
     <p v-if="props.explanation" class="text-sm text-ink-500">{{ props.explanation }}</p>
 
     <p v-if="props.activeSession" role="status" class="text-sm text-ink-700">
-      You have a session in progress from earlier today.
+      {{ isToday ? 'You have a session in progress from earlier today.' : 'This day has a session in progress.' }}
     </p>
 
     <!-- Already trained today: no start affordance at all, or the day gets
          logged twice and the progression advances twice. -->
     <template v-if="isDone">
-      <p role="status" class="text-sm text-ink-700">Session done. Today is logged.</p>
+      <p role="status" class="text-sm text-ink-700">
+        {{ isToday ? 'Session done. Today is logged.' : 'Session done. This day is logged.' }}
+      </p>
       <router-link
         :to="{ name: 'history' }"
         class="min-h-[48px] w-full rounded-xl border border-ink-300 px-4 py-3 text-center text-base font-semibold text-ink-700"

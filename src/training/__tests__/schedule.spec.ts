@@ -2,7 +2,7 @@ import type { CardioPrescription, Profile, Session } from '@/types'
 import { addDays } from '@/utils/date'
 
 import { GZCLP_PROGRAM_SOURCE } from '../gzclp'
-import { cardioOf, planWeek, resolveToday } from '../schedule'
+import { cardioOf, frontierFor, planWeek, resolveDay, resolveToday } from '../schedule'
 
 const MON = '2026-08-24'
 const TUE = '2026-08-25'
@@ -295,5 +295,93 @@ describe('resolveToday — after a long gap', () => {
 
   it('stays quiet while the gap is shorter than the profile threshold', () => {
     expect(resolveToday(profile(), [strength(addDays(MON, -3), 'A1')], MON).comebackProposal).toBeNull()
+  })
+})
+
+describe('frontierFor', () => {
+  it('replays a past day behind its own frontier and plans today and the future as of today', () => {
+    expect(frontierFor(addDays(MON, -2), MON)).toBe(addDays(MON, -2))
+    expect(frontierFor(MON, MON)).toBe(MON)
+    expect(frontierFor(addDays(MON, 3), MON)).toBe(MON)
+  })
+})
+
+describe('resolveDay', () => {
+  it('is resolveToday when the day is today', () => {
+    expect(resolveDay(profile(), [], MON, MON)).toEqual(resolveToday(profile(), [], MON))
+  })
+
+  it('offers a missed past day the rotation day that was outstanding then', () => {
+    // Nothing logged by Friday: Monday and Wednesday were both A1 when they came.
+    const friday = addDays(MON, 4)
+
+    expect(resolveDay(profile(), [], MON, friday).item).toEqual({ kind: 'strength', programDay: 'A1' })
+    expect(resolveDay(profile(), [], addDays(MON, 2), friday).item).toEqual({ kind: 'strength', programDay: 'A1' })
+  })
+
+  it('does not roll skipped days forward onto a future day', () => {
+    const wednesday = addDays(MON, 2)
+    const planned = planWeek(profile(), [], MON).week.days.find((day) => day.date === wednesday)?.planned
+
+    expect(resolveDay(profile(), [], wednesday, MON).item).toEqual(planned)
+  })
+
+  it('measures the comeback and the gap to today, whichever day is asked about', () => {
+    const lastSession = addDays(MON, -20)
+    const sessions = [strength(lastSession, 'A1')]
+
+    const today = resolveDay(profile(), sessions, MON, MON)
+    const yesterday = resolveDay(profile(), sessions, addDays(MON, -1), MON)
+
+    expect(yesterday.daysSinceLastSession).toBe(today.daysSinceLastSession)
+    expect(yesterday.comebackProposal).toEqual(today.comebackProposal)
+  })
+})
+
+describe('planWeek — a later week behind a frontier', () => {
+  const NEXT_MON = addDays(MON, 7)
+  const ROTATION = ['A1', 'B1', 'A2', 'B2']
+
+  function firstStrengthDay(week: ReturnType<typeof planWeek>['week']): string | undefined {
+    const day = week.days.find((entry) => entry.planned?.kind === 'strength')
+    return day?.planned?.kind === 'strength' ? day.planned.programDay : undefined
+  }
+
+  it('projects the rotation cursor across the strength days still to come', () => {
+    const thisWeek = planWeek(profile(), [], MON, MON).week
+    const toCome = thisWeek.days.filter((day) => day.planned?.kind === 'strength').length
+    expect(toCome).toBeGreaterThan(0)
+
+    const projected = planWeek(profile(), [], NEXT_MON, MON)
+
+    expect(projected.input.rotationCursor).toBe(toCome % ROTATION.length)
+    expect(firstStrengthDay(projected.week)).toBe(ROTATION[toCome % ROTATION.length])
+  })
+
+  it('composes straight off the stored cursor when there is no frontier', () => {
+    expect(planWeek(profile(), [], NEXT_MON).input.rotationCursor).toBe(0)
+    expect(firstStrengthDay(planWeek(profile(), [], NEXT_MON).week)).toBe('A1')
+  })
+
+  it('counts from the frontier, not from the start of its week', () => {
+    // Behind a Thursday frontier only Friday is still to come this week.
+    expect(planWeek(profile(), [], NEXT_MON, THU).input.rotationCursor).toBe(1)
+  })
+
+  it('does not count a strength day that is already logged — the stored cursor already carries it', () => {
+    const base = profile()
+    const advanced = { ...base, strengthTrack: { ...base.strengthTrack, rotationCursor: 1 } }
+    // Monday A1 is done; Wednesday and Friday are still to come.
+    const projected = planWeek(advanced, [strength(MON, 'A1')], NEXT_MON, addDays(MON, 1))
+
+    expect(projected.input.rotationCursor).toBe(3)
+    expect(firstStrengthDay(projected.week)).toBe('B2')
+  })
+
+  it('leaves the anchor week itself alone', () => {
+    const { input } = planWeek(profile(), [], addDays(MON, 3), MON)
+
+    expect(input.rotationCursor).toBe(0)
+    expect(input.weekStart).toBe(MON)
   })
 })

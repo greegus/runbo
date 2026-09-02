@@ -151,6 +151,54 @@ function detailOf(session: Session | null): string | null {
 }
 
 /**
+ * One day of the strip: what was planned on it, cross-referenced with what was
+ * logged. Exported because the day picker builds its rows from the same
+ * function — a day must read the same in the calendar as it does in the week
+ * strip, whichever frontier its item was composed behind.
+ *
+ * `profile` is expected already coerced (`coerceProfileForPreview`); the callers
+ * do that once per model rather than once per day.
+ */
+export function describeDay(
+  date: string,
+  planned: PlannedItem | null,
+  sessions: Session[],
+  todayIso: string,
+  profile: Profile,
+): WeekGridDay {
+  const onDay = sessions.filter((session) => session.date === date)
+  // A done session on a day the planner still calls "strength" is the case
+  // `planned === null` cannot see: composeWeek keeps the plan on a trained
+  // day, so "done" is decided here, from the session list.
+  const done =
+    onDay.find((session) => session.status === 'done' && planned !== null && session.kind === planned.kind) ??
+    onDay.find((session) => session.status === 'done') ??
+    null
+  const active = onDay.find((session) => session.status === 'active') ?? null
+  const session = done ?? active
+
+  let status: DayStatus
+  if (done) status = 'done'
+  else if (active) status = 'planned'
+  else if (planned === null) status = 'rest'
+  else if (date > todayIso) status = 'future'
+  else if (date < todayIso) status = 'missed'
+  else status = 'planned'
+
+  return {
+    date,
+    label: WEEKDAY_LABELS[weekdayIndexMondayFirst(date)],
+    human: formatHuman(date),
+    isToday: date === todayIso,
+    kind: session?.kind ?? planned?.kind ?? null,
+    title: titleOf(planned, session, profile),
+    detail: detailOf(session),
+    status,
+    sessionId: session?.id ?? null,
+  }
+}
+
+/**
  * One week, planned and done.
  *
  * `options.fromDate` is the frontier `planWeek` takes: pass `todayIso` for the
@@ -173,39 +221,7 @@ export function buildWeekGrid(
   const fromDate = options?.fromDate ?? undefined
   const plan = planWeek(safeProfile, sessions, anchorIso, fromDate)
 
-  const days = plan.week.days.map((day): WeekGridDay => {
-    const planned = day.planned
-    const onDay = sessions.filter((session) => session.date === day.date)
-    // A done session on a day the planner still calls "strength" is the case
-    // `planned === null` cannot see: composeWeek keeps the plan on a trained
-    // day, so "done" is decided here, from the session list.
-    const done =
-      onDay.find((session) => session.status === 'done' && planned !== null && session.kind === planned.kind) ??
-      onDay.find((session) => session.status === 'done') ??
-      null
-    const active = onDay.find((session) => session.status === 'active') ?? null
-    const session = done ?? active
-
-    let status: DayStatus
-    if (done) status = 'done'
-    else if (active) status = 'planned'
-    else if (planned === null) status = 'rest'
-    else if (day.date > todayIso) status = 'future'
-    else if (day.date < todayIso) status = 'missed'
-    else status = 'planned'
-
-    return {
-      date: day.date,
-      label: WEEKDAY_LABELS[weekdayIndexMondayFirst(day.date)],
-      human: formatHuman(day.date),
-      isToday: day.date === todayIso,
-      kind: session?.kind ?? planned?.kind ?? null,
-      title: titleOf(planned, session, safeProfile),
-      detail: detailOf(session),
-      status,
-      sessionId: session?.id ?? null,
-    }
-  })
+  const days = plan.week.days.map((day) => describeDay(day.date, day.planned, sessions, todayIso, safeProfile))
 
   return {
     weekStart: plan.week.weekStart,

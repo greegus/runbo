@@ -524,12 +524,27 @@ anyone into a deload.
 ```ts
 planWeek(profile, sessions, anchorIso, fromDate?): WeekPlan
 resolveToday(profile, sessions, todayIso): TodayResolution
+resolveDay(profile, sessions, dateIso, todayIso): TodayResolution
+frontierFor(dateIso, todayIso): string
 cardioOf(week): CardioPrescription[]
 ```
 
 `TodayResolution = { item, isRestDay, isDeloadWeek, catchUp, comebackProposal, daysSinceLastSession }`. `catchUp`
-is what claiming today would offer — set only on a rest day with work outstanding. This is the one function
-TodayView calls.
+is what claiming today would offer — set only on a rest day with work outstanding.
+
+`planWeek` with a frontier in an EARLIER week than the anchor projects the rotation cursor across the strength
+days still to come between the two (logged days excluded — the stored cursor already carries them), so next week
+composed behind today's frontier continues the rotation instead of repeating this week's remaining days.
+PlanView passes today as the frontier for a future week for exactly this reason; the tiles still compose the
+whole week.
+
+`resolveDay` is `resolveToday` for any day, seen from today; `resolveToday` is the `dateIso === todayIso` case.
+The frontier comes from `frontierFor`: **today and the future are planned as of today** (a Thursday looked at
+on Tuesday shows what Plan shows), **a past day is replayed behind its own frontier** — it offers the work that
+was outstanding as of that day. Under a cursor rotation this is what makes backfilling safe: a missed Monday
+and a missed Wednesday are both offered the outstanding A1, so filling in either never steps the cursor past a
+day that did not happen. (Composing the whole week would label them A1 and B1 and logging the Wednesday would
+skip A1.) The comeback and the gap are always measured to today, whichever day is asked about.
 
 ### Comeback (`comeback.ts`)
 
@@ -659,11 +674,19 @@ Route `/onboarding/:step`, progress saved to `profiles/{uid}.onboarding.step` af
 Views are thin; every rule lives in a pure module.
 
 - `SignInView` — Google button; not-allowlisted state ("ask for access", shows the signed-in email).
-- `TodayView` — `resolveToday` card: strength day (program day + first exercise's weights), cardio
-  prescription (`describePrescription`), or rest; claim-today and swap controls; comeback proposal; deload
-  badge; the streak tile (`currentStreak`, in **sessions**) and the "this week" tiles (`weeklyRollup`, over the
-  **calendar** week); bodyweight quick add. It also drives the training-block rollover: `cardioBlockAction` off
-  the stored anchor, adopted through the profile store.
+- `TodayView` — `buildDay` card (`src/session/today.ts`; `buildToday` is the today case): strength day
+  (program day + first exercise's weights), cardio prescription (`describePrescription`), or rest; claim-today
+  and swap controls; comeback proposal; deload badge; the streak tile (`currentStreak`, in **sessions**) and the
+  "this week" tiles (`weeklyRollup`, over the **calendar** week); bodyweight quick add. It also drives the
+  training-block rollover: `cardioBlockAction` off the stored anchor, adopted through the profile store.
+  A calendar `IconButton` in the header opens `today/DayPickerSheet` (`buildDayPicker` in
+  `src/session/dayPicker.ts`: the live session window's first Monday → today + 7, one row per day, rest days
+  inert, rows built by `weekGrid.describeDay` so a day reads the same as in the Plan strip). The picked day is
+  local state (`selectedIso`, `null` = follow the clock); the card is built with `buildDay(…, dateIso,
+  todayIso)` and a session started from it is **dated `dateIso`**. The tiles, the streak, the bodyweight
+  quick-add and the comeback stay about today (the comeback card is hidden off-today: it would propose cutting
+  weights for the gap being backfilled). Claim and swap are today-only (`canClaim`/`canSwap` are false
+  off-today).
 - `StrengthSessionView` — `TierBlock` per tier, `SetRow` with tap cycling, AMRAP stepper, `PlateHint` per set,
   `RestTimer` (tier default or program timer), readiness sheet on entry, completion summary with
   `progressionSummary` lines and `detectNewRecords`.
@@ -679,7 +702,9 @@ Views are thin; every rule lives in a pure module.
 
 Components: `AppNav` (bottom, Today / Plan / Progress / History / Settings), `StatTile`, `LineChart`,
 `BarChart`, `strength/TierBlock`, `strength/SetRow`, `strength/PlateHint`, `RestTimer`,
-`cardio/PrescriptionCard`, `cardio/CardioLogForm`, `program/ProgramEditor`, `DiagnosticsList`, `settings/*Form`.
+`cardio/PrescriptionCard`, `cardio/CardioLogForm`, `program/ProgramEditor`, `DiagnosticsList`, `settings/*Form`,
+`BottomSheet` (the modal shell — backdrop, focus, Tab cycle, Escape; emits `dismiss`, the parent picks the verb),
+`ReadinessSheet` and `today/DayPickerSheet` on top of it.
 
 Style: `style.css` = `@import 'tailwindcss'; @import 'vuiii/style.css';` + `@theme` tokens — one orange
 `accent` scale and a cool `ink` neutral scale. Light mode only; vuiii's dark blocks are never activated.

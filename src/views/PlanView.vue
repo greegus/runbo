@@ -230,13 +230,18 @@ watch(
            this screen answers the other question: what the week asked for and
            what came of it. Trimmed, a Sunday visit showed seven Rest days under
            tiles reading "0/3 sessions" — the same screen contradicting itself.
-           A missed day belongs here, shown as planned and not done. -->
+           A missed day belongs here, shown as planned and not done.
+
+           A FUTURE week is the one exception, and for a different reason: there
+           is nothing before today to trim, but behind today's frontier the
+           rotation is projected across this week's remaining strength days, so
+           next Monday does not repeat the B1 this Wednesday still has to do. -->
       <WeekPreview
         :profile="profile"
         :today-iso="todayIso"
         :sessions="sessionsStore.weekSessions"
         :anchor-iso="anchorIso"
-        :from-date="null"
+        :from-date="isFutureWeek ? todayIso : null"
         show-status
         link-sessions
       />

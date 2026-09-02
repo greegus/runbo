@@ -11,8 +11,10 @@ const props = withDefaults(
     zones?: Profile['cardioTrack']['zones']
     completed?: boolean
     session?: Session | null
+    /** The eyebrow over the modality: 'Today' on the home screen, the day's name when another day is on the card. */
+    label?: string
   }>(),
-  { zones: undefined, completed: false, session: null },
+  { zones: undefined, completed: false, session: null, label: 'Today' },
 )
 
 const MODALITY_ICONS: Record<Modality, string> = { run: 'run', bike: 'bike', swim: 'swim' }
@@ -46,7 +48,7 @@ const stats = computed(() => {
       <Icon :name="MODALITY_ICONS[prescription.modality]" size="large" class="shrink-0 text-accent-600" />
       <div class="min-w-0">
         <p class="text-sm text-ink-500">
-          {{ completed ? 'Logged' : 'Today' }}
+          {{ completed ? 'Logged' : label }}
         </p>
         <h2 class="text-lg font-semibold text-ink-900">
           {{ MODALITY_LABELS[prescription.modality] }} · {{ prescription.kind }}

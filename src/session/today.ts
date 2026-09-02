@@ -14,7 +14,7 @@ import { format } from '@/liftoscript/weight'
 import { applyComeback, type ComebackProposal } from '@/training/comeback'
 import { claimToday, swapToday } from '@/training/composer'
 import { evalContextFromSettings } from '@/training/plates'
-import { planWeek, resolveToday, type TodayResolution, type WeekPlan } from '@/training/schedule'
+import { frontierFor, planWeek, resolveDay, type TodayResolution, type WeekPlan } from '@/training/schedule'
 import { currentStreak, weeklyRollup, type WeeklyRollup } from '@/training/stats'
 import type { ExerciseState, PlannedItem, Profile, Session } from '@/types'
 import { startOfWeekMonday } from '@/utils/date'
@@ -23,7 +23,16 @@ import { startOfWeekMonday } from '@/utils/date'
 const HEADLINE_LIFTS = 2
 
 export interface TodayModel {
+  /** The clock — what the tiles, the streak and the comeback are measured against. */
   todayIso: string
+  /**
+   * The day the card is about. Equal to `todayIso` on the home screen; another
+   * day when the athlete picked one from the calendar to backfill or to train
+   * ahead. Every per-day field below (`item`, `doneSession`, `headline`, …) is
+   * about THIS day.
+   */
+  dateIso: string
+  isToday: boolean
   plan: WeekPlan
   resolution: TodayResolution
   item: PlannedItem | null
@@ -63,8 +72,30 @@ export interface TodayOverride {
  * exactly that input to recompose the week.
  */
 export function buildToday(profile: Profile, sessions: Session[], todayIso: string): TodayModel {
-  const plan = planWeek(profile, sessions, todayIso, todayIso)
-  const resolution = resolveToday(profile, sessions, todayIso)
+  return buildDay(profile, sessions, todayIso, todayIso)
+}
+
+/**
+ * Any day of the plan, resolved the way today is — the model behind the card
+ * once the athlete has picked a day from the calendar.
+ *
+ * Two clocks, on purpose. The CARD is about `dateIso`: its item, its logged
+ * session, its headline, composed behind the frontier `frontierFor` picks (the
+ * day itself for the past, today for the present and the future — see
+ * `schedule.ts` for why that is what keeps backfilling from skipping a rotation
+ * day). The TILES, the streak and the comeback are about `todayIso`: "3 of 3
+ * this week" and "you have not trained in 12 days" are facts about now, and
+ * re-anchoring them on a day being backfilled would turn the home screen into a
+ * history browser.
+ *
+ * Claim and swap are today-only. Both are pure over any date, but a claim on a
+ * past rest day is a different feature (logging an unplanned session) with its
+ * own copy, and a swap on a day that never happened has nothing to displace.
+ */
+export function buildDay(profile: Profile, sessions: Session[], dateIso: string, todayIso: string): TodayModel {
+  const isToday = dateIso === todayIso
+  const plan = planWeek(profile, sessions, dateIso, frontierFor(dateIso, todayIso))
+  const resolution = resolveDay(profile, sessions, dateIso, todayIso)
 
   // The tiles describe the WHOLE week, so they are composed without the frontier.
   // `plan` above drops every past day that was never logged — right for "what do
@@ -73,25 +104,27 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
   // strength days and 132 minutes of cardio in it.
   const wholeWeek = planWeek(profile, sessions, todayIso).week
 
-  const todaysSessions = sessions.filter((session) => session.date === todayIso)
-  const doneSession = todaysSessions.find((session) => session.status === 'done') ?? null
+  const daysSessions = sessions.filter((session) => session.date === dateIso)
+  const doneSession = daysSessions.find((session) => session.status === 'done') ?? null
   const hasDoneSession = doneSession !== null
 
   return {
     todayIso,
+    dateIso,
+    isToday,
     plan,
     resolution,
     item: resolution.item,
     catchUp: resolution.catchUp,
     // Offering a bonus session to someone who is on track is how overtraining
     // starts: `catchUp` is already null when the week's budget is covered.
-    canClaim: resolution.isRestDay && resolution.catchUp !== null,
+    canClaim: isToday && resolution.isRestDay && resolution.catchUp !== null,
     // A logged session is history — there is nothing left to swap.
-    canSwap: resolution.item !== null && !hasDoneSession,
+    canSwap: isToday && resolution.item !== null && !hasDoneSession,
     isDeloadWeek: resolution.isDeloadWeek,
     headline: resolution.item?.kind === 'strength' ? strengthHeadline(profile, resolution.item.programDay) : null,
     explanation: plan.week.explanations[0] ?? null,
-    activeSession: todaysSessions.find((session) => session.status === 'active') ?? null,
+    activeSession: daysSessions.find((session) => session.status === 'active') ?? null,
     doneSession,
     streak: currentStreak(profile, sessions, todayIso),
     rollup: weeklyRollup(profile, sessions, startOfWeekMonday(todayIso), wholeWeek),
@@ -104,16 +137,16 @@ function plannedOn(days: { date: string; planned: PlannedItem | null }[], dateIs
 
 /** Claiming today: the most valuable outstanding session, plus the composer's own sentence. */
 export function claimedOutcome(model: TodayModel): TodayOverride {
-  const week = claimToday(model.plan.week, model.todayIso, model.plan.input)
+  const week = claimToday(model.plan.week, model.dateIso, model.plan.input)
 
-  return { item: plannedOn(week.days, model.todayIso), explanation: week.explanations[0] ?? null }
+  return { item: plannedOn(week.days, model.dateIso), explanation: week.explanations[0] ?? null }
 }
 
 /** Swapping today: the other track's next item. Nothing is dropped — the rotation is a cursor. */
 export function swappedOutcome(model: TodayModel): TodayOverride {
-  const week = swapToday(model.plan.week, model.todayIso, model.plan.input)
+  const week = swapToday(model.plan.week, model.dateIso, model.plan.input)
 
-  return { item: plannedOn(week.days, model.todayIso), explanation: week.explanations[0] ?? null }
+  return { item: plannedOn(week.days, model.dateIso), explanation: week.explanations[0] ?? null }
 }
 
 export function claimedItem(model: TodayModel): PlannedItem | null {

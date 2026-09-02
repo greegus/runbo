@@ -14,7 +14,7 @@
 
 import { parseProgram } from '@/liftoscript/parser'
 import type { CardioPrescription, ComposedWeek, PlannedItem, Profile, Session } from '@/types'
-import { inWeek, startOfWeekMonday, WEEK_LENGTH } from '@/utils/date'
+import { addDays, inWeek, startOfWeekMonday, WEEK_LENGTH } from '@/utils/date'
 
 import { blockRatio } from './cardioBlock'
 import { type CardioWeekPlan, planCardioWeek } from './cardioPlan'
@@ -65,7 +65,15 @@ export function plannedCardioDays(availability: Profile['availability']): number
  *
  * `fromDate` marks the frontier: days before it that hold no logged session
  * cannot happen any more and their work rolls forward. Omit it to plan a whole
- * week (the onboarding preview, PlanView of a future week).
+ * week (the onboarding preview, PlanView of a past week).
+ *
+ * When the frontier lies in an EARLIER week than the anchor, the strength days
+ * between the two have not happened yet but will — so the rotation cursor is
+ * projected across them before the anchor week is composed. Without that, next
+ * week opened on Wednesday with B1 while this Wednesday also said B1: the stored
+ * cursor only moves when a session is logged, and a week composed straight off
+ * it repeats whatever this week still has to do. A day that is already logged
+ * is not counted — the stored cursor already carries it.
  */
 export function planWeek(profile: Profile, sessions: Session[], anchorIso: string, fromDate?: string): WeekPlan {
   const weekStart = startOfWeekMonday(anchorIso)
@@ -88,19 +96,60 @@ export function planWeek(profile: Profile, sessions: Session[], anchorIso: strin
   // list is a property of the program that profile carries.
   const { program, diagnostics } = parseProgram(profile.strengthTrack.programText)
   const programDays = diagnostics.some((diagnostic) => diagnostic.severity === 'error') ? [] : rotationDays(program)
+  const heavyLowerDays = (programDay: string) => isHeavyLowerDay(programDay, program)
 
-  const input: ComposeWeekInput = {
-    weekStart,
-    availability: profile.availability,
-    rotationCursor: profile.strengthTrack.rotationCursor,
-    programDays,
-    cardioSessions: cardio.sessions,
-    heavyLowerDays: (programDay: string) => isHeavyLowerDay(programDay, program),
-    completedSessions: sessions.filter((session) => session.status === 'done' && inWeek(session.date, weekStart)),
-    ...(fromDate ? { fromDate } : {}),
+  const compose = (start: string, rotationCursor: number): { input: ComposeWeekInput; week: ComposedWeekPlan } => {
+    const input: ComposeWeekInput = {
+      weekStart: start,
+      availability: profile.availability,
+      rotationCursor,
+      programDays,
+      cardioSessions: cardio.sessions,
+      heavyLowerDays,
+      completedSessions: sessions.filter((session) => session.status === 'done' && inWeek(session.date, start)),
+      ...(fromDate ? { fromDate } : {}),
+    }
+
+    return { input, week: composeWeek(input) }
   }
 
-  return { week: composeWeek(input), cardio, isDeloadWeek: cardio.isDeload, input }
+  let cursor = profile.strengthTrack.rotationCursor
+
+  if (fromDate && programDays.length > 0) {
+    for (let start = startOfWeekMonday(fromDate); start < weekStart; start = addDays(start, WEEK_LENGTH)) {
+      const between = compose(start, cursor)
+      const toCome = between.week.days.filter(
+        (day) =>
+          day.planned?.kind === 'strength' &&
+          !between.input.completedSessions.some((session) => session.date === day.date && session.kind === 'strength'),
+      ).length
+
+      cursor = (cursor + toCome) % programDays.length
+    }
+  }
+
+  const { input, week } = compose(weekStart, cursor)
+
+  return { week, cardio, isDeloadWeek: cardio.isDeload, input }
+}
+
+/**
+ * The frontier a day is composed behind when it is not today.
+ *
+ * Today and every day after it are planned AS OF NOW — the frontier is today, so
+ * a Thursday looked at on Tuesday shows the same B1 the Plan tab shows, not the
+ * A1 it would get if Tuesday and Wednesday were skipped.
+ *
+ * A past day is REPLAYED — the frontier is the day itself, so it shows what the
+ * app offered that morning: the work that was outstanding as of that day. This
+ * is what makes backfilling safe under a cursor-driven rotation. Composing the
+ * whole week instead would label a missed Monday A1 and a missed Wednesday B1,
+ * and logging the Wednesday would step the cursor past an A1 that never
+ * happened; with the frontier on the day, whichever past day is filled in is
+ * offered the outstanding A1, and nothing is skipped.
+ */
+export function frontierFor(dateIso: string, todayIso: string): string {
+  return dateIso < todayIso ? dateIso : todayIso
 }
 
 /**
@@ -108,14 +157,23 @@ export function planWeek(profile: Profile, sessions: Session[], anchorIso: strin
  * the session claiming today would offer.
  */
 export function resolveToday(profile: Profile, sessions: Session[], todayIso: string): TodayResolution {
-  const plan = planWeek(profile, sessions, todayIso, todayIso)
-  const item = plan.week.days.find((day) => day.date === todayIso)?.planned ?? null
+  return resolveDay(profile, sessions, todayIso, todayIso)
+}
+
+/**
+ * `resolveToday` for any day: what `dateIso` asks of the athlete, seen from
+ * `todayIso`. The frontier follows `frontierFor`; the comeback and the gap are
+ * about now, whichever day is on screen, so they are always measured to today.
+ */
+export function resolveDay(profile: Profile, sessions: Session[], dateIso: string, todayIso: string): TodayResolution {
+  const plan = planWeek(profile, sessions, dateIso, frontierFor(dateIso, todayIso))
+  const item = plan.week.days.find((day) => day.date === dateIso)?.planned ?? null
 
   return {
     item,
     isRestDay: item === null,
     isDeloadWeek: plan.isDeloadWeek,
-    catchUp: item === null ? catchUpFor(profile, plan, todayIso) : null,
+    catchUp: item === null ? catchUpFor(profile, plan, dateIso) : null,
     comebackProposal: proposeComeback(profile, sessions, todayIso),
     daysSinceLastSession: daysSinceLastSession(sessions, todayIso) ?? 0,
   }

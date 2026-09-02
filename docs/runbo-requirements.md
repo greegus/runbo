@@ -120,6 +120,11 @@ friends may follow. This shapes the product:
   session (overdue strength first, else the next cardio of the week).
 - **Swap today**: replace today's item with the other track's next item; the rest of the week recomposes.
   Nothing is ever skipped — the strength rotation is a cursor, not a calendar.
+- **Any day**: a calendar button in the Today header opens any training day from the last three weeks up to a
+  week ahead. The card then shows that day, and a session started from it is **dated on that day** — a missed
+  Monday is backfilled as Monday, a Thursday trained on Tuesday is Thursday's session done early. A past day
+  offers the work that was outstanding as of that day (the rotation is a cursor, so backfilling never skips a
+  day); today and future days show the plan as it stands now. Claim and swap stay today-only.
 - **Calendar week vs. training block.** The **calendar week starts Monday** and is what availability, the
   planning window and the "this week" tiles mean: "I train Monday, Wednesday, Friday" is a fact about the
   athlete's life, the plan repeats weekly, and "this week" is what a person means by it. The **training
@@ -193,7 +198,7 @@ friends may follow. This shapes the product:
 |-------|------|---------|
 | `/signin` | SignIn | Google button; "ask for access" state for non-allowlisted accounts |
 | `/onboarding/:step` | Onboarding | Resumable wizard, steps 0–6 |
-| `/` | Today | Today's card (strength day, cardio prescription, or rest); claim-today and swap controls; comeback proposal; deload badge; streak and week tiles; bodyweight quick add |
+| `/` | Today | Today's card (strength day, cardio prescription, or rest); calendar button to open and start any training day from the last three weeks to a week ahead (the session is dated on that day); claim-today and swap controls; comeback proposal; deload badge; streak and week tiles; bodyweight quick add |
 | *(from Today)* | StrengthSession | Tier blocks with tap-cycling set rows, AMRAP stepper, plate hints, rest timer, readiness sheet on entry, completion summary with progression lines and new PRs |
 | *(from Today)* | CardioSession | Prescription card (zone as HR / pace / RPE cue) with manual log form; a matched Strava activity shows as completed |
 | `/plan` | Plan | This week as composed: planned vs done per day, deload badge, placement explanations |

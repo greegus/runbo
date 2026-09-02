@@ -1,8 +1,9 @@
 import type { ComebackProposal } from '@/training/comeback'
 import { GZCLP_PROGRAM_SOURCE, initialProgramState } from '@/training/gzclp'
 import type { Profile, Session } from '@/types'
+import { addDays } from '@/utils/date'
 
-import { buildToday, claimedOutcome, comebackPatch, strengthHeadline, swappedOutcome } from '../today'
+import { buildDay, buildToday, claimedOutcome, comebackPatch, strengthHeadline, swappedOutcome } from '../today'
 
 const MON = '2026-08-24'
 const TUE = '2026-08-25'
@@ -130,6 +131,96 @@ describe('buildToday', () => {
     expect(buildToday(profile(), [strengthSession(MON, 'A1', 'active')], MON).doneSession).toBeNull()
     // Yesterday's finished session is not today's.
     expect(buildToday(profile(), [strengthSession(MON, 'A1')], TUE).doneSession).toBeNull()
+  })
+})
+
+describe('buildDay', () => {
+  const FRI = '2026-08-28'
+  const NEXT_MON = '2026-08-31'
+
+  it('is what buildToday is built on', () => {
+    // `plan.input` carries a predicate, and two closures never compare equal.
+    const { plan: _dayPlan, ...day } = buildDay(profile(), [], WED, WED)
+    const { plan: _todayPlan, ...today } = buildToday(profile(), [], WED)
+
+    expect(day).toEqual(today)
+    expect(day.isToday).toBe(true)
+  })
+
+  it('names the day it is about separately from the clock', () => {
+    const model = buildDay(profile(), [], MON, WED)
+
+    expect(model.dateIso).toBe(MON)
+    expect(model.todayIso).toBe(WED)
+    expect(model.isToday).toBe(false)
+  })
+
+  // A missed Monday and a missed Wednesday are both offered the outstanding A1:
+  // the past is replayed behind its own frontier, so backfilling either never
+  // steps the rotation past a day that did not happen.
+  it('offers a past day the work that was outstanding as of that day', () => {
+    const monday = buildDay(profile(), [], MON, FRI)
+    const wednesday = buildDay(profile(), [], WED, FRI)
+
+    expect(monday.item).toEqual({ kind: 'strength', programDay: 'A1' })
+    expect(wednesday.item).toEqual({ kind: 'strength', programDay: 'A1' })
+  })
+
+  it('lets a backfilled past day move the offer on the days after it', () => {
+    // Finishing Monday's A1 also stepped the cursor — that is what
+    // `finishSession` writes, and what the composer reads.
+    const base = profile()
+    const advanced = { ...base, strengthTrack: { ...base.strengthTrack, rotationCursor: 1 } }
+    const wednesday = buildDay(advanced, [strengthSession(MON, 'A1')], WED, FRI)
+
+    expect(wednesday.item).toEqual({ kind: 'strength', programDay: 'B1' })
+  })
+
+  // Looked at on Tuesday, Wednesday must show what the Plan tab shows for it —
+  // never the rolled-forward item it would get if Tuesday were skipped.
+  it('plans a future day as of today, not as of that day', () => {
+    const asOfNow = buildDay(profile(), [], WED, MON)
+    const wholeWeek = buildToday(profile(), [], MON).plan
+
+    expect(asOfNow.item).toEqual(wholeWeek.week.days.find((day) => day.date === WED)?.planned)
+    expect(asOfNow.item).toEqual({ kind: 'strength', programDay: 'B1' })
+  })
+
+  it('reads the logged session off the day it is about, not off today', () => {
+    const done = strengthSession(MON, 'A1')
+    const model = buildDay(profile(), [done], MON, WED)
+
+    expect(model.doneSession).toEqual(done)
+    expect(buildDay(profile(), [done], WED, WED).doneSession).toBeNull()
+  })
+
+  it('keeps the tiles, the streak and the comeback anchored on today', () => {
+    const sessions = [strengthSession(MON, 'A1')]
+    const today = buildToday(profile(), sessions, WED)
+    const lastWeek = buildDay(profile(), sessions, addDays(MON, -7), WED)
+
+    expect(lastWeek.rollup).toEqual(today.rollup)
+    expect(lastWeek.streak).toBe(today.streak)
+    expect(lastWeek.resolution.comebackProposal).toEqual(today.resolution.comebackProposal)
+  })
+
+  it('offers claim and swap on today only', () => {
+    // Thursday is a rest day the week is behind on: claimable today...
+    const todayRest = buildDay(profile(), [], THU, THU)
+    expect(todayRest.canClaim).toBe(true)
+    // ...but not when it is being backfilled from Friday.
+    expect(buildDay(profile(), [], THU, FRI).canClaim).toBe(false)
+
+    expect(buildDay(profile(), [], MON, MON).canSwap).toBe(true)
+    expect(buildDay(profile(), [], MON, WED).canSwap).toBe(false)
+    expect(buildDay(profile(), [], NEXT_MON, WED).canSwap).toBe(false)
+  })
+
+  it('composes the week the picked day falls in, not the current one', () => {
+    const model = buildDay(profile(), [], NEXT_MON, WED)
+
+    expect(model.plan.week.weekStart).toBe(NEXT_MON)
+    expect(model.item).not.toBeNull()
   })
 })
 

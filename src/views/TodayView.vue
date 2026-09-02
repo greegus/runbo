@@ -2,17 +2,20 @@
 import { v4 as uuid } from 'uuid'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { IconButton } from 'vuiii'
 
 import BodyweightQuickAdd from '@/components/BodyweightQuickAdd.vue'
 import DiagnosticsList from '@/components/DiagnosticsList.vue'
 import ReadinessSheet from '@/components/ReadinessSheet.vue'
 import StatTile from '@/components/StatTile.vue'
 import ComebackCard from '@/components/today/ComebackCard.vue'
+import DayPickerSheet from '@/components/today/DayPickerSheet.vue'
 import TodayCard from '@/components/today/TodayCard.vue'
 import type { Diagnostic } from '@/liftoscript/diagnostics'
+import { buildDayPicker, relativeDayLabel } from '@/session/dayPicker'
 import { buildStrengthPlan, draftFromPlan } from '@/session/strengthSession'
 import {
-  buildToday,
+  buildDay,
   claimedOutcome,
   comebackPatch,
   strengthHeadline,
@@ -26,15 +29,16 @@ import { planCardioWeek } from '@/training/cardioPlan'
 import type { ReadinessInput } from '@/training/readiness'
 import { plannedCardioDays } from '@/training/schedule'
 import type { PlannedItem, Session } from '@/types'
-import { startOfWeekMonday, toIso } from '@/utils/date'
+import { formatHuman, startOfWeekMonday, toIso } from '@/utils/date'
 
 /**
  * The home screen: one card, one tap to the bar.
  *
  * The clock is read here and nowhere else below, and threaded into every pure
- * call as `todayIso`. Every decision (rest day, claim,
- * swap, deload, streak, tiles) comes from `buildToday`; this view only owns the
- * async edges: starting a session, accepting a comeback, saving a weight.
+ * call as `todayIso`. Every decision (rest day, claim, swap, deload, streak,
+ * tiles) comes from `buildDay`; this view only owns the async edges: starting a
+ * session, accepting a comeback, saving a weight — and which day the card is
+ * about, when the athlete picks one from the calendar in the header.
  */
 const router = useRouter()
 const profileStore = useProfileStore()
@@ -49,9 +53,48 @@ const bodyweightStore = useBodyweightStore()
  */
 const todayIso = ref(toIso(new Date()))
 
-const model = computed(() =>
-  profileStore.profile ? buildToday(profileStore.profile, sessionsStore.weekSessions, todayIso.value) : null,
+/**
+ * The day the screen is about, when it is not today. `null` means "follow the
+ * clock" — the home screen. A picked day is local state, like a claim or a
+ * swap: nothing is persisted until a session document is created, and a
+ * session started here is dated on THIS day, not on the clock. That is the
+ * whole feature: a missed Monday is backfilled as Monday, and a Thursday
+ * trained on Tuesday is Thursday's session done early.
+ */
+const selectedIso = ref<string | null>(null)
+const dateIso = computed(() => selectedIso.value ?? todayIso.value)
+const isToday = computed(() => selectedIso.value === null)
+const dayTense = computed<'past' | 'today' | 'future'>(() =>
+  isToday.value ? 'today' : dateIso.value < todayIso.value ? 'past' : 'future',
 )
+const dayLabel = computed(() => relativeDayLabel(dateIso.value, todayIso.value))
+const dayHuman = computed(() => formatHuman(dateIso.value))
+
+const model = computed(() =>
+  profileStore.profile
+    ? buildDay(profileStore.profile, sessionsStore.weekSessions, dateIso.value, todayIso.value)
+    : null,
+)
+
+const pickerOpen = ref(false)
+// Built only while the sheet is open: it composes every day of five weeks.
+const pickerModel = computed(() =>
+  pickerOpen.value && profileStore.profile && sessionsStore.isLoaded
+    ? buildDayPicker(profileStore.profile, sessionsStore.weekSessions, todayIso.value)
+    : null,
+)
+
+function onPickDay(iso: string): void {
+  // Picking today is going home, not selecting a day that happens to be today —
+  // so it keeps following the clock past midnight.
+  selectedIso.value = iso === todayIso.value ? null : iso
+  // A claim or a swap belongs to the day it was made on.
+  override.value = null
+}
+
+function backToToday(): void {
+  onPickDay(todayIso.value)
+}
 
 /**
  * A claim or a swap is a pure recomposition and persists NOTHING: the program
@@ -103,6 +146,8 @@ watch(
   (uid) => {
     if (uid) bodyweightStore.bind(uid)
     else bodyweightStore.reset()
+    // Another account's picked day is not this account's.
+    selectedIso.value = null
   },
   { immediate: true },
 )
@@ -116,6 +161,8 @@ function refreshToday(): void {
   // A claim or a swap belongs to the day it was made on.
   override.value = null
   comebackDismissed.value = false
+  // A day picked because it was tomorrow is now today: go back to the clock.
+  if (selectedIso.value === now) selectedIso.value = null
 
   // The live window is anchored on the week it was bound in.
   const uid = profileStore.profile?.id
@@ -269,13 +316,13 @@ async function startSession(readiness?: ReadinessInput): Promise<void> {
         return
       }
 
-      write(draftFromPlan(plan, todayIso.value, readiness))
+      write(draftFromPlan(plan, dateIso.value, readiness))
       await router.push({ name: 'strength-session', params: { id } })
       return
     }
 
     write({
-      date: todayIso.value,
+      date: dateIso.value,
       kind: 'cardio',
       prescription: target.prescription,
       source: 'manual',
@@ -332,7 +379,43 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
 
 <template>
   <section class="mx-auto flex max-w-lg flex-col gap-4 p-4">
-    <h1 class="text-2xl font-bold text-ink-900">Today</h1>
+    <header class="flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold text-ink-900">{{ dayLabel }}</h1>
+        <p v-if="!isToday" class="text-sm text-ink-500">{{ dayHuman }}</p>
+      </div>
+
+      <IconButton
+        icon="calendar"
+        variant="outlined"
+        size="large"
+        class="min-h-[48px] min-w-[48px] shrink-0"
+        :class="isToday ? '' : 'text-accent-600'"
+        aria-label="Choose a day"
+        aria-haspopup="dialog"
+        :aria-expanded="pickerOpen"
+        @click="pickerOpen = true"
+      />
+    </header>
+
+    <!-- The date a session started here will carry is the one thing the athlete
+         must not be surprised by, so it is said in words before the tap. -->
+    <div v-if="!isToday" class="flex flex-col gap-2">
+      <p role="status" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-700">
+        <template v-if="dayTense === 'past'">
+          Logging a past day: the session will be filed under {{ dayHuman }}.
+        </template>
+        <template v-else>Training ahead: the session will be filed under {{ dayHuman }}.</template>
+      </p>
+
+      <button
+        type="button"
+        class="min-h-[48px] rounded-xl border border-ink-200 px-4 text-base font-medium text-ink-700"
+        @click="backToToday()"
+      >
+        Back to today
+      </button>
+    </div>
 
     <!-- The profile and the session snapshot both arrive asynchronously; a
          "rest day" flashed before they land would be a lie. -->
@@ -345,8 +428,10 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
     </div>
 
     <template v-else>
+      <!-- A comeback is about now. Offered over a day being backfilled it would
+           propose cutting the weights for the very gap that day is closing. -->
       <ComebackCard
-        v-if="comebackProposal && !comebackDismissed"
+        v-if="isToday && comebackProposal && !comebackDismissed"
         :proposal="comebackProposal"
         :busy="comebackBusy"
         :error="comebackError"
@@ -368,6 +453,8 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
         :explanation="explanation"
         :busy="busy"
         :error="startError"
+        :day-label="dayLabel"
+        :day-tense="dayTense"
         @start="onStart()"
         @resume="onResume($event)"
         @claim="onClaim()"
@@ -431,6 +518,13 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
         @submit="onBodyweight($event)"
       />
     </template>
+
+    <DayPickerSheet
+      v-model:open="pickerOpen"
+      :model="pickerModel"
+      :selected-iso="dateIso"
+      @select="onPickDay($event)"
+    />
 
     <ReadinessSheet
       v-model:open="readinessOpen"
