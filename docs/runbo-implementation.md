@@ -610,6 +610,13 @@ Stores (Pinia):
 Router guard: signed out → `/signin`; signed in but `status === 'notAllowlisted'` → `/signin` (ask-for-access
 state); `profile.onboarding.completed === false` → `/onboarding/:step` with the saved step.
 
+The guard only runs on a navigation, and an auth change is not one — signing in leaves the user sitting on
+`/signin`, signing out leaves them inside the app. `src/router/authRedirect.ts` maps `(status, route)` → the
+route to push, driven by a watcher in `App.vue`: `ready` on `/signin` → `today` (the guard then decides
+whether that means onboarding), `signedOut` / `notAllowlisted` anywhere else → `signin`. It must stay in
+`App.vue`, which is always mounted — `App.vue` swaps `RouterView` for the boot screen while the status is
+'loading', so a watcher owned by SignInView is stopped mid-sign-in and never sees 'ready'.
+
 ---
 
 ## Import

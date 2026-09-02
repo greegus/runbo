@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { FirebaseError } from 'firebase/app'
-import { computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed } from 'vue'
 import { Button, Icon, useSubmitAction } from 'vuiii'
 
 import { useAuthStore } from '@/stores/auth'
 
-const router = useRouter()
 const authStore = useAuthStore()
 
 /**
@@ -51,21 +49,16 @@ function signInErrorMessage(error: Error): string {
   return 'Sign-in did not complete. Please try again.'
 }
 
+// Leaving this screen is not this view's job: sign-in resolves the account
+// asynchronously (auth state, then the allowlist check, then the profile), and
+// this view is unmounted for the whole of that window — `App.vue` shows the
+// boot screen while the status is 'loading'. The status watcher in `App.vue`
+// does the redirect, and the router guard decides where "ready" lands.
 const { submit: signIn, isSubmitting } = useSubmitAction(() => authStore.signIn(), {
   errorMessage: ({ error }) => signInErrorMessage(error),
 })
 
 const { submit: signOut, isSubmitting: isSigningOut } = useSubmitAction(() => authStore.signOut())
-
-// Sign-in resolves the account asynchronously (auth state, then the allowlist
-// check), so leaving this screen is driven by the status, not by the click.
-// The router guard decides where "ready" actually lands.
-watch(
-  () => authStore.status,
-  (status) => {
-    if (status === 'ready') router.push({ name: 'today' })
-  },
-)
 </script>
 
 <template>

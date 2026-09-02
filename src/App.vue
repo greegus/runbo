@@ -5,6 +5,7 @@ import { DialogStack, SnackbarStack } from 'vuiii'
 
 import AppNav from '@/components/AppNav.vue'
 import UpdatePrompt from '@/components/UpdatePrompt.vue'
+import { authRedirect } from '@/router/authRedirect'
 import { useAuthStore } from '@/stores/auth'
 import { useProfileStore } from '@/stores/profile'
 
@@ -23,12 +24,21 @@ const isBooting = computed(
   () => authStore.status === 'loading' || (authStore.status === 'ready' && !profileStore.profile),
 )
 
-// Signing out (from Settings, or by the session expiring) changes no route on
-// its own — without this the user would be left staring at stale data.
+// Auth changes no route on its own, and the router guard only runs on a
+// navigation — so both directions are pushed from here: signing in has to leave
+// /signin, and signing out (from Settings, or by the session expiring) has to
+// leave the app rather than stare at stale data.
+//
+// This watcher lives in `App.vue` because `App.vue` is always mounted. The
+// same watcher inside SignInView could not work: the boot screen below
+// replaces `RouterView` while the status is 'loading', which is exactly the
+// window a sign-in passes through, so the view is unmounted — and its watcher
+// stopped — before 'ready' arrives.
 watch(
   () => authStore.status,
   (status) => {
-    if (status === 'signedOut' || status === 'notAllowlisted') router.push({ name: 'signin' })
+    const target = authRedirect(status, typeof route.name === 'string' ? route.name : null)
+    if (target) router.push({ name: target })
   },
 )
 </script>
