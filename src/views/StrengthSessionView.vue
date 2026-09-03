@@ -615,7 +615,7 @@ onBeforeRouteLeave(() => {
              and a strip that has scrolled away answers nothing. It scrolls
              horizontally on its own so a twelve-lift day does not wrap into a
              wall of chips. -->
-        <div class="sticky top-0 z-10 border-b border-ink-200 bg-white">
+        <div class="sticky top-0 z-10 border-b border-ink-200 bg-white px-4">
           <TabsNav
             v-model="selectedTab"
             :tabs="tabs"
