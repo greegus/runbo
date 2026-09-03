@@ -29,6 +29,14 @@ import { registerCustomIconResolver } from 'vuiii'
  * Material Design Icons (pictogrammers.com/library/mdi) wired into the vuiii
  * Icon component: `<Icon name="run" />` and Button prefixIcon/suffixIcon
  * resolve through this map. Only listed icons end up in the bundle.
+ *
+ * The `<svg>` is the Icon's ROOT element, so vuiii's own `.Icon` class lands on
+ * it and sizes it: `width: var(--vuiii-icon-size…)` plus `aspect-ratio: 1`. It
+ * must therefore carry no `height` attribute — a presentational height is a
+ * non-auto height, `aspect-ratio` is ignored, and the glyph shrinks to the
+ * surrounding font size while the box stays wide. That is exactly how every
+ * icon in the app used to render at text height and `size="large"` did nothing.
+ * `width="1em"` stays only as the fallback for an svg rendered outside `Icon`.
  */
 const MDI_PATHS: Record<string, string> = {
   'alert': mdiAlertCircleOutline,
@@ -60,7 +68,7 @@ export function registerMdiIcons() {
     const path = MDI_PATHS[name]
     if (!path) return undefined
     return () =>
-      h('svg', { viewBox: '0 0 24 24', fill: 'currentColor', width: '1em', height: '1em', 'aria-hidden': 'true' }, [
+      h('svg', { viewBox: '0 0 24 24', fill: 'currentColor', width: '1em', 'aria-hidden': 'true' }, [
         h('path', { d: path }),
       ])
   })
