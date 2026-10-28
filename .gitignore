@@ -7,3 +7,4 @@ dist
 .firebase
 node_modules/.tmp
 coverage
+.claude/worktrees

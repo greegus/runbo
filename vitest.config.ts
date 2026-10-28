@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 // Standalone config: loading vite.config.ts would boot the Vue and Tailwind
 // plugins that the pure-TS domain tests never need. The `@` alias mirrors
@@ -14,5 +14,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    // Agent worktrees are full checkouts; without this every run picks up
+    // their copies of the suite too.
+    exclude: [...configDefaults.exclude, '.claude/worktrees/**'],
   },
 })
