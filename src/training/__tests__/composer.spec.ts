@@ -689,7 +689,25 @@ describe('replacementOptions / replaceToday', () => {
     })
   })
 
-  it('offers the next rotation day when the week has no strength day left', () => {
+  it('offers the next rotation day when the week has no strength day left but still owes one', () => {
+    // Sunday, and only Monday's B2 was ever lifted, so the rotation is back on
+    // A1: the week is two strength days short with no day left to hold them.
+    const behind = input({
+      rotationCursor: 0,
+      completedSessions: [strengthSession(MON, 'B2')],
+      fromDate: SUN,
+    })
+    const behindWeek = composeWeek(behind)
+    const options = replacementOptions(behindWeek, SUN, behind)
+
+    expect(options[0]).toEqual({ item: { kind: 'strength', programDay: 'A1' }, from: null })
+
+    const replaced = replaceToday(behindWeek, SUN, behind, options[0])
+    expect(itemAt(replaced, SUN)).toEqual({ kind: 'strength', programDay: 'A1' })
+    expect(replaced.explanations[0]).toContain('next in the rotation')
+  })
+
+  it('offers no bonus strength day once the week has had its lifting', () => {
     const caught = input({
       rotationCursor: 3,
       completedSessions: [
@@ -700,14 +718,36 @@ describe('replacementOptions / replaceToday', () => {
       ],
       fromDate: SUN,
     })
-    const caughtWeek = composeWeek(caught)
-    const options = replacementOptions(caughtWeek, SUN, caught)
+    const options = replacementOptions(composeWeek(caught), SUN, caught)
 
-    expect(options[0]).toEqual({ item: { kind: 'strength', programDay: 'B2' }, from: null })
+    expect(options.filter((option) => option.item.kind === 'strength')).toEqual([])
+  })
 
-    const replaced = replaceToday(caughtWeek, SUN, caught, options[0])
-    expect(itemAt(replaced, SUN)).toEqual({ kind: 'strength', programDay: 'B2' })
-    expect(replaced.explanations[0]).toContain('next in the rotation')
+  it('does not offer a session a non-matching logged run already stands in for', () => {
+    // A 45-minute Strava run with no prescription stands in for Tuesday's
+    // session; the intervals it replaced must not come back as "missed".
+    const strava: Session = { id: 'c-strava', uid: 'u1', date: TUE, kind: 'cardio', status: 'done', minutes: 45 }
+    const logged = input({ completedSessions: [strava], fromDate: THU })
+    const options = replacementOptions(composeWeek(logged), THU, logged)
+
+    expect(options.filter((option) => option.from === null && option.item.kind === 'cardio')).toEqual([])
+  })
+
+  it('keeps the long session off the day after a pinned hard one', () => {
+    // Friday takes the intervals; Saturday, the preferred long day, would then
+    // follow a hard session, so the long run goes elsewhere.
+    const fri = input({ fromDate: FRI, availability: availability({ preferredDays: [0, 2, 4, 5, 6] }) })
+    const friWeek = composeWeek(fri)
+    expect(itemAt(friWeek, SAT)).toEqual({ kind: 'cardio', prescription: long(60) })
+
+    const replaced = replaceToday(friWeek, FRI, fri, {
+      item: { kind: 'cardio', prescription: intervals(40) },
+      from: null,
+    })
+
+    expect(itemAt(replaced, FRI)).toEqual({ kind: 'cardio', prescription: intervals(40) })
+    expect(itemAt(replaced, SAT)).not.toEqual({ kind: 'cardio', prescription: long(60) })
+    expect(cardioKinds(replaced)).toContain('long')
   })
 
   it('stays consistent once the moved workout is logged — it is not planned twice', () => {
