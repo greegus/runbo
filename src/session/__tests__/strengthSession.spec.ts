@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { GZCLP_PROGRAM_SOURCE } from '@/training/gzclp'
 import type { Profile, Session } from '@/types'
 
+import { tapSet, toLoggedSet } from '../setCycle'
 import {
   applyLoggedSets,
   applyWorkingWeight,
@@ -10,6 +11,7 @@ import {
   draftFromPlan,
   finishBlockedReason,
   loggedSetsFromSession,
+  projectPlannedExercise,
   restSecFor,
 } from '../strengthSession'
 import type { LoggedSet } from '../types'
@@ -146,6 +148,59 @@ describe('buildStrengthPlan', () => {
 
     expect(plan.exercises).toEqual([])
     expect(plan.diagnostics[0].message).toContain('C7')
+  })
+})
+
+describe('projectPlannedExercise', () => {
+  it("starts at today's prescription and climbs from the stored state", () => {
+    const plan = buildStrengthPlan(profile(), 'A1')
+    const projection = projectPlannedExercise(profile(), plan, plan.exercises[0], [])
+
+    expect(projection.diagnostics).toEqual([])
+    expect(projection.sessions[0].sets).toEqual(plan.exercises[0].sets)
+    expect(projection.sessions.slice(0, 3).map((session) => session.weight.value)).toEqual([105, 110, 115])
+  })
+
+  it('counts up from a weight changed this session, not the stored one', () => {
+    const plan = buildStrengthPlan(profile(), 'A1')
+    const squat = plan.exercises[0]
+    const logged = applyWorkingWeight(squat.sets.map(toLoggedSet), { value: 100, unit: 'kg' })
+    const projection = projectPlannedExercise(profile(), plan, squat, logged)
+
+    expect(projection.sessions.slice(0, 2).map((session) => session.weight.value)).toEqual([100, 105])
+  })
+
+  it('keeps the stored weight while the remaining sets are as prescribed', () => {
+    const plan = buildStrengthPlan(profile(), 'A1')
+    const squat = plan.exercises[0]
+    // Mid-exercise: the first four sets are logged, the untouched last one is as prescribed.
+    const logged = squat.sets.map(toLoggedSet).map((set, index) => (index < 4 ? tapSet(set) : set))
+    logged[4] = { ...logged[4], weight: { ...squat.sets[4].weight } }
+
+    expect(projectPlannedExercise(profile(), plan, squat, logged).sessions[0].weight.value).toBe(105)
+  })
+
+  it('projects an ask-weight lift once a weight is entered, and nothing before', () => {
+    const bare = profile()
+    bare.strengthTrack.programState = {
+      ...bare.strengthTrack.programState,
+      'T1:Squat': { weights: [], setVariationIndex: 1, state: { inc: 5 }, askWeight: true },
+    }
+    const plan = buildStrengthPlan(bare, 'A1')
+
+    const squat = plan.exercises[0]
+    const untouched = squat.sets.map(toLoggedSet)
+    const entered = applyWorkingWeight(untouched, { value: 80, unit: 'kg' })
+
+    expect(
+      projectPlannedExercise(
+        bare,
+        plan,
+        squat,
+        untouched.map((set) => ({ ...set, weight: { value: 0, unit: 'kg' } })),
+      ).sessions,
+    ).toEqual([])
+    expect(projectPlannedExercise(bare, plan, squat, entered).sessions[1].weight).toEqual({ value: 85, unit: 'kg' })
   })
 })
 

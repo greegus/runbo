@@ -37,6 +37,8 @@ const emit = defineEmits<{
   'update:collapsed': [collapsed: boolean]
   'first-log': [payload: { setIndex: number; restSec: number }]
   'update:weight': [weight: WeightValue]
+  /** Open the upcoming-sessions table for this lift. */
+  'show-projection': []
 }>()
 
 const WEIGHT_BLOCKED = 'Enter a weight to log this exercise'
@@ -155,6 +157,15 @@ function selectAll(event: FocusEvent): void {
           class="mt-0.5"
         />
       </div>
+
+      <IconButton
+        icon="chart"
+        variant="text"
+        size="large"
+        class="min-h-[48px] min-w-[48px]"
+        :aria-label="`Upcoming ${exercise.name} sessions`"
+        @click="emit('show-projection')"
+      />
 
       <IconButton
         :icon="collapsed ? 'chevron-down' : 'chevron-up'"

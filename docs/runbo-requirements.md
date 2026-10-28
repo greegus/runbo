@@ -194,12 +194,12 @@ friends may follow. This shapes the product:
 | `/signin` | SignIn | Google button; "ask for access" state for non-allowlisted accounts |
 | `/onboarding/:step` | Onboarding | Resumable wizard, steps 0–6 |
 | `/` | Today | Today's card (strength day, cardio prescription, or rest); claim-today and swap controls; comeback proposal; deload badge; streak and week tiles; bodyweight quick add |
-| *(from Today)* | StrengthSession | Tier blocks with tap-cycling set rows, AMRAP stepper, plate hints, rest timer, readiness sheet on entry, completion summary with progression lines and new PRs |
+| *(from Today)* | StrengthSession | Tier blocks with tap-cycling set rows, AMRAP stepper, plate hints, rest timer, readiness sheet on entry, completion summary with progression lines and new PRs; per lift, a table of the upcoming sessions the progression projects |
 | *(from Today)* | CardioSession | Prescription card (zone as HR / pace / RPE cue) with manual log form; a matched Strava activity shows as completed |
 | `/plan` | Plan | This week as composed: planned vs done per day, deload badge, placement explanations |
 | `/progress` | Progress | Lift weight and e1RM lines, weekly cardio bars vs target, PR list, bodyweight trend, readiness vs performance |
 | `/history` | History | Finished sessions; delete the most recent one (with confirmation) to restore program state |
-| `/program` | Program | Program text editor with diagnostics, per-exercise current state, copy-out |
+| `/program` | Program | Program text editor with diagnostics, per-exercise current state with its projected upcoming sessions, copy-out |
 | `/settings` | Settings | All wizard form sections, rest timers, comeback threshold, Strava connect card, notification toggles, JSON export |
 
 ---
