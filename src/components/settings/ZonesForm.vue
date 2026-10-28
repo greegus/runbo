@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
-import { FormGroup, Icon, Input, RadioButtonGroup } from 'vuiii'
+import { FormGroup, Icon, Input, Select } from 'vuiii'
 
 import type { CardioZones, PaceDraft, ZonesDraft } from '@/onboarding/types'
 import {
@@ -188,19 +188,20 @@ watch(
     <section class="flex flex-col gap-4">
       <h2 class="text-lg font-semibold text-ink-900">Heart rate</h2>
 
-      <!-- fieldset/legend rather than FormGroup: FormGroup's label is a
-           `<label for>` pointing at an id no radiogroup can carry. -->
-      <fieldset class="flex flex-col gap-2">
-        <legend class="text-sm font-medium text-ink-900">Maximum heart rate</legend>
-        <RadioButtonGroup
-          :options="HR_MODE_OPTIONS"
-          option-label="label"
-          option-value="value"
-          :model-value="props.draft.hrMode"
-          class="min-h-[48px]"
-          @update:model-value="patchDraft({ hrMode: $event })"
-        />
-      </fieldset>
+      <FormGroup label="Maximum heart rate">
+        <template #default="{ id }">
+          <Select
+            :id="id"
+            :options="HR_MODE_OPTIONS"
+            option-label="label"
+            option-value="value"
+            :model-value="props.draft.hrMode"
+            size="large"
+            class="min-h-[48px]"
+            @update:model-value="patchDraft({ hrMode: $event })"
+          />
+        </template>
+      </FormGroup>
 
       <FormGroup v-if="props.draft.hrMode === 'max'" label="Max HR" hint="bpm — the highest you have ever seen.">
         <template #default="{ id }">
@@ -276,18 +277,20 @@ watch(
         {{ PACE_COPY[modality].title }}
       </h2>
 
-      <fieldset class="flex flex-col gap-2">
-        <legend class="text-sm font-medium text-ink-900">{{ PACE_COPY[modality].threshold }}</legend>
-        <p class="text-sm text-ink-500">{{ PACE_COPY[modality].hint }}</p>
-        <RadioButtonGroup
-          :options="PACE_MODE_OPTIONS"
-          option-label="label"
-          option-value="value"
-          :model-value="props.draft.pace[modality].mode"
-          class="min-h-[48px]"
-          @update:model-value="patchPace(modality, { mode: $event })"
-        />
-      </fieldset>
+      <FormGroup :label="PACE_COPY[modality].threshold" :description="PACE_COPY[modality].hint">
+        <template #default="{ id }">
+          <Select
+            :id="id"
+            :options="PACE_MODE_OPTIONS"
+            option-label="label"
+            option-value="value"
+            :model-value="props.draft.pace[modality].mode"
+            size="large"
+            class="min-h-[48px]"
+            @update:model-value="patchPace(modality, { mode: $event })"
+          />
+        </template>
+      </FormGroup>
 
       <!-- mm:ss as two number fields: a masked text input would have to reject
            keystrokes on a phone keypad, and the domain wants seconds anyway. -->

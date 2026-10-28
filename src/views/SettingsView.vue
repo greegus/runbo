@@ -301,7 +301,12 @@ function setComebackGap(value: unknown): void {
 </script>
 
 <template>
-  <section class="mx-auto flex max-w-lg flex-col gap-6 p-4">
+  <!-- The cards draw no border or background of their own, so vuiii's 1.5rem
+       card padding only pushed every section inwards from the page gutter.
+       Zero sideways lines them up with the header, on the same 1rem gutter the
+       other pages' content sits on. Scoped here rather than set on :root:
+       vuiii's dialogs pad themselves with the same variable. -->
+  <section class="mx-auto flex max-w-lg flex-col gap-4 p-4 [--vuiii-card-padding:1rem_0]">
     <header>
       <h1 class="text-2xl font-bold text-ink-900">Settings</h1>
       <p v-if="profile" class="mt-1 text-sm text-ink-500">{{ profile.email }}</p>
@@ -548,16 +553,18 @@ function setComebackGap(value: unknown): void {
         <ExportDataCard />
       </Card>
 
-      <Button
-        label="Sign out"
-        color="secondary"
-        variant="outlined"
-        size="large"
-        block
-        class="min-h-[48px]"
-        :loading="isSigningOut"
-        @click="signOut()"
-      />
+      <Card title="Account">
+        <Button
+          label="Sign out"
+          color="secondary"
+          variant="outlined"
+          size="large"
+          block
+          class="min-h-[48px]"
+          :loading="isSigningOut"
+          @click="signOut()"
+        />
+      </Card>
     </template>
   </section>
 </template>

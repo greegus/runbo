@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { FormGroup, RadioButtonGroup, Select } from 'vuiii'
+import { FormGroup, Select } from 'vuiii'
 
+import DayCountSlider from '@/components/settings/DayCountSlider.vue'
 import type { Availability } from '@/onboarding/types'
 import { DEFAULT_STRENGTH_DAYS_PER_WEEK, trainingWeekdays, weeklyTrackBudget } from '@/training/composer'
 import { WEEKDAY_LABELS } from '@/utils/date'
@@ -17,19 +18,19 @@ const emit = defineEmits<{
 }>()
 
 const dayOptions = WEEKDAY_LABELS.map((label, index) => ({ value: index, label }))
-const daysPerWeekOptions = [1, 2, 3, 4, 5, 6, 7].map((value) => ({ value, label: String(value) }))
-
-const strengthDays = computed(() => props.modelValue.strengthDaysPerWeek ?? DEFAULT_STRENGTH_DAYS_PER_WEEK)
 
 /**
- * Lifting days are offered up to the training budget and no further: an option
- * the composer would immediately clamp away is not an option.
+ * Lifting days are offered up to the training budget and no further: a value
+ * the composer would immediately clamp away is not a value.
  */
-const strengthDaysOptions = computed(() => {
-  const ceiling = whole(props.modelValue.daysPerWeek, 5, 1, 7)
+const strengthDaysCeiling = computed(() => whole(props.modelValue.daysPerWeek, 5, 1, 7))
 
-  return Array.from({ length: ceiling + 1 }, (_, value) => ({ value, label: String(value) }))
-})
+// Capped on the way out too: a profile that never stored a lifting count gets
+// the default of 3, which a 1- or 2-day week cannot hold, and a slider handed a
+// value past its own end pins the thumb while the number beside it disagrees.
+const strengthDays = computed(() =>
+  Math.min(props.modelValue.strengthDaysPerWeek ?? DEFAULT_STRENGTH_DAYS_PER_WEEK, strengthDaysCeiling.value),
+)
 
 const preferred = computed(() => props.modelValue.preferredDays ?? [])
 
@@ -93,8 +94,7 @@ function patch(changes: Partial<Availability>): void {
     ...next,
     daysPerWeek,
     // Clamped against the budget, not just against the week: shrinking the week
-    // otherwise leaves the lifting control pointing at an option it no longer
-    // offers, and nothing looks selected.
+    // otherwise saves a lifting count the composer would only clamp away.
     strengthDaysPerWeek: whole(
       next.strengthDaysPerWeek ?? DEFAULT_STRENGTH_DAYS_PER_WEEK,
       DEFAULT_STRENGTH_DAYS_PER_WEEK,
@@ -128,33 +128,27 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
       label="Days per week"
       hint="A budget for how many sessions we plan — it does not have to match the days you tick below."
     >
-      <!-- Named with `aria-label`, not FormGroup's slot id: a `<label for>`
-           cannot name the `role="radiogroup"` div this renders. -->
-      <RadioButtonGroup
-        aria-label="Days per week"
-        :model-value="modelValue.daysPerWeek"
-        :options="daysPerWeekOptions"
-        option-label="label"
-        option-value="value"
-        size="large"
-        class="min-h-[48px]"
-        @update:model-value="(value: number) => patch({ daysPerWeek: value })"
-      />
+      <template #default="{ id }">
+        <DayCountSlider
+          :id="id"
+          :model-value="modelValue.daysPerWeek"
+          :min="1"
+          :max="7"
+          @update:model-value="(value: number) => patch({ daysPerWeek: value })"
+        />
+      </template>
     </FormGroup>
 
     <FormGroup label="Lifting days" hint="How many of those days go to the barbell. The rest carry cardio.">
-      <!-- Named with `aria-label`, not FormGroup's slot id: a `<label for>`
-           cannot name the `role="radiogroup"` div this renders. -->
-      <RadioButtonGroup
-        aria-label="Lifting days"
-        :model-value="strengthDays"
-        :options="strengthDaysOptions"
-        option-label="label"
-        option-value="value"
-        size="large"
-        class="min-h-[48px]"
-        @update:model-value="(value: number) => patch({ strengthDaysPerWeek: value })"
-      />
+      <template #default="{ id }">
+        <DayCountSlider
+          :id="id"
+          :model-value="strengthDays"
+          :min="0"
+          :max="strengthDaysCeiling"
+          @update:model-value="(value: number) => patch({ strengthDaysPerWeek: value })"
+        />
+      </template>
     </FormGroup>
 
     <fieldset class="flex flex-col gap-2">
