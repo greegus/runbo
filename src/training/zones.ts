@@ -80,6 +80,9 @@ const RPE_CUES: Record<Zone, string> = {
   5: 'RPE 9-10 - all out',
 }
 
+/** How a modality is named on screen — one map, so a new modality is one edit. */
+export const MODALITY_LABELS: Record<Modality, string> = { run: 'Run', bike: 'Bike', swim: 'Swim' }
+
 const KIND_LABELS: Record<CardioPrescription['kind'], string> = {
   easy: 'easy',
   intervals: 'intervals',

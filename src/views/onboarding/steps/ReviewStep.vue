@@ -4,6 +4,7 @@ import { Button } from 'vuiii'
 
 import WeekPreview from '@/components/WeekPreview.vue'
 import { strengthDaysPerWeek } from '@/training/composer'
+import { MODALITY_LABELS } from '@/training/zones'
 import type { Profile } from '@/types'
 import { toIso, WEEKDAY_LABELS } from '@/utils/date'
 import StepShell from '@/views/onboarding/steps/StepShell.vue'
@@ -25,8 +26,6 @@ defineEmits<{
 }>()
 
 const todayIso = toIso(new Date())
-
-const MODALITY_LABELS: Record<string, string> = { run: 'Run', bike: 'Bike', swim: 'Swim' }
 
 const gym = computed(() => {
   const { units, barbellWeight, plates } = props.modelValue.settings
