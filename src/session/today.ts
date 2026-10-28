@@ -95,8 +95,9 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
     // A logged session is history — there is nothing left to swap.
     canSwap: resolution.item !== null && !hasDoneSession,
     // A running session already decided what today is; replacing it under the
-    // athlete would start a second document beside it.
-    replacements: hasDoneSession || activeSession ? [] : replacementOptions(plan.week, todayIso, plan.input),
+    // athlete would start a second document beside it. A logged day is the
+    // composer's to refuse.
+    replacements: activeSession ? [] : replacementOptions(plan.week, todayIso, plan.input),
     isDeloadWeek: resolution.isDeloadWeek,
     headline: resolution.item?.kind === 'strength' ? strengthHeadline(profile, resolution.item.programDay) : null,
     explanation: plan.week.explanations[0] ?? null,

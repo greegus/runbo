@@ -576,12 +576,17 @@ function assignItems(
   if (longIndex >= 0 && available.length > 0) {
     const [long] = pool.splice(longIndex, 1)
     const preferred = available.find((date) => weekdayIndexMondayFirst(date) === input.availability.longSessionDay)
-    const legal = available.filter((date) => canPlaceLongSession(date, slots, input.heavyLowerDays))
+    // A pinned hard session already sits where it sits, so the long one keeps
+    // off the day after it — the same pair `canPlaceHardCardio` rules out.
+    const fits = (date: string) =>
+      canPlaceLongSession(date, slots, input.heavyLowerDays) &&
+      !(pinned && isHardCardio(pinned.prescription) && date === addDays(pinned.date, 1))
+    const legal = available.filter(fits)
 
     let target: string
     let prescription = long
 
-    if (preferred && canPlaceLongSession(preferred, slots, input.heavyLowerDays)) {
+    if (preferred && fits(preferred)) {
       target = preferred
       explanations.push(`${label(target)}: ${describe(long)} — the preferred long-session day.`)
     } else if (legal.length > 0) {
@@ -784,6 +789,10 @@ export interface ReplacementOption {
   from: string | null
 }
 
+function countKind(week: ComposedWeek, kind: Track): number {
+  return week.days.filter((entry) => entry.planned?.kind === kind).length
+}
+
 function itemKey(item: PlannedItem): string {
   return item.kind === 'strength' ? `strength:${item.programDay}` : `cardio:${JSON.stringify(item.prescription)}`
 }
@@ -817,16 +826,20 @@ export function replacementOptions(week: ComposedWeek, dateIso: string, input: C
   const later = week.days.filter((entry) => entry.date > dateIso && entry.planned !== null && !fixed.has(entry.date))
   const options: ReplacementOption[] = []
 
+  const budget = weeklyTrackBudget(input.availability, input.cardioSessions.length)
+
   if (day.planned?.kind !== 'strength' && input.programDays.length > 0) {
     const due = later.find((entry) => entry.planned?.kind === 'strength')
     if (due?.planned) {
       options.push({ item: due.planned, from: due.date })
-    } else {
-      // No strength day left this week: ask the composer what the cursor hands a
-      // strength day placed here, rather than redoing its arithmetic.
-      const trial = replaceToday(week, dateIso, input, { item: { kind: 'strength', programDay: '' }, from: null })
-      const item = trial.days.find((entry) => entry.date === dateIso)?.planned
-      if (item?.kind === 'strength') options.push({ item, from: null })
+    } else if (countKind(week, 'strength') < budget.strengthDays) {
+      // No strength day left, but the week still owes one. `replaceToday`
+      // releases every earlier unlogged day, so this day becomes the first free
+      // strength day and the cursor hands it exactly the day it points at. When
+      // the week's lifting is covered nothing is offered: that would be a bonus
+      // session, not a moved one.
+      const programDay = input.programDays[input.rotationCursor % input.programDays.length]
+      options.push({ item: { kind: 'strength', programDay }, from: null })
     }
   }
 
@@ -835,12 +848,17 @@ export function replacementOptions(week: ComposedWeek, dateIso: string, input: C
   }
 
   // What the week no longer places anywhere: the pool, minus every prescription
-  // some day holds — planned or logged.
-  const pool = [...input.cardioSessions]
-  for (const entry of week.days) {
-    if (entry.planned?.kind === 'cardio') consume(pool, entry.planned.prescription)
+  // some day holds — planned or logged. Only while fewer days hold cardio than
+  // the pool has sessions, though: a Strava run logged without a prescription
+  // stands in for one it does not match exactly, and offering that one again as
+  // "missed" would have the athlete do the same session twice.
+  if (countKind(week, 'cardio') < input.cardioSessions.length) {
+    const pool = [...input.cardioSessions]
+    for (const entry of week.days) {
+      if (entry.planned?.kind === 'cardio') consume(pool, entry.planned.prescription)
+    }
+    for (const prescription of pool) options.push({ item: { kind: 'cardio', prescription }, from: null })
   }
-  for (const prescription of pool) options.push({ item: { kind: 'cardio', prescription }, from: null })
 
   const seen = new Set(day.planned ? [itemKey(day.planned)] : [])
   return options.filter((option) => {
@@ -907,7 +925,7 @@ export function replaceToday(
         ? 'missed earlier this week'
         : 'next in the rotation'
   const consequence = original
-    ? `today's ${describeItem(original)} takes its place later in the week, nothing is dropped`
+    ? `today's ${describeItem(original)} moves to a later training day or rolls forward, nothing is dropped`
     : option.from !== null
       ? `${WEEKDAY_LABELS[weekdayIndexMondayFirst(option.from)]} becomes a rest day`
       : 'today becomes a training day'

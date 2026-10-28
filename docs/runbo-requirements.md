@@ -124,9 +124,9 @@ friends may follow. This shapes the product:
   this week, or a cardio session a missed day left behind — on a training day and a rest day alike. A workout
   taken from a later day *moves*: that day takes over today's track (or rests, if today was a rest day), so
   nothing is trained twice and the displaced work shifts later. Strength is offered only as the day the
-  rotation is on, so a pick can never skip program days. The interference rules do not veto the athlete's
-  pick; the explanation says when it breaks one. Like claim and swap, it persists nothing until the session
-  is logged.
+  rotation is on, so a pick can never skip program days, and never as a bonus day once the week's lifting is
+  done. The interference rules do not veto the athlete's pick; the explanation says when it breaks one. Like
+  claim and swap, it persists nothing until the session is logged.
 - **Calendar week vs. training block.** The **calendar week starts Monday** and is what availability, the
   planning window and the "this week" tiles mean: "I train Monday, Wednesday, Friday" is a fact about the
   athlete's life, the plan repeats weekly, and "this week" is what a person means by it. The **training
