@@ -12,7 +12,7 @@ import { exerciseKey, prescribe } from '@/liftoscript/evaluator'
 import { parseProgram } from '@/liftoscript/parser'
 import { format } from '@/liftoscript/weight'
 import { applyComeback, type ComebackProposal } from '@/training/comeback'
-import { claimToday, swapToday } from '@/training/composer'
+import { claimToday, type ReplacementOption, replacementOptions, replaceToday, swapToday } from '@/training/composer'
 import { evalContextFromSettings } from '@/training/plates'
 import { planWeek, resolveToday, type TodayResolution, type WeekPlan } from '@/training/schedule'
 import { currentStreak, weeklyRollup, type WeeklyRollup } from '@/training/stats'
@@ -30,6 +30,11 @@ export interface TodayModel {
   catchUp: PlannedItem | null
   canClaim: boolean
   canSwap: boolean
+  /**
+   * What the athlete may train today instead — a later day's workout, or one a
+   * missed day left behind. Empty once today is logged or a session is running.
+   */
+  replacements: ReplacementOption[]
   isDeloadWeek: boolean
   headline: string | null
   explanation: string | null
@@ -46,9 +51,9 @@ export interface TodayModel {
 }
 
 /**
- * What claiming or swapping today would produce. Both are pure composer calls:
- * nothing is persisted, and the sentence comes from the recomposed week rather
- * than from the view.
+ * What claiming, swapping or replacing today would produce. All three are pure
+ * composer calls: nothing is persisted, and the sentence comes from the
+ * recomposed week rather than from the view.
  */
 export interface TodayOverride {
   item: PlannedItem | null
@@ -76,6 +81,7 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
   const todaysSessions = sessions.filter((session) => session.date === todayIso)
   const doneSession = todaysSessions.find((session) => session.status === 'done') ?? null
   const hasDoneSession = doneSession !== null
+  const activeSession = todaysSessions.find((session) => session.status === 'active') ?? null
 
   return {
     todayIso,
@@ -88,10 +94,13 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
     canClaim: resolution.isRestDay && resolution.catchUp !== null,
     // A logged session is history — there is nothing left to swap.
     canSwap: resolution.item !== null && !hasDoneSession,
+    // A running session already decided what today is; replacing it under the
+    // athlete would start a second document beside it.
+    replacements: hasDoneSession || activeSession ? [] : replacementOptions(plan.week, todayIso, plan.input),
     isDeloadWeek: resolution.isDeloadWeek,
     headline: resolution.item?.kind === 'strength' ? strengthHeadline(profile, resolution.item.programDay) : null,
     explanation: plan.week.explanations[0] ?? null,
-    activeSession: todaysSessions.find((session) => session.status === 'active') ?? null,
+    activeSession,
     doneSession,
     streak: currentStreak(profile, sessions, todayIso),
     rollup: weeklyRollup(profile, sessions, startOfWeekMonday(todayIso), wholeWeek),
@@ -112,6 +121,13 @@ export function claimedOutcome(model: TodayModel): TodayOverride {
 /** Swapping today: the other track's next item. Nothing is dropped — the rotation is a cursor. */
 export function swappedOutcome(model: TodayModel): TodayOverride {
   const week = swapToday(model.plan.week, model.todayIso, model.plan.input)
+
+  return { item: plannedOn(week.days, model.todayIso), explanation: week.explanations[0] ?? null }
+}
+
+/** Replacing today with the athlete's pick. The moved workout leaves its own day — nothing is doubled. */
+export function replacedOutcome(model: TodayModel, option: ReplacementOption): TodayOverride {
+  const week = replaceToday(model.plan.week, model.todayIso, model.plan.input, option)
 
   return { item: plannedOn(week.days, model.todayIso), explanation: week.explanations[0] ?? null }
 }

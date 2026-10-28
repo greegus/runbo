@@ -8,6 +8,7 @@ import DiagnosticsList from '@/components/DiagnosticsList.vue'
 import ReadinessSheet from '@/components/ReadinessSheet.vue'
 import StatTile from '@/components/StatTile.vue'
 import ComebackCard from '@/components/today/ComebackCard.vue'
+import ReplacePicker from '@/components/today/ReplacePicker.vue'
 import TodayCard from '@/components/today/TodayCard.vue'
 import type { Diagnostic } from '@/liftoscript/diagnostics'
 import { buildStrengthPlan, draftFromPlan } from '@/session/strengthSession'
@@ -15,6 +16,7 @@ import {
   buildToday,
   claimedOutcome,
   comebackPatch,
+  replacedOutcome,
   strengthHeadline,
   swappedOutcome,
   type TodayOverride,
@@ -23,6 +25,7 @@ import { useBodyweightStore } from '@/stores/bodyweight'
 import { useProfileStore } from '@/stores/profile'
 import { type SessionDraft, useSessionsStore } from '@/stores/sessions'
 import { planCardioWeek } from '@/training/cardioPlan'
+import type { ReplacementOption } from '@/training/composer'
 import type { ReadinessInput } from '@/training/readiness'
 import { plannedCardioDays } from '@/training/schedule'
 import type { PlannedItem, Session } from '@/types'
@@ -54,10 +57,11 @@ const model = computed(() =>
 )
 
 /**
- * A claim or a swap is a pure recomposition and persists NOTHING: the program
- * day the athlete actually trains is recorded on the session, and
- * `finishSession` derives the cursor from that. So the chosen item lives here,
- * in local state, until the session document is created.
+ * A claim, a swap or a replacement is a pure recomposition and persists
+ * NOTHING: the program day (or the prescription) the athlete actually trains is
+ * recorded on the session, `finishSession` derives the cursor from that, and the
+ * composer re-plans the rest of the week around the logged day. So the chosen
+ * item lives here, in local state, until the session document is created.
  */
 const override = ref<TodayOverride | null>(null)
 
@@ -207,6 +211,11 @@ function onClaim(): void {
 function onSwap(): void {
   if (!model.value) return
   override.value = swappedOutcome(model.value)
+}
+
+function onReplace(option: ReplacementOption): void {
+  if (!model.value) return
+  override.value = replacedOutcome(model.value, option)
 }
 
 function undoOverride(): void {
@@ -372,6 +381,14 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
         @resume="onResume($event)"
         @claim="onClaim()"
         @swap="onSwap()"
+      />
+
+      <ReplacePicker
+        v-if="override === null"
+        :options="model.replacements"
+        :zones="profileStore.profile?.cardioTrack.zones"
+        :busy="busy"
+        @pick="onReplace($event)"
       />
 
       <button

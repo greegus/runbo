@@ -120,6 +120,13 @@ friends may follow. This shapes the product:
   session (overdue strength first, else the next cardio of the week).
 - **Swap today**: replace today's item with the other track's next item; the rest of the week recomposes.
   Nothing is ever skipped — the strength rotation is a cursor, not a calendar.
+- **Replace today**: the athlete picks what today holds from the week's other workouts — one planned later
+  this week, or a cardio session a missed day left behind — on a training day and a rest day alike. A workout
+  taken from a later day *moves*: that day takes over today's track (or rests, if today was a rest day), so
+  nothing is trained twice and the displaced work shifts later. Strength is offered only as the day the
+  rotation is on, so a pick can never skip program days. The interference rules do not veto the athlete's
+  pick; the explanation says when it breaks one. Like claim and swap, it persists nothing until the session
+  is logged.
 - **Calendar week vs. training block.** The **calendar week starts Monday** and is what availability, the
   planning window and the "this week" tiles mean: "I train Monday, Wednesday, Friday" is a fact about the
   athlete's life, the plan repeats weekly, and "this week" is what a person means by it. The **training
@@ -193,7 +200,7 @@ friends may follow. This shapes the product:
 |-------|------|---------|
 | `/signin` | SignIn | Google button; "ask for access" state for non-allowlisted accounts |
 | `/onboarding/:step` | Onboarding | Resumable wizard, steps 0–6 |
-| `/` | Today | Today's card (strength day, cardio prescription, or rest); claim-today and swap controls; comeback proposal; deload badge; streak and week tiles; bodyweight quick add |
+| `/` | Today | Today's card (strength day, cardio prescription, or rest); claim-today, swap and replace controls; comeback proposal; deload badge; streak and week tiles; bodyweight quick add |
 | *(from Today)* | StrengthSession | Tier blocks with tap-cycling set rows, AMRAP stepper, plate hints, rest timer, readiness sheet on entry, completion summary with progression lines and new PRs; per lift, a table of the upcoming sessions the progression projects |
 | *(from Today)* | CardioSession | Prescription card (zone as HR / pace / RPE cue) with manual log form; a matched Strava activity shows as completed |
 | `/plan` | Plan | This week as composed: planned vs done per day, deload badge, placement explanations |
@@ -212,7 +219,7 @@ friends may follow. This shapes the product:
 - Liftoscript engine for the documented subset, with diagnostics and a stable serializer.
 - Built-in GZCLP; paste-your-own program; Liftosaur history import with derived state.
 - Prescribed cardio with mesocycles, adaptive hold/step-back, zones, modality rotation.
-- Availability-driven composer with interference rules, claim-today, swap-today.
+- Availability-driven composer with interference rules, claim-today, swap-today, replace-today.
 - Today / StrengthSession / CardioSession / Plan / Progress / History / Program / Settings.
 - Comeback mode, readiness check, bodyweight, PRs, JSON export.
 - Strava OAuth + webhook import + 30-activity backfill; manual cardio entry.
