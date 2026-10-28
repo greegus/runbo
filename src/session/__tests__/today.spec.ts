@@ -2,7 +2,7 @@ import type { ComebackProposal } from '@/training/comeback'
 import { GZCLP_PROGRAM_SOURCE, initialProgramState } from '@/training/gzclp'
 import type { Profile, Session } from '@/types'
 
-import { buildToday, claimedOutcome, comebackPatch, strengthHeadline, swappedOutcome } from '../today'
+import { buildToday, claimedOutcome, comebackPatch, replacedOutcome, strengthHeadline, swappedOutcome } from '../today'
 
 const MON = '2026-08-24'
 const TUE = '2026-08-25'
@@ -172,6 +172,23 @@ describe('claimedOutcome / swappedOutcome', () => {
     if (model.item !== null) return
 
     expect(swappedOutcome(model).item).toBeNull()
+  })
+})
+
+describe('replacedOutcome', () => {
+  it('trains the picked workout today and takes it off the day it came from', () => {
+    const model = buildToday(profile(), [], MON)
+    const option = model.replacements.find((entry) => entry.from !== null)
+    if (!option?.from) throw new Error('expected a workout planned later in the week')
+
+    const outcome = replacedOutcome(model, option)
+    expect(outcome.item).toEqual(option.item)
+    expect(outcome.explanation).toContain('replaced with')
+  })
+
+  it('offers nothing once today is logged or a session is running', () => {
+    expect(buildToday(profile(), [strengthSession(MON, 'A1')], MON).replacements).toEqual([])
+    expect(buildToday(profile(), [strengthSession(MON, 'A1', 'active')], MON).replacements).toEqual([])
   })
 })
 

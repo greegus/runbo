@@ -14,6 +14,9 @@ import {
   explainPlacement,
   isDayBeforeHeavyLower,
   isHardCardio,
+  type ReplacementOption,
+  replacementOptions,
+  replaceToday,
   sharesDayWithStrength,
   swapToday,
   trainingWeekdays,
@@ -101,6 +104,10 @@ function layout(week: ComposedWeek): Record<string, string> {
 
 function strengthDays(week: ComposedWeek): string[] {
   return week.days.flatMap((day) => (day.planned?.kind === 'strength' ? [day.planned.programDay] : []))
+}
+
+function cardioKinds(week: ComposedWeek): CardioPrescription['kind'][] {
+  return week.days.flatMap((day) => (day.planned?.kind === 'cardio' ? [day.planned.prescription.kind] : []))
 }
 
 function countKind(week: ComposedWeek, kind: PlannedItem['kind']): number {
@@ -592,6 +599,139 @@ describe('swapToday', () => {
     const logged = input({ rotationCursor: 1, completedSessions: [strengthSession(MON, 'A1')] })
 
     expect(layout(swapToday(composeWeek(logged), MON, logged))).toEqual(layout(composeWeek(logged)))
+  })
+})
+
+describe('replacementOptions / replaceToday', () => {
+  // Tuesday: Tue easy 40 (the intervals, demoted before Wednesday's A1),
+  // Wed A1, Fri B1, Sat long 60.
+  const base = input({ fromDate: TUE })
+  const week = composeWeek(base)
+
+  function optionFrom(options: ReplacementOption[], from: string | null, kind: PlannedItem['kind']) {
+    const option = options.find((entry) => entry.from === from && entry.item.kind === kind)
+    if (!option) throw new Error(`no ${kind} option from ${from}`)
+    return option
+  }
+
+  it('composes the week the tests below start from', () => {
+    expect(layout(week)).toEqual({ Tue: 'easy 40', Wed: 'A1', Fri: 'B1', Sat: 'long 60' })
+  })
+
+  it('offers the due strength day and every later cardio session, never today itself', () => {
+    const options = replacementOptions(week, TUE, base)
+
+    expect(options).toEqual([
+      { item: { kind: 'strength', programDay: 'A1' }, from: WED },
+      { item: { kind: 'cardio', prescription: long(60) }, from: SAT },
+    ])
+  })
+
+  it('never offers a strength day past the one the rotation is on', () => {
+    // B1 on Friday would skip A1, and the cursor would never come back for it.
+    const options = replacementOptions(week, TUE, base)
+
+    expect(options.filter((option) => option.item.kind === 'strength')).toHaveLength(1)
+  })
+
+  it('swaps cardio for strength by trading the two days, so nothing is doubled', () => {
+    const replaced = replaceToday(week, TUE, base, optionFrom(replacementOptions(week, TUE, base), WED, 'strength'))
+
+    expect(itemAt(replaced, TUE)).toEqual({ kind: 'strength', programDay: 'A1' })
+    expect(itemAt(replaced, WED)?.kind).toBe('cardio')
+    expect(strengthDays(replaced)).toEqual(['A1', 'B1'])
+    expect(countKind(replaced, 'cardio')).toBe(countKind(week, 'cardio'))
+    expect(replaced.explanations[0]).toContain('replaced with strength A1 from Wed 2026-08-26')
+    expect(noHardCardioBeforeHeavyLower(replaced)).toBe(true)
+  })
+
+  it('moves a later cardio session onto today and gives its day the displaced work', () => {
+    const replaced = replaceToday(week, TUE, base, optionFrom(replacementOptions(week, TUE, base), SAT, 'cardio'))
+
+    expect(itemAt(replaced, TUE)).toEqual({ kind: 'cardio', prescription: long(60) })
+    expect(cardioKinds(replaced).filter((kind) => kind === 'long')).toHaveLength(1)
+    // Today's easy session was the intervals all along; Saturday can hold them.
+    expect(itemAt(replaced, SAT)).toEqual({ kind: 'cardio', prescription: intervals(40) })
+    expect(strengthDays(replaced)).toEqual(['A1', 'B1'])
+  })
+
+  it('places the pick even against the interference rules, and says so', () => {
+    // The long run on Tuesday sits the evening before Wednesday's A1.
+    const replaced = replaceToday(week, TUE, base, optionFrom(replacementOptions(week, TUE, base), SAT, 'cardio'))
+
+    expect(replaced.explanations[0]).toContain('Tomorrow is a heavy lower day')
+  })
+
+  describe('on a rest day', () => {
+    // Thursday: Monday to Wednesday never happened. Fri A1, Sat long 60, and
+    // the intervals had no day left.
+    const rest = input({ fromDate: THU })
+    const restWeek = composeWeek(rest)
+    const options = replacementOptions(restWeek, THU, rest)
+
+    it('offers the missed session no day holds any more', () => {
+      expect(layout(restWeek)).toEqual({ Fri: 'A1', Sat: 'long 60' })
+      expect(options).toContainEqual({ item: { kind: 'cardio', prescription: intervals(40) }, from: null })
+    })
+
+    it('does a missed workout today without touching the rest of the week', () => {
+      const replaced = replaceToday(restWeek, THU, rest, optionFrom(options, null, 'cardio'))
+
+      expect(layout(replaced)).toEqual({ Thu: 'intervals 40', Fri: 'A1', Sat: 'long 60' })
+      expect(replaced.explanations[0]).toContain('missed earlier this week')
+    })
+
+    it('pulls a later workout forward and leaves its day free', () => {
+      const replaced = replaceToday(restWeek, THU, rest, optionFrom(options, FRI, 'strength'))
+
+      expect(layout(replaced)).toEqual({ Thu: 'A1', Sat: 'long 60' })
+      expect(replaced.explanations[0]).toContain('Fri becomes a rest day')
+    })
+  })
+
+  it('offers the next rotation day when the week has no strength day left', () => {
+    const caught = input({
+      rotationCursor: 3,
+      completedSessions: [
+        strengthSession(MON, 'A1'),
+        strengthSession(WED, 'B1'),
+        strengthSession(FRI, 'A2'),
+        cardioSession(SAT, long(60)),
+      ],
+      fromDate: SUN,
+    })
+    const caughtWeek = composeWeek(caught)
+    const options = replacementOptions(caughtWeek, SUN, caught)
+
+    expect(options[0]).toEqual({ item: { kind: 'strength', programDay: 'B2' }, from: null })
+
+    const replaced = replaceToday(caughtWeek, SUN, caught, options[0])
+    expect(itemAt(replaced, SUN)).toEqual({ kind: 'strength', programDay: 'B2' })
+    expect(replaced.explanations[0]).toContain('next in the rotation')
+  })
+
+  it('stays consistent once the moved workout is logged — it is not planned twice', () => {
+    // Saturday's long run done on Tuesday, then the week recomposed from Wednesday.
+    const logged = input({ completedSessions: [cardioSession(TUE, long(60))], fromDate: WED })
+
+    expect(cardioKinds(composeWeek(logged)).filter((kind) => kind === 'long')).toHaveLength(1)
+    // Wednesday's A1 done on Tuesday: the cursor moved on, so A1 is not owed again.
+    const lifted = input({ rotationCursor: 1, completedSessions: [strengthSession(TUE, 'A1')], fromDate: WED })
+
+    expect(strengthDays(composeWeek(lifted)).filter((day) => day === 'A1')).toHaveLength(1)
+  })
+
+  it('refuses a day that is already logged, and a workout from a logged day', () => {
+    const logged = input({ rotationCursor: 1, completedSessions: [strengthSession(TUE, 'A1')], fromDate: TUE })
+    const loggedWeek = composeWeek(logged)
+
+    expect(replacementOptions(loggedWeek, TUE, logged)).toEqual([])
+    expect(
+      layout(replaceToday(loggedWeek, TUE, logged, { item: { kind: 'cardio', prescription: long(60) }, from: SAT })),
+    ).toEqual(layout(loggedWeek))
+    expect(
+      layout(replaceToday(loggedWeek, WED, logged, { item: { kind: 'strength', programDay: 'A1' }, from: TUE })),
+    ).toEqual(layout(loggedWeek))
   })
 })
 

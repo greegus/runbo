@@ -454,6 +454,33 @@ function consume(pool: CardioPrescription[], used: CardioPrescription): void {
   if (index >= 0) pool.splice(index, 1)
 }
 
+/** A cardio prescription the athlete placed on a day themselves — see `replaceToday`. */
+interface PinnedCardio {
+  date: string
+  prescription: CardioPrescription
+}
+
+/**
+ * The week is not the end of training. A Sunday interval session still lands
+ * the evening before next Monday's lift, and the interference predicates only
+ * see the slots they are given — so next week's first strength day joins them
+ * as a virtual slot. The pattern repeats, so it sits seven days after this
+ * week's first strength day and carries the program day the cursor will be on
+ * once this week is logged (`step` is how many of the slots the cursor fed). It
+ * can only ever bite on the last day of the week.
+ */
+function nextWeekSlot(slots: StrengthSlot[], input: ComposeWeekInput, step: number): StrengthSlot[] {
+  const first = slots[0]
+  if (!first || input.programDays.length === 0) return []
+
+  return [
+    {
+      date: addDays(first.date, WEEK_LENGTH),
+      programDay: input.programDays[(input.rotationCursor + step) % input.programDays.length],
+    },
+  ]
+}
+
 /**
  * Fills a decided track layout with actual items: program days from the
  * rotation cursor, prescriptions through the interference predicates.
@@ -464,6 +491,7 @@ function assignItems(
   tracks: Map<string, Track>,
   fixed: Map<string, PlannedItem>,
   preferCardioDate?: string,
+  pinned?: PinnedCardio,
 ): ComposedWeekPlan {
   const explanations: string[] = []
   const planned = new Map<string, PlannedItem>()
@@ -503,19 +531,7 @@ function assignItems(
     )
   }
 
-  // The week is not the end of training. A Sunday interval session still lands
-  // the evening before next Monday's lift, and the interference predicates only
-  // see the slots they are given — so next week's first strength day joins them
-  // as a virtual slot. The pattern repeats, so it sits seven days after this
-  // week's first strength day and carries the program day the cursor will be on
-  // once this week is logged. It can only ever bite on the last day of the week.
-  const first = slots[0]
-  if (first) {
-    slots.push({
-      date: addDays(first.date, WEEK_LENGTH),
-      programDay: programDays[(input.rotationCursor + step) % programDays.length],
-    })
-  }
+  slots.push(...nextWeekSlot(slots, input, step))
 
   // --- cardio ---------------------------------------------------------------
   const pool = [...input.cardioSessions]
@@ -532,6 +548,15 @@ function assignItems(
       continue
     }
 
+    // The athlete's own pick holds its day the way a logged session does, and
+    // takes its prescription out of the pool so no other day gets it too.
+    if (pinned && pinned.date === date) {
+      planned.set(date, { kind: 'cardio', prescription: pinned.prescription })
+      consume(pool, pinned.prescription)
+      explanations.push(`${label(date)}: ${describe(pinned.prescription)} — chosen for this day.`)
+      continue
+    }
+
     available.push(date)
   }
 
@@ -544,7 +569,8 @@ function assignItems(
 
   // Long session: the preferred day first, then the nearest legal day, and only
   // then a demotion — the week keeps the minutes even when it loses the flavour.
-  let longSessionDate: string | null = null
+  // A pinned long session is still the long session: the hard one keeps off the day before it.
+  let longSessionDate: string | null = pinned?.prescription.kind === 'long' ? pinned.date : null
   const longIndex = pool.findIndex((prescription) => prescription.kind === 'long')
 
   if (longIndex >= 0 && available.length > 0) {
@@ -745,4 +771,172 @@ export function swapToday(week: ComposedWeek, dateIso: string, input: ComposeWee
   )
 
   return plan
+}
+
+/** One workout a day can be replaced with, and where the week holds it now. */
+export interface ReplacementOption {
+  item: PlannedItem
+  /**
+   * The later day this week that holds the workout, or `null` when no day does:
+   * a cardio session from a missed day that the remaining cardio days could not
+   * absorb, or the rotation's next strength day when the week has none left.
+   */
+  from: string | null
+}
+
+function itemKey(item: PlannedItem): string {
+  return item.kind === 'strength' ? `strength:${item.programDay}` : `cardio:${JSON.stringify(item.prescription)}`
+}
+
+function describeItem(item: PlannedItem): string {
+  return item.kind === 'strength' ? `strength ${item.programDay}` : describe(item.prescription)
+}
+
+/**
+ * What the athlete may train on `dateIso` instead of what is planned there.
+ *
+ * Strength is offered ONCE, and only as the day the rotation is on: the first
+ * strength day later in the week already holds it, because the cursor fills
+ * strength days in calendar order. Offering Friday's A2 on a Monday that owes A1
+ * would let one tap skip two program days, and the cursor — which follows the
+ * program day actually logged — would never come back for them.
+ *
+ * Cardio is offered per prescription: every session still planned later in the
+ * week, plus the ones no day holds any more. Identical prescriptions collapse
+ * into one option, and today's own item is never offered back.
+ */
+export function replacementOptions(week: ComposedWeek, dateIso: string, input: ComposeWeekInput): ReplacementOption[] {
+  const dates = weekDates(input.weekStart)
+  const day = week.days.find((entry) => entry.date === dateIso)
+  if (!day) return []
+
+  const fixed = fixedItems(input, dates)
+  // A logged session is history — there is nothing left to replace.
+  if (fixed.has(dateIso)) return []
+
+  const later = week.days.filter((entry) => entry.date > dateIso && entry.planned !== null && !fixed.has(entry.date))
+  const options: ReplacementOption[] = []
+
+  if (day.planned?.kind !== 'strength' && input.programDays.length > 0) {
+    const due = later.find((entry) => entry.planned?.kind === 'strength')
+    if (due?.planned) {
+      options.push({ item: due.planned, from: due.date })
+    } else {
+      // No strength day left this week: ask the composer what the cursor hands a
+      // strength day placed here, rather than redoing its arithmetic.
+      const trial = replaceToday(week, dateIso, input, { item: { kind: 'strength', programDay: '' }, from: null })
+      const item = trial.days.find((entry) => entry.date === dateIso)?.planned
+      if (item?.kind === 'strength') options.push({ item, from: null })
+    }
+  }
+
+  for (const entry of later) {
+    if (entry.planned?.kind === 'cardio') options.push({ item: entry.planned, from: entry.date })
+  }
+
+  // What the week no longer places anywhere: the pool, minus every prescription
+  // some day holds — planned or logged.
+  const pool = [...input.cardioSessions]
+  for (const entry of week.days) {
+    if (entry.planned?.kind === 'cardio') consume(pool, entry.planned.prescription)
+  }
+  for (const prescription of pool) options.push({ item: { kind: 'cardio', prescription }, from: null })
+
+  const seen = new Set(day.planned ? [itemKey(day.planned)] : [])
+  return options.filter((option) => {
+    const key = itemKey(option.item)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+/**
+ * Trains `option` on `dateIso` instead of what the day holds, and recomposes
+ * the rest of the week around it.
+ *
+ * When the workout came from a later day, the two days trade TRACKS: that day
+ * takes over whatever today was (or becomes a rest day if today was one), so the
+ * week keeps its shape and the moved workout cannot stay where it was as well. A
+ * strength pick takes the rotation's next day; a cardio pick is pinned as it is
+ * and leaves the pool, and the remaining prescriptions are placed by the usual
+ * rules. What today used to hold is displaced, never dropped: strength shifts
+ * along the cursor, cardio goes back to the pool and fills a later cardio day or
+ * rolls forward.
+ *
+ * The pick is the athlete's, so the interference rules do not veto it: a hard or
+ * long session the day before a heavy lower day is placed anyway, and the
+ * explanation says so.
+ */
+export function replaceToday(
+  week: ComposedWeek,
+  dateIso: string,
+  input: ComposeWeekInput,
+  option: ReplacementOption,
+): ComposedWeekPlan {
+  const dates = weekDates(input.weekStart)
+  const day = week.days.find((entry) => entry.date === dateIso)
+  if (!day) return toPlan(week)
+
+  const fixed = fixedItems(input, dates)
+  // A logged session is history — on this day and on the day a workout would be moved from.
+  if (fixed.has(dateIso) || (option.from !== null && fixed.has(option.from))) return toPlan(week)
+
+  const tracks = tracksFromWeek(week)
+  // As in `claimToday`: earlier days that never happened are released, so their
+  // work is what this day can pick up.
+  for (const date of tracks.keys()) {
+    if (date < dateIso && !fixed.has(date)) tracks.delete(date)
+  }
+
+  const original = day.planned
+  tracks.set(dateIso, option.item.kind)
+  if (option.from !== null && option.from !== dateIso) {
+    if (original) tracks.set(option.from, original.kind)
+    else tracks.delete(option.from)
+  }
+
+  const pinned = option.item.kind === 'cardio' ? { date: dateIso, prescription: option.item.prescription } : undefined
+  const plan = assignItems(input, dates, tracks, fixed, undefined, pinned)
+
+  const placed = plan.days.find((entry) => entry.date === dateIso)?.planned ?? option.item
+  const origin =
+    option.from !== null
+      ? `from ${label(option.from)}`
+      : option.item.kind === 'cardio'
+        ? 'missed earlier this week'
+        : 'next in the rotation'
+  const consequence = original
+    ? `today's ${describeItem(original)} takes its place later in the week, nothing is dropped`
+    : option.from !== null
+      ? `${WEEKDAY_LABELS[weekdayIndexMondayFirst(option.from)]} becomes a rest day`
+      : 'today becomes a training day'
+  const warning =
+    pinned &&
+    (isHardCardio(pinned.prescription) || pinned.prescription.kind === 'long') &&
+    isBeforeHeavyLower(plan, dateIso, input, fixed)
+      ? ' Tomorrow is a heavy lower day, which this session is normally kept clear of — go by how your legs feel.'
+      : ''
+
+  plan.explanations.unshift(
+    `${label(dateIso)} replaced with ${describeItem(placed)} ${origin} — ${consequence}.${warning}`,
+  )
+
+  return plan
+}
+
+/** `isDayBeforeHeavyLower` over a finished week, next week's first strength day included. */
+function isBeforeHeavyLower(
+  plan: ComposedWeek,
+  dateIso: string,
+  input: ComposeWeekInput,
+  fixed: Map<string, PlannedItem>,
+): boolean {
+  const slots: StrengthSlot[] = plan.days.flatMap((entry) =>
+    entry.planned?.kind === 'strength' ? [{ date: entry.date, programDay: entry.planned.programDay }] : [],
+  )
+  // `nextWeekSlot` wants how many of the slots the cursor fed — the logged ones it did not.
+  const step = slots.filter((slot) => !fixed.has(slot.date)).length
+
+  return isDayBeforeHeavyLower(dateIso, [...slots, ...nextWeekSlot(slots, input, step)], input.heavyLowerDays)
 }

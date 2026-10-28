@@ -431,6 +431,8 @@ of scripted results driven through composer + evaluator).
 composeWeek(input: ComposeWeekInput): ComposedWeekPlan
 claimToday(week, dateIso, input): ComposedWeekPlan
 swapToday(week, dateIso, input): ComposedWeekPlan
+replacementOptions(week, dateIso, input): ReplacementOption[]
+replaceToday(week, dateIso, input, option): ComposedWeekPlan
 explainPlacement(week): string[]
 ```
 
@@ -459,6 +461,18 @@ is implicit.
 Overrides: `claimToday` marks an unplanned day available and returns the most valuable session (overdue
 strength first, else the next cardio of the week). `swapToday` replaces today's item with the other track's
 next item and recomposes the rest of the week. Nothing is ever skipped — cursor semantics.
+
+`replacementOptions` lists what the athlete may train on a day instead (`ReplacementOption = { item, from }`,
+`from` = the later day holding it, or `null`): the strength day the rotation is on (the first later strength
+day, or — when the week has none left — what the cursor hands a strength day placed here), every cardio
+prescription planned later in the week, and the prescriptions no day holds any more (a missed day's work
+the remaining days could not absorb). Later strength days are never offered: logging B1 on a day that owes
+A1 would move the cursor past A1 for good. `replaceToday` applies a pick: earlier unlogged days are released
+(as in `claimToday`), the day and `from` **trade tracks** (or `from` becomes a rest day), a cardio pick is
+pinned as given and consumed from the pool, and the rest recomposes through the normal rules. The pick is not
+vetoed by the interference predicates — a hard or long session before a heavy lower day is placed and the
+explanation warns. Nothing is persisted: the logged session's `programDay` / `prescription` is what the
+composer and `finishSession` read afterwards, so the moved workout is not planned twice.
 
 ### Cardio planner (`cardioPlan.ts`)
 
@@ -660,9 +674,10 @@ Views are thin; every rule lives in a pure module.
 
 - `SignInView` — Google button; not-allowlisted state ("ask for access", shows the signed-in email).
 - `TodayView` — `resolveToday` card: strength day (program day + first exercise's weights), cardio
-  prescription (`describePrescription`), or rest; claim-today and swap controls; comeback proposal; deload
-  badge; the streak tile (`currentStreak`, in **sessions**) and the "this week" tiles (`weeklyRollup`, over the
-  **calendar** week); bodyweight quick add. It also drives the training-block rollover: `cardioBlockAction` off
+  prescription (`describePrescription`), or rest; claim-today and swap controls; the replace picker
+  (`today/ReplacePicker`, fed by `replacementOptions`); comeback proposal; deload badge; the streak tile
+  (`currentStreak`, in **sessions**) and the "this week" tiles (`weeklyRollup`, over the **calendar** week);
+  bodyweight quick add. It also drives the training-block rollover: `cardioBlockAction` off
   the stored anchor, adopted through the profile store.
 - `StrengthSessionView` — `TierBlock` per tier, `SetRow` with tap cycling, AMRAP stepper, `PlateHint` per set,
   `RestTimer` (tier default or program timer), readiness sheet on entry, completion summary with
