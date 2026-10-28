@@ -6,8 +6,10 @@ import { Button, Icon, IconButton, TabsNav, useDialogStack } from 'vuiii'
 import DiagnosticsList from '@/components/DiagnosticsList.vue'
 import ReadinessSheet from '@/components/ReadinessSheet.vue'
 import RestTimer from '@/components/RestTimer.vue'
+import ProjectionSheet from '@/components/strength/ProjectionSheet.vue'
 import TierBlock from '@/components/strength/TierBlock.vue'
 import { deleteSession, loadSession, saveSession } from '@/services/sessionsService'
+import type { LiftProjection } from '@/session/projection'
 import { loggedCount } from '@/session/setCycle'
 import {
   applyLoggedSets,
@@ -15,6 +17,7 @@ import {
   buildStrengthPlan,
   finishBlockedReason,
   loggedSetsFromSession,
+  projectPlannedExercise,
 } from '@/session/strengthSession'
 import type { LoggedSet } from '@/session/types'
 import { useProfileStore } from '@/stores/profile'
@@ -163,6 +166,24 @@ const activeExercise = computed(() => plan.value?.exercises[activeIndex.value] ?
 
 /** The lift after this one, so a finished block offers the obvious next move. */
 const nextExercise = computed(() => plan.value?.exercises[activeIndex.value + 1] ?? null)
+
+/**
+ * The upcoming-sessions table for the lift on screen. Computed once, when it is
+ * opened: the projection is a snapshot of "where this goes from here", and
+ * re-running eight engine round trips on every logged rep would buy nothing.
+ */
+const projection = shallowRef<{ title: string; result: LiftProjection } | null>(null)
+
+function showProjection(): void {
+  const current = profile.value
+  const exercise = activeExercise.value
+  if (!current || !plan.value || !exercise) return
+
+  projection.value = {
+    title: `${exercise.tier ? `T${exercise.tier} ` : ''}${exercise.name}`,
+    result: projectPlannedExercise(current, plan.value, exercise, logged.value[activeIndex.value] ?? []),
+  }
+}
 
 function goToNext(): void {
   const next = nextExercise.value
@@ -638,6 +659,7 @@ onBeforeRouteLeave(() => {
             @update:collapsed="collapsed[activeIndex] = $event"
             @update:weight="setWeight(activeIndex, $event)"
             @first-log="onFirstLog(activeIndex, $event)"
+            @show-projection="showProjection()"
           />
 
           <!-- The obvious next move once a lift is done, so finishing one does
@@ -728,6 +750,14 @@ onBeforeRouteLeave(() => {
         :busy="busy"
         @submit="submitReadiness"
         @skip="skipReadiness()"
+      />
+
+      <ProjectionSheet
+        v-if="projection"
+        :title="projection.title"
+        :projection="projection.result"
+        first-label="Today"
+        @close="projection = null"
       />
     </template>
   </section>

@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { Button } from 'vuiii'
 
 import DiagnosticsList from '@/components/DiagnosticsList.vue'
 import PlateHint from '@/components/strength/PlateHint.vue'
+import ProjectionSheet from '@/components/strength/ProjectionSheet.vue'
 import { variationCounts } from '@/import/mergeProgramState'
 import { prescribe } from '@/liftoscript/evaluator'
 import type { PrescribedSet, Program } from '@/liftoscript/types'
 import { format } from '@/liftoscript/weight'
+import { projectLift, repsRange } from '@/session/projection'
 import { evalContextFromSettings } from '@/training/plates'
 import type { ExerciseState, Profile, WeightValue } from '@/types'
 
@@ -46,6 +49,8 @@ interface StateRow {
   diagnostics: ReturnType<typeof prescribe>['diagnostics']
 }
 
+const evalContext = computed(() => evalContextFromSettings(props.settings, { week: props.week, day: props.day }))
+
 const counts = computed(() => (props.program ? variationCounts(props.program) : {}))
 
 const rows = computed<StateRow[]>(() =>
@@ -58,9 +63,7 @@ const rows = computed<StateRow[]>(() =>
       // has: `variationOf` clamps the index, so showing the raw number would
       // claim a stage the athlete is not on.
       const stageCount = counts.value[key] ?? null
-      const result = program
-        ? prescribe(program, key, state, evalContextFromSettings(props.settings, { week: props.week, day: props.day }))
-        : null
+      const result = program ? prescribe(program, key, state, evalContext.value) : null
 
       return {
         key,
@@ -75,10 +78,25 @@ const rows = computed<StateRow[]>(() =>
     }),
 )
 
+/**
+ * Keyed, not snapshotted: a session finished on another device moves the row,
+ * and the open table has to move with it.
+ */
+const projectionKey = ref<string | null>(null)
+
+const projection = computed(() => {
+  const row = rows.value.find((candidate) => candidate.key === projectionKey.value)
+  if (!row || !props.program) return null
+
+  return {
+    title: row.key.replace(':', ' '),
+    result: projectLift(props.program, row.key, row.state, evalContext.value),
+  }
+})
+
 /** `3+` for an AMRAP set, `8-12` for a range — the reps as the program writes them. */
 function repsLabel(set: PrescribedSet): string {
-  const reps = set.minReps === undefined ? `${set.reps}` : `${set.minReps}-${set.reps}`
-  return set.isAmrap ? `${reps}+` : reps
+  return set.isAmrap ? `${repsRange(set)}+` : repsRange(set)
 }
 </script>
 
@@ -124,11 +142,27 @@ function repsLabel(set: PrescribedSet): string {
           </ul>
         </div>
 
+        <Button
+          v-if="row.sets.length && row.weight"
+          label="Upcoming sessions"
+          prefix-icon="chart"
+          variant="outlined"
+          class="min-h-[48px] self-start"
+          @click="projectionKey = row.key"
+        />
+
         <!-- A lift the program no longer mentions still has state, and
              `prescribe` says so in words. Hiding that would leave a weight on
              screen that nothing will ever prescribe. -->
         <DiagnosticsList v-if="row.diagnostics.length" :diagnostics="row.diagnostics" />
       </li>
     </ul>
+
+    <ProjectionSheet
+      v-if="projection"
+      :title="projection.title"
+      :projection="projection.result"
+      @close="projectionKey = null"
+    />
   </div>
 </template>

@@ -666,14 +666,16 @@ Views are thin; every rule lives in a pure module.
   the stored anchor, adopted through the profile store.
 - `StrengthSessionView` — `TierBlock` per tier, `SetRow` with tap cycling, AMRAP stepper, `PlateHint` per set,
   `RestTimer` (tier default or program timer), readiness sheet on entry, completion summary with
-  `progressionSummary` lines and `detectNewRecords`.
+  `progressionSummary` lines and `detectNewRecords`. Each `TierBlock` opens a `ProjectionSheet`: the lift's
+  next sessions from `projectLift` (`session/projection.ts`), counted up from the weight on the bar.
 - `CardioSessionView` — `PrescriptionCard` + `CardioLogForm` (minutes, distance, avg HR, RPE, notes); a
   matched Strava activity shows as completed.
 - `PlanView` — composed week, planned vs done per day, deload badge, `explainPlacement` lines.
 - `HistoryView` — list; delete the most recent session with confirmation → restores `stateSnapshot`.
 - `ProgressView` — per-lift weight and e1RM `LineChart`s, weekly cardio `BarChart` vs target, PR list,
   bodyweight trend, readiness vs performance. Charts are hand-rolled SVG; load the `dataviz` skill first.
-- `ProgramView` — `ProgramEditor` (text + diagnostics), per-exercise current state, copy-out.
+- `ProgramView` — `ProgramEditor` (text + diagnostics), per-exercise current state with the same
+  upcoming-sessions `ProjectionSheet`, copy-out.
 - `SettingsView` — all form sections, rest timers, comeback threshold, Strava connect card, notification
   toggles (request permission here only), JSON export of all user data.
 

@@ -20,6 +20,7 @@ import { evalContextFromSettings } from '@/training/plates'
 import type { ReadinessInput } from '@/training/readiness'
 import type { ExerciseState, Profile, Session, SetLog, WeightValue } from '@/types'
 
+import { type LiftProjection, projectLift } from './projection'
 import { fromSetLog, isLogged, toLoggedSet, toSetLog } from './setCycle'
 import type { LoggedSet } from './types'
 
@@ -147,6 +148,56 @@ export function buildStrengthPlan(profile: Profile, programDay: string): Strengt
     exercises: lines.map((line) => prescribeLine(profile, program, line, slot)),
     diagnostics: [],
   }
+}
+
+function sameWeight(a: WeightValue | undefined, b: WeightValue | undefined): boolean {
+  return a?.value === b?.value && a?.unit === b?.unit
+}
+
+/**
+ * The working weight to project from, or `null` to keep the stored one.
+ *
+ * Only a weight the athlete CHANGED this session overrides the state: an
+ * untouched set still carrying its prescribed weight may be a percentage of the
+ * working weight (a back-off set), and reading it as the working weight would
+ * count the whole table up from a number 15 % low. `applyWorkingWeight` rewrites
+ * every untouched set to the entered number, so the first one that differs
+ * from its prescription is that number.
+ */
+function enteredWeight(exercise: PrescribedExercise, logged: LoggedSet[]): WeightValue | null {
+  // An ask-weight lift has no working weight of its own, so a weight on ANY of
+  // its rows — logged ones included — is the athlete's, as long as it is not
+  // the program text's seed still sitting there untouched.
+  const askWeight = exercise.workingWeight === null
+
+  for (const [index, set] of logged.entries()) {
+    if ((!askWeight && set.phase !== 'untouched') || !(set.weight?.value > 0)) continue
+    if (!sameWeight(set.weight, exercise.sets[index]?.weight)) return { ...set.weight }
+  }
+
+  return null
+}
+
+/**
+ * The upcoming sessions of one lift on the plan, today's included.
+ *
+ * Projected from the profile's stored state — the state this session will be
+ * evaluated against — with a weight typed in this session substituted, because
+ * that weight (or one entered for an ask-weight lift) is not stored yet.
+ */
+export function projectPlannedExercise(
+  profile: Profile,
+  plan: StrengthPlan,
+  exercise: PrescribedExercise,
+  logged: LoggedSet[],
+): LiftProjection {
+  const { program, diagnostics } = parseProgram(profile.strengthTrack.programText)
+  if (diagnostics.length > 0) return { sessions: [], diagnostics }
+
+  const state = profile.strengthTrack.programState[exercise.key] ?? unknownState()
+  const ctx = evalContextFromSettings(profile.settings, { week: plan.week, day: plan.day })
+
+  return projectLift(program, exercise.key, state, ctx, { workingWeight: enteredWeight(exercise, logged) })
 }
 
 /** The prescribed set as it is first stored: nothing completed yet. */
