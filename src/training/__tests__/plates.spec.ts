@@ -4,8 +4,10 @@ import {
   evalContextFromSettings,
   formatPlateLoad,
   formatPlatesForWeight,
+  formatPlateWeight,
   nextLoadableDown,
   nextLoadableUp,
+  plateColor,
   platesForWeight,
   roundToLoadable,
 } from '../plates'
@@ -67,6 +69,12 @@ describe('platesForWeight', () => {
 })
 
 describe('formatting', () => {
+  it('drops trailing zeros from a plate weight', () => {
+    expect(formatPlateWeight(2.5)).toBe('2.5')
+    expect(formatPlateWeight(20)).toBe('20')
+    expect(formatPlateWeight(1.25)).toBe('1.25')
+  })
+
   it('prints bar plus per-side plates', () => {
     expect(formatPlateLoad(platesForWeight({ value: 102.5, unit: 'kg' }, settings), settings)).toBe('20 + 25/15/1.25')
     expect(formatPlatesForWeight({ value: 60, unit: 'kg' }, settings)).toBe('20 + 20')
@@ -85,5 +93,45 @@ describe('rounding helpers delegate to the engine', () => {
   it('steps to the neighbouring loadable weights', () => {
     expect(nextLoadableUp({ value: 100, unit: 'kg' }, settings)).toEqual({ value: 102.5, unit: 'kg' })
     expect(nextLoadableDown({ value: 100, unit: 'kg' }, settings)).toEqual({ value: 97.5, unit: 'kg' })
+  })
+})
+
+describe('plateColor', () => {
+  it('paints kg plates in the IWF competition colours', () => {
+    expect([25, 20, 15, 10, 5].map((weight) => plateColor(weight, 'kg'))).toEqual([
+      'red',
+      'blue',
+      'yellow',
+      'green',
+      'white',
+    ])
+    expect([2.5, 2, 1.5, 1, 0.5].map((weight) => plateColor(weight, 'kg'))).toEqual([
+      'red',
+      'blue',
+      'yellow',
+      'green',
+      'white',
+    ])
+    expect(plateColor(1.25, 'kg')).toBe('silver')
+  })
+
+  it('gives an lb plate the colour of the kg plate it stands in for', () => {
+    expect(plateColor(45, 'lb')).toBe('blue')
+    expect(plateColor(55, 'lb')).toBe('red')
+  })
+
+  it('keys on the units, not the bare number', () => {
+    expect(plateColor(25, 'kg')).toBe('red')
+    expect(plateColor(25, 'lb')).toBe('green')
+  })
+
+  it('finds the colour of a weight that drifted in floating point', () => {
+    expect(plateColor(2.4999999, 'kg')).toBe('red')
+    expect(plateColor(1.2500001, 'kg')).toBe('silver')
+  })
+
+  it('falls back to black iron for a size with no convention', () => {
+    expect(plateColor(7.5, 'kg')).toBe('black')
+    expect(plateColor(100, 'lb')).toBe('black')
   })
 })
