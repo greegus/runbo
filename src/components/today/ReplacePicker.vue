@@ -3,8 +3,8 @@ import { computed, ref } from 'vue'
 import { Icon } from 'vuiii'
 
 import type { ReplacementOption } from '@/training/composer'
-import { describePrescription } from '@/training/zones'
-import type { Modality, Profile } from '@/types'
+import { describePrescription, MODALITY_LABELS } from '@/training/zones'
+import type { Profile } from '@/types'
 import { WEEKDAY_LABELS, weekdayIndexMondayFirst } from '@/utils/date'
 
 /**
@@ -28,8 +28,6 @@ const props = withDefaults(
 const emit = defineEmits<{
   pick: [option: ReplacementOption]
 }>()
-
-const MODALITY_LABELS: Record<Modality, string> = { run: 'Run', bike: 'Bike', swim: 'Swim' }
 
 const open = ref(false)
 

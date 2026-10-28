@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Icon } from 'vuiii'
 
-import { describePrescription } from '@/training/zones'
+import { describePrescription, MODALITY_LABELS } from '@/training/zones'
 import type { CardioPrescription, Modality, Profile, Session } from '@/types'
 
 const props = withDefaults(
@@ -16,7 +16,6 @@ const props = withDefaults(
 )
 
 const MODALITY_ICONS: Record<Modality, string> = { run: 'run', bike: 'bike', swim: 'swim' }
-const MODALITY_LABELS: Record<Modality, string> = { run: 'Run', bike: 'Bike', swim: 'Swim' }
 
 /**
  * The headline is `describePrescription` verbatim. It already degrades: with no
