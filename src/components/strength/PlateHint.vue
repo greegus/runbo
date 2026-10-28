@@ -5,6 +5,8 @@ import { format } from '@/liftoscript/weight'
 import { formatPlatesForWeight, platesForWeight } from '@/training/plates'
 import type { Profile, WeightValue } from '@/types'
 
+import PlateStack from './PlateStack.vue'
+
 /**
  * "What to load" for one barbell weight. All arithmetic comes from
  * `src/training/plates.ts` — this component does none of its own, because the
@@ -38,14 +40,18 @@ const achievable = computed(() => format(load.value.achievable))
        what the bar will really weigh. -->
   <!-- A <span>, not a <p>: the whole non-AMRAP set row is one <button>, and a
        block element inside a button is invalid HTML. -->
+  <!-- The discs are a picture of the bar; the text version of the same load
+       is what a screen reader gets, so it never hears "25 15 1.25" as numbers
+       with no bar and no plus — and hears "about" where the eye sees '≈'. -->
   <span
     v-if="hasWeight"
-    class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm tabular-nums"
+    class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm tabular-nums"
     :class="load.exact ? 'text-ink-500' : 'text-accent-700'"
   >
-    <span>
-      <span v-if="!load.exact" aria-hidden="true">≈&nbsp;</span>
-      {{ hint }}
+    <span class="sr-only">{{ load.exact ? hint : `about ${hint}` }}</span>
+    <span class="flex flex-wrap items-center gap-1">
+      <span v-if="!load.exact" aria-hidden="true">≈</span>
+      <PlateStack :load="load" :settings="settings" :compact="compact" />
     </span>
 
     <span v-if="!load.exact && !compact" class="font-medium text-accent-700">closest: {{ achievable }}</span>

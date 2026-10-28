@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { Button, FormGroup, Icon, IconButton, Input, RadioButtonGroup } from 'vuiii'
 
+import PlateStack from '@/components/strength/PlateStack.vue'
 import { smallestStep } from '@/liftoscript/weight'
 import {
   defaultPlateRows,
@@ -296,9 +297,13 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
         </template>
       </FormGroup>
 
-      <p class="text-ink-900" role="status">
-        <span class="font-mono text-lg font-semibold">{{ formatPlateLoad(sampleLoad, modelValue) }}</span>
-        <span class="ml-2 text-sm text-ink-500">per side</span>
+      <!-- The same discs the session shows, so the colours a user checks here
+           are the ones they will look for on the rack. The text load stays for
+           the live region: a status that announces nothing is no status. -->
+      <p class="flex flex-wrap items-center gap-1 text-ink-900" role="status">
+        <span class="sr-only">{{ formatPlateLoad(sampleLoad, modelValue) }} per side</span>
+        <PlateStack :load="sampleLoad" :settings="modelValue" class="text-lg font-semibold tabular-nums" />
+        <span class="ml-1 text-sm text-ink-500" aria-hidden="true">per side</span>
       </p>
 
       <p v-if="!sampleLoad.exact" class="text-sm text-ink-500">

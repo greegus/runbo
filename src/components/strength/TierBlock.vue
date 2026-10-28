@@ -218,7 +218,7 @@ function selectAll(event: FocusEvent): void {
           <li
             v-for="(warmup, index) in exercise.warmup"
             :key="index"
-            class="flex flex-wrap items-baseline gap-x-3 text-sm text-ink-700 tabular-nums"
+            class="flex flex-wrap items-center gap-x-3 text-sm text-ink-700 tabular-nums"
           >
             <span class="font-semibold">{{ warmup.reps }} reps</span>
             <span>{{ format(warmup.weight) }}</span>
