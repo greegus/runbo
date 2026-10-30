@@ -786,9 +786,8 @@ describe('explainPlacement', () => {
     const lines = explainPlacement(plan)
 
     expect(lines).toBe(plan.explanations)
-    // The header plus one line per planned day.
-    expect(lines).toHaveLength(1 + plan.days.filter((day) => day.planned).length)
-    expect(lines[0]).toBe('Training days: Mon, Tue, Wed, Fri, Sat (5 per week).')
+    // One line per planned day.
+    expect(lines).toHaveLength(plan.days.filter((day) => day.planned).length)
     expect(lines.every((line) => line.length > 10 && line.endsWith('.'))).toBe(true)
     expect(lines).toContain('Mon 2026-08-24: strength A1 — rotation position 1/4.')
   })

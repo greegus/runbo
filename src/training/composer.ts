@@ -661,13 +661,7 @@ export function composeWeek(input: ComposeWeekInput): ComposedWeekPlan {
   const tracks = planTracks(input, dates, fixed)
   applyFrontier(tracks, fixed, input.fromDate)
 
-  const plan = assignItems(input, dates, tracks, fixed)
-  const training = trainingWeekdays(input.availability)
-  plan.explanations.unshift(
-    `Training days: ${training.map((weekday) => WEEKDAY_LABELS[weekday]).join(', ')} (${input.availability.daysPerWeek} per week).`,
-  )
-
-  return plan
+  return assignItems(input, dates, tracks, fixed)
 }
 
 /** One human line per placement decision, for PlanView and for tests. */
