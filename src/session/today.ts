@@ -12,7 +12,7 @@ import { exerciseKey, prescribe } from '@/liftoscript/evaluator'
 import { parseProgram } from '@/liftoscript/parser'
 import { format } from '@/liftoscript/weight'
 import { applyComeback, type ComebackProposal } from '@/training/comeback'
-import { claimToday, type ReplacementOption, replacementOptions, replaceToday, swapToday } from '@/training/composer'
+import { type ReplacementOption, replacementOptions, replaceToday, swapToday } from '@/training/composer'
 import { evalContextFromSettings } from '@/training/plates'
 import { planWeek, resolveToday, type TodayResolution, type WeekPlan } from '@/training/schedule'
 import { currentStreak, weeklyRollup, type WeeklyRollup } from '@/training/stats'
@@ -27,14 +27,18 @@ export interface TodayModel {
   plan: WeekPlan
   resolution: TodayResolution
   item: PlannedItem | null
-  catchUp: PlannedItem | null
-  canClaim: boolean
-  canSwap: boolean
   /**
-   * What the athlete may train today instead — a later day's workout, or one a
-   * missed day left behind. Empty once today is logged or a session is running.
+   * What the athlete may train today instead — a later day's workout, or work
+   * the week still owes. Empty once today is logged or a session is running.
    */
   replacements: ReplacementOption[]
+  /**
+   * What swapping today to the other track would give, offered as one more row
+   * of the replace picker. `null` when there is nothing to swap, or when a
+   * replacement already offers the same workout: moving it from its later day
+   * keeps the week's shape, so that row is the one shown.
+   */
+  swap: PlannedItem | null
   isDeloadWeek: boolean
   headline: string | null
   explanation: string | null
@@ -51,7 +55,7 @@ export interface TodayModel {
 }
 
 /**
- * What claiming, swapping or replacing today would produce. All three are pure
+ * What swapping or replacing today would produce. Both are pure
  * composer calls: nothing is persisted, and the sentence comes from the
  * recomposed week rather than from the view.
  */
@@ -64,7 +68,7 @@ export interface TodayOverride {
  * Today, fully resolved.
  *
  * `planWeek` is called here rather than reading `resolveToday` alone because
- * `TodayResolution` does not expose the `ComposeWeekInput`, and claim/swap need
+ * `TodayResolution` does not expose the `ComposeWeekInput`, and swap/replace need
  * exactly that input to recompose the week.
  */
 export function buildToday(profile: Profile, sessions: Session[], todayIso: string): TodayModel {
@@ -82,22 +86,19 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
   const doneSession = todaysSessions.find((session) => session.status === 'done') ?? null
   const hasDoneSession = doneSession !== null
   const activeSession = todaysSessions.find((session) => session.status === 'active') ?? null
+  // A running session already decided what today is; replacing it under the
+  // athlete would start a second document beside it. A logged day is the
+  // composer's to refuse.
+  const replacements = activeSession ? [] : replacementOptions(plan.week, todayIso, plan.input)
 
   return {
     todayIso,
     plan,
     resolution,
     item: resolution.item,
-    catchUp: resolution.catchUp,
-    // Offering a bonus session to someone who is on track is how overtraining
-    // starts: `catchUp` is already null when the week's budget is covered.
-    canClaim: resolution.isRestDay && resolution.catchUp !== null,
+    replacements,
     // A logged session is history — there is nothing left to swap.
-    canSwap: resolution.item !== null && !hasDoneSession,
-    // A running session already decided what today is; replacing it under the
-    // athlete would start a second document beside it. A logged day is the
-    // composer's to refuse.
-    replacements: activeSession ? [] : replacementOptions(plan.week, todayIso, plan.input),
+    swap: activeSession || hasDoneSession ? null : swapOption(plan, todayIso, replacements),
     isDeloadWeek: resolution.isDeloadWeek,
     headline: resolution.item?.kind === 'strength' ? strengthHeadline(profile, resolution.item.programDay) : null,
     explanation: plan.week.explanations[0] ?? null,
@@ -112,11 +113,18 @@ function plannedOn(days: { date: string; planned: PlannedItem | null }[], dateIs
   return days.find((day) => day.date === dateIso)?.planned ?? null
 }
 
-/** Claiming today: the most valuable outstanding session, plus the composer's own sentence. */
-export function claimedOutcome(model: TodayModel): TodayOverride {
-  const week = claimToday(model.plan.week, model.todayIso, model.plan.input)
+/** Items are plain data built from the same pool, so equal JSON is the same workout. */
+function sameItem(a: PlannedItem, b: PlannedItem): boolean {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
 
-  return { item: plannedOn(week.days, model.todayIso), explanation: week.explanations[0] ?? null }
+function swapOption(plan: WeekPlan, todayIso: string, replacements: ReplacementOption[]): PlannedItem | null {
+  if (plannedOn(plan.week.days, todayIso) === null) return null
+
+  const item = plannedOn(swapToday(plan.week, todayIso, plan.input).days, todayIso)
+  if (item === null || replacements.some((option) => sameItem(option.item, item))) return null
+
+  return item
 }
 
 /** Swapping today: the other track's next item. Nothing is dropped — the rotation is a cursor. */
@@ -126,15 +134,14 @@ export function swappedOutcome(model: TodayModel): TodayOverride {
   return { item: plannedOn(week.days, model.todayIso), explanation: week.explanations[0] ?? null }
 }
 
-/** Replacing today with the athlete's pick. The moved workout leaves its own day — nothing is doubled. */
+/**
+ * Replacing today with the athlete's pick. A moved workout leaves its own day —
+ * nothing is doubled; owed work (`from: null`) is added to the week.
+ */
 export function replacedOutcome(model: TodayModel, option: ReplacementOption): TodayOverride {
   const week = replaceToday(model.plan.week, model.todayIso, model.plan.input, option)
 
   return { item: plannedOn(week.days, model.todayIso), explanation: week.explanations[0] ?? null }
-}
-
-export function claimedItem(model: TodayModel): PlannedItem | null {
-  return claimedOutcome(model).item
 }
 
 export function swappedItem(model: TodayModel): PlannedItem | null {

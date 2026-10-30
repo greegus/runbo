@@ -3,15 +3,13 @@ import { computed } from 'vue'
 import { Icon } from 'vuiii'
 
 import PrescriptionCard from '@/components/cardio/PrescriptionCard.vue'
-import { describePrescription } from '@/training/zones'
 import type { PlannedItem, Profile, Session } from '@/types'
 
 /**
  * Today's single card: what to do, and the one tap that starts it.
  *
- * It decides nothing. Every predicate — is this a rest day, may the athlete
- * claim or swap, is a session already running, is the week a deload — arrives
- * as a prop from `@/session/today`, so the composer and the schedule are never
+ * It decides nothing. Every predicate — is this a rest day, is a session
+ * already running, is the week a deload — arrives as a prop from `@/session/today`, so the composer and the schedule are never
  * called from here.
  */
 
@@ -20,9 +18,6 @@ const props = withDefaults(
     item: PlannedItem | null
     isRestDay: boolean
     isDeloadWeek?: boolean
-    catchUp?: PlannedItem | null
-    canClaim?: boolean
-    canSwap?: boolean
     /** Pre-built strength weights line, e.g. 'Squat 100 kg - Bench Press 70 kg'. */
     headline?: string | null
     zones?: Profile['cardioTrack']['zones']
@@ -36,9 +31,6 @@ const props = withDefaults(
   }>(),
   {
     isDeloadWeek: false,
-    catchUp: null,
-    canClaim: false,
-    canSwap: false,
     headline: null,
     zones: undefined,
     activeSession: null,
@@ -52,17 +44,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   start: []
   resume: [session: Session]
-  claim: []
-  swap: []
 }>()
-
-/**
- * Claiming is offered only on a rest day the week is actually behind on —
- * `catchUp` is already null when the budget is covered, and `canClaim` is the
- * parent's form of the same predicate. Both must agree before the control
- * appears, so a bonus session can never be offered to someone on track.
- */
-const showClaim = computed(() => props.isRestDay && props.catchUp !== null && props.canClaim)
 
 /**
  * The day is finished. `composeWeek` deliberately keeps today's `planned` item
@@ -75,11 +57,6 @@ const isDone = computed(() => props.doneSession !== null && props.activeSession 
 
 const primaryLabel = computed(() => (props.activeSession ? 'Resume session' : 'Start session'))
 
-/** The catch-up line is the domain's own sentence, never assembled here. */
-const catchUpCardio = computed(() =>
-  props.catchUp?.kind === 'cardio' ? describePrescription(props.catchUp.prescription, props.zones) : null,
-)
-
 function primary(): void {
   if (props.busy || isDone.value) return
 
@@ -90,16 +67,6 @@ function primary(): void {
   }
 
   if (props.item) emit('start')
-}
-
-function claim(): void {
-  if (props.busy || !showClaim.value) return
-  emit('claim')
-}
-
-function swap(): void {
-  if (props.busy || !props.canSwap) return
-  emit('swap')
 }
 </script>
 
@@ -172,40 +139,6 @@ function swap(): void {
     >
       {{ props.busy ? 'Starting…' : primaryLabel }}
     </button>
-
-    <div v-if="showClaim || props.canSwap" class="flex flex-col gap-2">
-      <template v-if="showClaim">
-        <button
-          type="button"
-          class="min-h-[48px] w-full rounded-xl border border-accent-600 px-4 text-base font-semibold text-accent-700"
-          :aria-disabled="props.busy"
-          @click="claim()"
-        >
-          Claim today
-        </button>
-        <!-- Catching up, never adding: the week owes this session. -->
-        <p class="text-sm text-ink-500">
-          The week is behind. Claiming today picks up
-          <template v-if="props.catchUp?.kind === 'strength'">the {{ props.catchUp.programDay }} strength day</template>
-          <template v-else-if="catchUpCardio">{{ catchUpCardio }}</template>
-          — it is outstanding work, not an extra session.
-        </p>
-      </template>
-
-      <template v-if="props.canSwap">
-        <button
-          type="button"
-          class="min-h-[48px] w-full rounded-xl border border-ink-300 px-4 text-base font-semibold text-ink-700"
-          :aria-disabled="props.busy"
-          @click="swap()"
-        >
-          Swap today
-        </button>
-        <p class="text-sm text-ink-500">
-          Trains the other track instead. Today's session keeps its place later in the week — nothing is dropped.
-        </p>
-      </template>
-    </div>
 
     <p v-if="props.error" role="alert" class="text-sm text-accent-700">{{ props.error }}</p>
   </section>

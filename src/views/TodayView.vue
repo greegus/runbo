@@ -14,7 +14,6 @@ import type { Diagnostic } from '@/liftoscript/diagnostics'
 import { buildStrengthPlan, draftFromPlan } from '@/session/strengthSession'
 import {
   buildToday,
-  claimedOutcome,
   comebackPatch,
   replacedOutcome,
   strengthHeadline,
@@ -35,8 +34,8 @@ import { startOfWeekMonday, toIso } from '@/utils/date'
  * The home screen: one card, one tap to the bar.
  *
  * The clock is read here and nowhere else below, and threaded into every pure
- * call as `todayIso`. Every decision (rest day, claim,
- * swap, deload, streak, tiles) comes from `buildToday`; this view only owns the
+ * call as `todayIso`. Every decision (rest day, swap,
+ * replace, deload, streak, tiles) comes from `buildToday`; this view only owns the
  * async edges: starting a session, accepting a comeback, saving a weight.
  */
 const router = useRouter()
@@ -57,7 +56,7 @@ const model = computed(() =>
 )
 
 /**
- * A claim, a swap or a replacement is a pure recomposition and persists
+ * A swap or a replacement is a pure recomposition and persists
  * NOTHING: the program day (or the prescription) the athlete actually trains is
  * recorded on the session, `finishSession` derives the cursor from that, and the
  * composer re-plans the rest of the week around the logged day. So the chosen
@@ -69,7 +68,7 @@ const item = computed<PlannedItem | null>(() => (override.value ? override.value
 const explanation = computed(() => override.value?.explanation ?? model.value?.explanation ?? null)
 
 /**
- * Derived from the EFFECTIVE item, not from the model: a claimed or swapped
+ * Derived from the EFFECTIVE item, not from the model: a swapped or replaced
  * strength day is exactly the case where the athlete has no idea what weight is
  * coming, and `model.headline` only ever describes the originally planned item.
  */
@@ -117,7 +116,7 @@ function refreshToday(): void {
 
   const previousWeek = startOfWeekMonday(todayIso.value)
   todayIso.value = now
-  // A claim or a swap belongs to the day it was made on.
+  // A swap or a replacement belongs to the day it was made on.
   override.value = null
   comebackDismissed.value = false
 
@@ -201,11 +200,6 @@ const tonnage = computed(() => {
 
 function routeFor(session: Session): 'strength-session' | 'cardio-session' {
   return session.kind === 'strength' ? 'strength-session' : 'cardio-session'
-}
-
-function onClaim(): void {
-  if (!model.value) return
-  override.value = claimedOutcome(model.value)
 }
 
 function onSwap(): void {
@@ -367,9 +361,6 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
         :item="item"
         :is-rest-day="model.resolution.isRestDay && override === null"
         :is-deload-week="model.isDeloadWeek"
-        :catch-up="model.catchUp"
-        :can-claim="model.canClaim && override === null"
-        :can-swap="model.canSwap && override === null"
         :headline="headline"
         :zones="profileStore.profile?.cardioTrack.zones"
         :active-session="model.activeSession"
@@ -379,16 +370,16 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
         :error="startError"
         @start="onStart()"
         @resume="onResume($event)"
-        @claim="onClaim()"
-        @swap="onSwap()"
       />
 
       <ReplacePicker
         v-if="override === null"
         :options="model.replacements"
+        :swap="model.swap"
         :zones="profileStore.profile?.cardioTrack.zones"
         :busy="busy"
         @pick="onReplace($event)"
+        @swap="onSwap()"
       />
 
       <button

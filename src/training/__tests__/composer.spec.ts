@@ -5,7 +5,6 @@ import {
   canPlaceHardCardio,
   canPlaceLongSession,
   chooseSpreadDays,
-  claimToday,
   type ComposedWeekPlan,
   type ComposeWeekInput,
   composeWeek,
@@ -501,68 +500,6 @@ describe('composeWeek — logged sessions are fixed', () => {
 // Overrides
 // ---------------------------------------------------------------------------
 
-describe('claimToday', () => {
-  const base = input({ fromDate: THU })
-  const week = composeWeek(base)
-
-  it('composes Thursday as a rest day to begin with', () => {
-    expect(itemAt(week, THU)).toBeNull()
-    expect(layout(week)).toEqual({ Fri: 'A1', Sat: 'long 60' })
-  })
-
-  it('offers the overdue strength session and pushes the rest of the rotation back', () => {
-    const claimed = claimToday(week, THU, base)
-
-    expect(itemAt(claimed, THU)).toEqual({ kind: 'strength', programDay: 'A1' })
-    expect(strengthDays(claimed)).toEqual(['A1', 'B1'])
-    expect(claimed.explanations[0]).toContain('claimed as an extra training day')
-    expect(claimed.explanations[0]).toContain('strength is behind')
-  })
-
-  it('offers cardio once strength is caught up but a cardio day was missed', () => {
-    // All three strength days are logged and so is Saturday's long run; only
-    // Tuesday's session never happened, so Sunday is worth claiming for cardio.
-    // The cursor stands at B2, so next Monday is a deadlift day and Sunday's
-    // intervals lose their intensity — the minutes are what was missed.
-    const caught = input({
-      rotationCursor: 3,
-      completedSessions: [
-        strengthSession(MON, 'A1'),
-        strengthSession(WED, 'B1'),
-        strengthSession(FRI, 'A2'),
-        cardioSession(SAT, long(60)),
-      ],
-      fromDate: SUN,
-    })
-    const claimed = claimToday(composeWeek(caught), SUN, caught)
-
-    expect(itemAt(claimed, SUN)).toEqual({ kind: 'cardio', prescription: easy(40, 'bike') })
-    expect(claimed.explanations[0]).toContain('cardio is behind')
-  })
-
-  it('claims Sunday for the hard session when next Monday is not a heavy lower day', () => {
-    // Same week from cursor 2: next Monday is A2, the one GZCLP day that is not
-    // heavy on the legs, so the intervals survive.
-    const caught = input({
-      rotationCursor: 2,
-      completedSessions: [
-        strengthSession(MON, 'B2'),
-        strengthSession(WED, 'A1'),
-        strengthSession(FRI, 'B1'),
-        cardioSession(SAT, long(60)),
-      ],
-      fromDate: SUN,
-    })
-    const claimed = claimToday(composeWeek(caught), SUN, caught)
-
-    expect(itemAt(claimed, SUN)).toEqual({ kind: 'cardio', prescription: intervals(40) })
-  })
-
-  it('is a no-op on a day that already has a session planned', () => {
-    expect(layout(claimToday(week, FRI, base))).toEqual(layout(week))
-  })
-})
-
 describe('swapToday', () => {
   const base = input()
   const week = composeWeek(base)
@@ -687,6 +624,44 @@ describe('replacementOptions / replaceToday', () => {
       expect(layout(replaced)).toEqual({ Thu: 'A1', Sat: 'long 60' })
       expect(replaced.explanations[0]).toContain('Fri becomes a rest day')
     })
+
+    it('offers the strength the week owes as well as the later day that holds it', () => {
+      // The same A1 twice, doing different things: owed work is added to the
+      // week, Friday's would only move.
+      const strength = options.filter((option) => option.item.kind === 'strength')
+
+      expect(strength).toEqual([
+        { item: { kind: 'strength', programDay: 'A1' }, from: null },
+        { item: { kind: 'strength', programDay: 'A1' }, from: FRI },
+      ])
+    })
+
+    it('adds the owed strength day and pushes the rest of the rotation back', () => {
+      const replaced = replaceToday(restWeek, THU, rest, optionFrom(options, null, 'strength'))
+
+      expect(itemAt(replaced, THU)).toEqual({ kind: 'strength', programDay: 'A1' })
+      expect(strengthDays(replaced)).toEqual(['A1', 'B1'])
+      expect(replaced.explanations[0]).toContain('owed this week — today becomes a training day')
+    })
+  })
+
+  it('offers a rest day only the missed cardio once the lifting is caught up', () => {
+    // All three strength days are logged and so is Saturday's long run; only
+    // Tuesday's session never happened, so Sunday can pick it up.
+    const caught = input({
+      rotationCursor: 3,
+      completedSessions: [
+        strengthSession(MON, 'A1'),
+        strengthSession(WED, 'B1'),
+        strengthSession(FRI, 'A2'),
+        cardioSession(SAT, long(60)),
+      ],
+      fromDate: SUN,
+    })
+    const options = replacementOptions(composeWeek(caught), SUN, caught)
+
+    expect(options.length).toBeGreaterThan(0)
+    expect(options.every((option) => option.item.kind === 'cardio' && option.from === null)).toBe(true)
   })
 
   it('offers the next rotation day when the week has no strength day left but still owes one', () => {
@@ -704,7 +679,7 @@ describe('replacementOptions / replaceToday', () => {
 
     const replaced = replaceToday(behindWeek, SUN, behind, options[0])
     expect(itemAt(replaced, SUN)).toEqual({ kind: 'strength', programDay: 'A1' })
-    expect(replaced.explanations[0]).toContain('next in the rotation')
+    expect(replaced.explanations[0]).toContain('owed this week')
   })
 
   it('offers no bonus strength day once the week has had its lifting', () => {

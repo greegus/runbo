@@ -2,11 +2,10 @@ import type { ComebackProposal } from '@/training/comeback'
 import { GZCLP_PROGRAM_SOURCE, initialProgramState } from '@/training/gzclp'
 import type { Profile, Session } from '@/types'
 
-import { buildToday, claimedOutcome, comebackPatch, replacedOutcome, strengthHeadline, swappedOutcome } from '../today'
+import { buildToday, comebackPatch, replacedOutcome, strengthHeadline, swappedOutcome } from '../today'
 
 const MON = '2026-08-24'
 const TUE = '2026-08-25'
-const WED = '2026-08-26'
 const THU = '2026-08-27'
 const SAT = '2026-08-29'
 const SUN = '2026-08-30'
@@ -87,19 +86,24 @@ describe('buildToday', () => {
     }
   })
 
-  it('allows a claim only on a rest day with work outstanding', () => {
-    const model = buildToday(profile(), [], WED)
-
-    expect(model.canClaim).toBe(model.resolution.isRestDay && model.catchUp !== null)
-    if (model.item !== null) expect(model.canClaim).toBe(false)
+  it('blocks a swap once today already holds a logged session', () => {
+    const logged = buildToday(profile(), [strengthSession(MON, 'A1')], MON)
+    expect(logged.swap).toBeNull()
   })
 
-  it('blocks a swap once today already holds a logged session', () => {
+  it('offers the swap only when no replacement already holds the same workout', () => {
     const planned = buildToday(profile(), [], MON)
-    expect(planned.canSwap).toBe(planned.item !== null)
+    const swapped = swappedOutcome(planned).item
 
-    const logged = buildToday(profile(), [strengthSession(MON, 'A1')], MON)
-    expect(logged.canSwap).toBe(false)
+    if (planned.swap === null) {
+      expect(
+        swapped === null ||
+          planned.replacements.some((option) => JSON.stringify(option.item) === JSON.stringify(swapped)),
+      ).toBe(true)
+    } else {
+      expect(planned.swap).toEqual(swapped)
+      expect(planned.replacements.map((option) => option.item)).not.toContainEqual(planned.swap)
+    }
   })
 
   it('surfaces an unfinished session for today as the one to resume', () => {
@@ -133,17 +137,19 @@ describe('buildToday', () => {
   })
 })
 
-describe('claimedOutcome / swappedOutcome', () => {
-  it('gives a rest day the outstanding session the resolution advertised', () => {
-    const sessions = [strengthSession(MON, 'A1')]
-    // Thursday is outside the default availability (Mon, Tue, Wed, Fri, Sat).
-    const model = buildToday(profile(), sessions, THU)
+describe('replacedOutcome / swappedOutcome', () => {
+  it('offers a rest day the strength the week still owes, as an added day', () => {
+    // Nothing logged and it is Thursday, outside the default availability
+    // (Mon, Tue, Wed, Fri, Sat): Monday's and Wednesday's lifting never happened.
+    const model = buildToday(profile(), [], THU)
+    const owed = model.replacements.find((option) => option.from === null && option.item.kind === 'strength')
 
-    if (!model.canClaim) return
+    expect(model.resolution.isRestDay).toBe(true)
+    expect(owed?.item).toEqual({ kind: 'strength', programDay: 'A1' })
 
-    const outcome = claimedOutcome(model)
-    expect(outcome.item).toEqual(model.catchUp)
-    expect(typeof outcome.explanation === 'string' || outcome.explanation === null).toBe(true)
+    const outcome = replacedOutcome(model, owed!)
+    expect(outcome.item).toEqual({ kind: 'strength', programDay: 'A1' })
+    expect(outcome.explanation).toContain('today becomes a training day')
   })
 
   it('counts the whole week in the tiles, not what is left of it', () => {

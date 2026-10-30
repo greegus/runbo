@@ -696,56 +696,6 @@ function tracksFromWeek(week: ComposedWeek): Map<string, Track> {
   return tracks
 }
 
-function countTrack(tracks: Map<string, Track>, track: Track): number {
-  let total = 0
-  for (const value of tracks.values()) {
-    if (value === track) total += 1
-  }
-
-  return total
-}
-
-/**
- * Turns an unplanned day into a training day holding the most valuable session.
- *
- * Days earlier in the week that never happened are released first: their work is
- * exactly what "overdue" means, and releasing them lets the cursor hand it to
- * the claimed day instead of to next week.
- */
-export function claimToday(week: ComposedWeek, dateIso: string, input: ComposeWeekInput): ComposedWeekPlan {
-  const dates = weekDates(input.weekStart)
-  const day = week.days.find((entry) => entry.date === dateIso)
-  if (!day || day.planned) return toPlan(week)
-
-  const fixed = fixedItems(input, dates)
-  const tracks = tracksFromWeek(week)
-  // Deleting from a Map during iteration is well defined — the iterator just
-  // skips the removed entries.
-  for (const date of tracks.keys()) {
-    if (date < dateIso && !fixed.has(date)) tracks.delete(date)
-  }
-
-  const budget = weeklyTrackBudget(input.availability, input.cardioSessions.length)
-  const strengthShort = budget.strengthDays - countTrack(tracks, 'strength')
-  const cardioShort = budget.cardioDays - countTrack(tracks, 'cardio')
-  // Strength first: a missed lifting day costs the rotation, a missed easy run costs minutes.
-  const claimed: Track = strengthShort > 0 ? 'strength' : cardioShort > 0 ? 'cardio' : 'strength'
-
-  tracks.set(dateIso, claimed)
-  const plan = assignItems(input, dates, tracks, fixed, claimed === 'cardio' ? dateIso : undefined)
-  plan.explanations.unshift(
-    `${label(dateIso)} claimed as an extra training day — ${
-      strengthShort > 0
-        ? 'strength is behind this week, so the overdue workout moves here'
-        : cardioShort > 0
-          ? 'cardio is behind this week, so the next prescription moves here'
-          : 'the week is on track, so the next rotation day is pulled forward'
-    }.`,
-  )
-
-  return plan
-}
-
 /**
  * Replaces the day's item with the other track's next item and recomposes the
  * remainder of the week. Nothing is skipped: the displaced strength workout
@@ -776,9 +726,11 @@ export function swapToday(week: ComposedWeek, dateIso: string, input: ComposeWee
 export interface ReplacementOption {
   item: PlannedItem
   /**
-   * The later day this week that holds the workout, or `null` when no day does:
-   * a cardio session from a missed day that the remaining cardio days could not
-   * absorb, or the rotation's next strength day when the week has none left.
+   * The later day this week that holds the workout — it moves to today and
+   * that day takes over today's track — or `null` for work the week still owes
+   * and no day holds: a cardio session from a missed day that the remaining
+   * cardio days could not absorb, or the rotation's next strength day while the
+   * week is short of one. A `null` pick adds to the week rather than moving.
    */
   from: string | null
 }
@@ -798,11 +750,13 @@ function describeItem(item: PlannedItem): string {
 /**
  * What the athlete may train on `dateIso` instead of what is planned there.
  *
- * Strength is offered ONCE, and only as the day the rotation is on: the first
- * strength day later in the week already holds it, because the cursor fills
- * strength days in calendar order. Offering Friday's A2 on a Monday that owes A1
- * would let one tap skip two program days, and the cursor — which follows the
- * program day actually logged — would never come back for them.
+ * Strength is offered only as the day the rotation is on: the first strength
+ * day later in the week already holds it, because the cursor fills strength
+ * days in calendar order. Offering Friday's A2 on a Monday that owes A1 would
+ * let one tap skip two program days, and the cursor — which follows the program
+ * day actually logged — would never come back for them. That one workout can
+ * stand twice on a rest day the week is behind on: added as owed work, or
+ * moved from the later day that holds it.
  *
  * Cardio is offered per prescription: every session still planned later in the
  * week, plus the ones no day holds any more. Identical prescriptions collapse
@@ -824,17 +778,19 @@ export function replacementOptions(week: ComposedWeek, dateIso: string, input: C
 
   if (day.planned?.kind !== 'strength' && input.programDays.length > 0) {
     const due = later.find((entry) => entry.planned?.kind === 'strength')
-    if (due?.planned) {
-      options.push({ item: due.planned, from: due.date })
-    } else if (countKind(week, 'strength') < budget.strengthDays) {
-      // No strength day left, but the week still owes one. `replaceToday`
-      // releases every earlier unlogged day, so this day becomes the first free
-      // strength day and the cursor hands it exactly the day it points at. When
-      // the week's lifting is covered nothing is offered: that would be a bonus
-      // session, not a moved one.
+    // The week still owes a strength day: one was missed earlier, or none is
+    // left to hold it. `replaceToday` releases every earlier unlogged day, so
+    // this day becomes the first free strength day and the cursor hands it
+    // exactly the day it points at. A rest day is offered it even when a later
+    // day holds the same workout: taking the owed day ADDS a training day and
+    // catches the week up, where moving the later one only reorders it. When
+    // the week's lifting is covered nothing is added: that would be a bonus
+    // session, not outstanding work.
+    if (countKind(week, 'strength') < budget.strengthDays && (day.planned === null || !due)) {
       const programDay = input.programDays[input.rotationCursor % input.programDays.length]
       options.push({ item: { kind: 'strength', programDay }, from: null })
     }
+    if (due?.planned) options.push({ item: due.planned, from: due.date })
   }
 
   for (const entry of later) {
@@ -854,11 +810,16 @@ export function replacementOptions(week: ComposedWeek, dateIso: string, input: C
     for (const prescription of pool) options.push({ item: { kind: 'cardio', prescription }, from: null })
   }
 
-  const seen = new Set(day.planned ? [itemKey(day.planned)] : [])
+  const today = day.planned ? itemKey(day.planned) : null
+  const seen = new Set<string>()
   return options.filter((option) => {
     const key = itemKey(option.item)
-    if (seen.has(key)) return false
-    seen.add(key)
+    if (key === today) return false
+    // The same workout may stand twice — owed by the week and held by a later
+    // day — and the two do different things to the week, so both stay.
+    const slot = `${option.from === null ? 'owed' : 'later'}:${key}`
+    if (seen.has(slot)) return false
+    seen.add(slot)
     return true
   })
 }
@@ -895,8 +856,8 @@ export function replaceToday(
   if (fixed.has(dateIso) || (option.from !== null && fixed.has(option.from))) return toPlan(week)
 
   const tracks = tracksFromWeek(week)
-  // As in `claimToday`: earlier days that never happened are released, so their
-  // work is what this day can pick up.
+  // Earlier days that never happened are released, so their work is what this
+  // day can pick up.
   for (const date of tracks.keys()) {
     if (date < dateIso && !fixed.has(date)) tracks.delete(date)
   }
@@ -917,7 +878,7 @@ export function replaceToday(
       ? `from ${label(option.from)}`
       : option.item.kind === 'cardio'
         ? 'missed earlier this week'
-        : 'next in the rotation'
+        : 'owed this week'
   const consequence = original
     ? `today's ${describeItem(original)} moves to a later training day or rolls forward, nothing is dropped`
     : option.from !== null

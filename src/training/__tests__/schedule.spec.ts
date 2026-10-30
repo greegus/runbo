@@ -227,10 +227,6 @@ describe('resolveToday — a training day', () => {
     expect(today.isRestDay).toBe(false)
   })
 
-  it('offers no catch-up when today already has work', () => {
-    expect(today.catchUp).toBeNull()
-  })
-
   it('has nothing to come back from', () => {
     expect(today.comebackProposal).toBeNull()
     expect(today.daysSinceLastSession).toBe(0)
@@ -239,16 +235,13 @@ describe('resolveToday — a training day', () => {
 
 describe('resolveToday — a rest day with work outstanding', () => {
   // Nothing logged and it is already Thursday: Monday's and Wednesday's
-  // sessions are gone, so Thursday is worth claiming.
+  // sessions are gone, and Thursday is not a training day. What the week still
+  // owes is offered by the replace picker, not by the resolution.
   const today = resolveToday(profile(), [], THU)
 
   it('is a rest day', () => {
     expect(today.item).toBeNull()
     expect(today.isRestDay).toBe(true)
-  })
-
-  it('offers the overdue strength session', () => {
-    expect(today.catchUp).toEqual({ kind: 'strength', programDay: 'A1' })
   })
 })
 
@@ -259,10 +252,9 @@ describe('resolveToday — a rest day with nothing due', () => {
     SUN,
   )
 
-  it('offers nothing once the week is complete', () => {
+  it('is a rest day once the week is complete', () => {
     expect(today.item).toBeNull()
     expect(today.isRestDay).toBe(true)
-    expect(today.catchUp).toBeNull()
   })
 
   it('still reports the gap since the last session', () => {

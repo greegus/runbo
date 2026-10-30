@@ -19,7 +19,7 @@ import { inWeek, startOfWeekMonday, WEEK_LENGTH } from '@/utils/date'
 import { blockRatio } from './cardioBlock'
 import { type CardioWeekPlan, planCardioWeek } from './cardioPlan'
 import { type ComebackProposal, daysSinceLastSession, proposeComeback } from './comeback'
-import { claimToday, type ComposedWeekPlan, type ComposeWeekInput, composeWeek, weeklyTrackBudget } from './composer'
+import { type ComposedWeekPlan, type ComposeWeekInput, composeWeek, weeklyTrackBudget } from './composer'
 import { isHeavyLowerDay } from './gzclp'
 import { rotationDays } from './rotation'
 
@@ -28,7 +28,7 @@ export interface WeekPlan {
   week: ComposedWeekPlan
   cardio: CardioWeekPlan
   isDeloadWeek: boolean
-  /** The exact input the week was composed from — `claimToday`/`swapToday` need it. */
+  /** The exact input the week was composed from — the today overrides need it. */
   input: ComposeWeekInput
 }
 
@@ -37,15 +37,9 @@ export interface TodayResolution {
   item: PlannedItem | null
   isRestDay: boolean
   isDeloadWeek: boolean
-  /** What claiming today would offer — only set on a rest day with work outstanding. */
-  catchUp: PlannedItem | null
   comebackProposal: ComebackProposal | null
   /** `0` when nothing was ever logged: a fresh profile has no gap to report. */
   daysSinceLastSession: number
-}
-
-function countKind(week: ComposedWeek, kind: PlannedItem['kind']): number {
-  return week.days.filter((day) => day.planned?.kind === kind).length
 }
 
 /**
@@ -103,10 +97,7 @@ export function planWeek(profile: Profile, sessions: Session[], anchorIso: strin
   return { week: composeWeek(input), cardio, isDeloadWeek: cardio.isDeload, input }
 }
 
-/**
- * Today's card: the planned item, or — on a rest day the week is behind on —
- * the session claiming today would offer.
- */
+/** Today's card: the planned item, or a rest day. */
 export function resolveToday(profile: Profile, sessions: Session[], todayIso: string): TodayResolution {
   const plan = planWeek(profile, sessions, todayIso, todayIso)
   const item = plan.week.days.find((day) => day.date === todayIso)?.planned ?? null
@@ -115,25 +106,9 @@ export function resolveToday(profile: Profile, sessions: Session[], todayIso: st
     item,
     isRestDay: item === null,
     isDeloadWeek: plan.isDeloadWeek,
-    catchUp: item === null ? catchUpFor(profile, plan, todayIso) : null,
     comebackProposal: proposeComeback(profile, sessions, todayIso),
     daysSinceLastSession: daysSinceLastSession(sessions, todayIso) ?? 0,
   }
-}
-
-/**
- * What an unplanned day is worth. `null` when the week's budget is already
- * covered by what is planned or logged — offering a bonus session to someone
- * who is on track is how overtraining starts.
- */
-function catchUpFor(profile: Profile, plan: WeekPlan, todayIso: string): PlannedItem | null {
-  const budget = weeklyTrackBudget(profile.availability, plan.cardio.sessions.length)
-  const behind =
-    countKind(plan.week, 'strength') < budget.strengthDays || countKind(plan.week, 'cardio') < budget.cardioDays
-
-  if (!behind) return null
-
-  return claimToday(plan.week, todayIso, plan.input).days.find((day) => day.date === todayIso)?.planned ?? null
 }
 
 /** The cardio prescriptions of a week, in calendar order — for PlanView and the weekly totals. */

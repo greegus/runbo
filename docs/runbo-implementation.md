@@ -429,7 +429,6 @@ of scripted results driven through composer + evaluator).
 
 ```ts
 composeWeek(input: ComposeWeekInput): ComposedWeekPlan
-claimToday(week, dateIso, input): ComposedWeekPlan
 swapToday(week, dateIso, input): ComposedWeekPlan
 replacementOptions(week, dateIso, input): ReplacementOption[]
 replaceToday(week, dateIso, input, option): ComposedWeekPlan
@@ -458,19 +457,20 @@ Interference predicates (exported, tested): `isHardCardio`, `sharesDayWithStreng
 minutes when it cannot be placed cleanly). One session per day in MVP, so "no hard cardio on a strength day"
 is implicit.
 
-Overrides: `claimToday` marks an unplanned day available and returns the most valuable session (overdue
-strength first, else the next cardio of the week). `swapToday` replaces today's item with the other track's
-next item and recomposes the rest of the week. Nothing is ever skipped — cursor semantics.
+Overrides: `swapToday` replaces today's item with the other track's next item and recomposes the rest of
+the week. Nothing is ever skipped — cursor semantics.
 
 `replacementOptions` lists what the athlete may train on a day instead (`ReplacementOption = { item, from }`,
-`from` = the later day holding it, or `null`): the strength day the rotation is on (the first later strength
-day, or — when the week has none left but is still short of its strength budget — the day the cursor points
-at; never a bonus day on a week whose lifting is covered), every cardio prescription planned later in the
+`from` = the later day holding it, or `null` for work the week still owes): the strength day the rotation is
+on — the first later strength day, and/or, while the week is short of its strength budget, the day the cursor
+points at as owed work (on a rest day both, since adding the owed day catches the week up where moving the
+later one only reorders it; on a cardio day only when no later strength day is left; never a bonus day on a
+week whose lifting is covered), every cardio prescription planned later in the
 week, and the prescriptions no day holds any more (a missed day's work the remaining days could not absorb —
 offered only while fewer days hold cardio than the pool has sessions, so a Strava stand-in that matches no
 prescription exactly is not offered again as "missed"). Later strength days are never offered: logging B1 on a day that owes
-A1 would move the cursor past A1 for good. `replaceToday` applies a pick: earlier unlogged days are released
-(as in `claimToday`), the day and `from` **trade tracks** (or `from` becomes a rest day), a cardio pick is
+A1 would move the cursor past A1 for good. `replaceToday` applies a pick: earlier unlogged days are released,
+the day and `from` **trade tracks** (or `from` becomes a rest day), a cardio pick is
 pinned as given and consumed from the pool, and the rest recomposes through the normal rules. The pick is not
 vetoed by the interference predicates — a hard or long session before a heavy lower day is placed and the
 explanation warns — but the pool's long session keeps off the day after a pinned hard one. Nothing is persisted: the logged session's `programDay` / `prescription` is what the
@@ -543,8 +543,8 @@ resolveToday(profile, sessions, todayIso): TodayResolution
 cardioOf(week): CardioPrescription[]
 ```
 
-`TodayResolution = { item, isRestDay, isDeloadWeek, catchUp, comebackProposal, daysSinceLastSession }`. `catchUp`
-is what claiming today would offer — set only on a rest day with work outstanding. This is the one function
+`TodayResolution = { item, isRestDay, isDeloadWeek, comebackProposal, daysSinceLastSession }`. What a rest day
+could pick up instead is the replace picker's business (`replacementOptions`). This is the one function
 TodayView calls.
 
 ### Comeback (`comeback.ts`)
@@ -676,8 +676,9 @@ Views are thin; every rule lives in a pure module.
 
 - `SignInView` — Google button; not-allowlisted state ("ask for access", shows the signed-in email).
 - `TodayView` — `resolveToday` card: strength day (program day + first exercise's weights), cardio
-  prescription (`describePrescription`), or rest; claim-today and swap controls; the replace picker
-  (`today/ReplacePicker`, fed by `replacementOptions`); comeback proposal; deload badge; the streak tile
+  prescription (`describePrescription`), or rest; the replace picker
+  (`today/ReplacePicker`, fed by `replacementOptions`, with the swap as one more row when it offers a workout
+  no replacement already holds); comeback proposal; deload badge; the streak tile
   (`currentStreak`, in **sessions**) and the "this week" tiles (`weeklyRollup`, over the **calendar** week);
   bodyweight quick add. It also drives the training-block rollover: `cardioBlockAction` off
   the stored anchor, adopted through the profile store.
@@ -875,7 +876,7 @@ by that test.
 | 4 | Firebase — services, collections, rules + allowlist gate, indexes, `firebase.json`, stores, persist plugin, `SignInView`, router guard | with emulators: sign-in works; non-allowlisted account sees ask-for-access; rules check proves isolation | ⬜ next |
 | 5 | Import — `programText`, `liftosaurHistory`, `deriveState` + fixtures | tests green; stock GZCLP fixture parses clean; unsupported fixture shows `DiagnosticsList` with line/col | ⬜ |
 | 6 | Onboarding — wizard, shared form sections, both program paths | fresh path → Today shows A1 with correct weights; import path → editable derived state; resume after reload; skip lands on Today with ask-weight prompts | ⬜ |
-| 7 | Training loop — `TodayView` (claim, swap, comeback, bodyweight), `StrengthSessionView`, `CardioSessionView` | log A1 with a deliberate T1 miss → summary shows stage advance; next Today shows B1; swap recomposes the week; deleting the last session restores weights | ⬜ |
+| 7 | Training loop — `TodayView` (swap, replace, comeback, bodyweight), `StrengthSessionView`, `CardioSessionView` | log A1 with a deliberate T1 miss → summary shows stage advance; next Today shows B1; swap recomposes the week; deleting the last session restores weights | ⬜ |
 | 8 | Plan / Progress / History / Program / Settings; charts; JSON export | charts render with fixture data; weekly bars show target vs done; PR list populates | ⬜ |
 | 9 | PWA — `vite-plugin-pwa`, manifest, icons, shell caching | manifest + service worker verified on the built app; killing the server and reloading still renders the shell from the precache. The reconnect half is Firestore's cache (Phase 4) and stays unverified | ✅ |
 | 10 | Functions — Strava auth/callback/webhook/backfill, notifications, Settings Strava card | emulator webhook POST with a recorded activity creates a matched session; scheduled function sends (or logs) the payload; mapper tests green | ⬜ |

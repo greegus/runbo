@@ -116,17 +116,18 @@ friends may follow. This shapes the product:
   before a heavy lower-body day (A1, B1, B2); if a long session cannot be placed cleanly it is demoted to an
   easy session of the same length.
 - Already-logged sessions this week stay fixed; only future days recompose.
-- **Claim today**: on a rest day, the user can mark themselves available and get the most valuable outstanding
-  session (overdue strength first, else the next cardio of the week).
 - **Swap today**: replace today's item with the other track's next item; the rest of the week recomposes.
-  Nothing is ever skipped — the strength rotation is a cursor, not a calendar.
+  Nothing is ever skipped — the strength rotation is a cursor, not a calendar. It is offered inside the
+  "train something else today" picker, and only when no other row already holds the same workout.
 - **Replace today**: the athlete picks what today holds from the week's other workouts — one planned later
-  this week, or a cardio session a missed day left behind — on a training day and a rest day alike. A workout
-  taken from a later day *moves*: that day takes over today's track (or rests, if today was a rest day), so
-  nothing is trained twice and the displaced work shifts later. Strength is offered only as the day the
+  this week, or work the week still owes (a strength day it is short of, a cardio session a missed day left
+  behind) — on a training day and a rest day alike. A workout taken from a later day *moves*: that day takes
+  over today's track (or rests, if today was a rest day), so nothing is trained twice and the displaced work
+  shifts later. Owed work is *added*: on a rest day the week is behind on, today becomes an extra training
+  day and the week catches up. Strength is offered only as the day the
   rotation is on, so a pick can never skip program days, and never as a bonus day once the week's lifting is
   done. The interference rules do not veto the athlete's pick; the explanation says when it breaks one. Like
-  claim and swap, it persists nothing until the session is logged.
+  swap, it persists nothing until the session is logged.
 - **Calendar week vs. training block.** The **calendar week starts Monday** and is what availability, the
   planning window and the "this week" tiles mean: "I train Monday, Wednesday, Friday" is a fact about the
   athlete's life, the plan repeats weekly, and "this week" is what a person means by it. The **training
@@ -200,7 +201,7 @@ friends may follow. This shapes the product:
 |-------|------|---------|
 | `/signin` | SignIn | Google button; "ask for access" state for non-allowlisted accounts |
 | `/onboarding/:step` | Onboarding | Resumable wizard, steps 0–6 |
-| `/` | Today | Today's card (strength day, cardio prescription, or rest); claim-today, swap and replace controls; comeback proposal; deload badge; streak and week tiles; bodyweight quick add |
+| `/` | Today | Today's card (strength day, cardio prescription, or rest); swap and replace controls; comeback proposal; deload badge; streak and week tiles; bodyweight quick add |
 | *(from Today)* | StrengthSession | Tier blocks with tap-cycling set rows, AMRAP stepper, plate hints, rest timer, readiness sheet on entry, completion summary with progression lines and new PRs; per lift, a table of the upcoming sessions the progression projects |
 | *(from Today)* | CardioSession | Prescription card (zone as HR / pace / RPE cue) with manual log form; a matched Strava activity shows as completed |
 | `/plan` | Plan | This week as composed: planned vs done per day, deload badge, placement explanations |
@@ -219,7 +220,7 @@ friends may follow. This shapes the product:
 - Liftoscript engine for the documented subset, with diagnostics and a stable serializer.
 - Built-in GZCLP; paste-your-own program; Liftosaur history import with derived state.
 - Prescribed cardio with mesocycles, adaptive hold/step-back, zones, modality rotation.
-- Availability-driven composer with interference rules, claim-today, swap-today, replace-today.
+- Availability-driven composer with interference rules, swap-today, replace-today.
 - Today / StrengthSession / CardioSession / Plan / Progress / History / Program / Settings.
 - Comeback mode, readiness check, bodyweight, PRs, JSON export.
 - Strava OAuth + webhook import + 30-activity backfill; manual cardio entry.
@@ -266,7 +267,7 @@ runbo is a personal tool, so the criteria are about whether it removes the bookk
   unsupported construct produces a precise diagnostic; the fallback keeps detected weights and runs the
   built-in GZCLP; the subset grows only when a real program needs it.
 - **Composer produces a week the user will not follow.** *Mitigation:* the composer explains its placements;
-  claim-today and swap-today give the user control without breaking the rotation; only future days recompose.
+  swap-today and replace-today give the user control without breaking the rotation; only future days recompose.
 - **Strava matching errors.** *Mitigation:* dedup by activity id; an unmatched activity is still counted toward
   volume as an unplanned session; manual entry always works.
 - **Losing history through a bad program edit.** *Mitigation:* history is read-only; program state snapshots
