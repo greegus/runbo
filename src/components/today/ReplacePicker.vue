@@ -62,40 +62,81 @@ function pick(option: ReplacementOption): void {
 </script>
 
 <template>
-  <section v-if="props.options.length > 0" class="flex flex-col gap-2">
+  <section v-if="props.options.length > 0" class="flex flex-col rounded-xl border border-ink-300 p-1">
     <button
       type="button"
-      class="flex min-h-[48px] w-full items-center justify-between rounded-xl border border-ink-300 px-4 text-base font-semibold text-ink-700"
+      class="flex min-h-[48px] w-full items-center justify-between rounded-lg px-3 text-base font-semibold text-ink-700"
       :aria-expanded="open"
       aria-controls="replace-picker-list"
       @click="open = !open"
     >
       Train something else today
-      <Icon :name="open ? 'chevron-up' : 'chevron-down'" class="shrink-0 text-ink-500" aria-hidden="true" />
+      <Icon
+        name="chevron-down"
+        class="ReplacePicker__chevron shrink-0 text-ink-500"
+        :class="{ 'rotate-180': open }"
+        aria-hidden="true"
+      />
     </button>
 
-    <div v-if="open" id="replace-picker-list" class="flex flex-col gap-2">
-      <p class="text-sm text-ink-500">
-        Pick a workout from later this week, or one you missed. It moves to today — it is not added on top.
-      </p>
+    <!-- Stays mounted so the height can animate; `inert` keeps the closed list out of reach. -->
+    <div
+      id="replace-picker-list"
+      class="ReplacePicker__panel"
+      :class="{ 'ReplacePicker__panel--open': open }"
+      :inert="!open"
+    >
+      <div class="flex min-h-0 flex-col gap-2 overflow-hidden px-2">
+        <p class="px-1 text-sm text-ink-500">
+          Pick a workout from later this week, or one you missed. It moves to today — it is not added on top.
+        </p>
 
-      <ul class="flex flex-col gap-2">
-        <li v-for="row in rows" :key="`${row.option.from}-${row.title}-${row.detail}`">
-          <button
-            type="button"
-            class="flex min-h-[56px] w-full items-start gap-3 rounded-xl border border-ink-200 bg-white px-4 py-3 text-left"
-            :aria-disabled="props.busy"
-            @click="pick(row.option)"
-          >
-            <Icon :name="row.icon" class="mt-0.5 shrink-0 text-accent-600" aria-hidden="true" />
-            <span class="flex min-w-0 flex-col">
-              <span class="text-base font-semibold text-ink-900">{{ row.title }}</span>
-              <span v-if="row.detail" class="text-sm tabular-nums text-ink-700">{{ row.detail }}</span>
-              <span class="text-sm text-ink-500">{{ row.origin }}</span>
-            </span>
-          </button>
-        </li>
-      </ul>
+        <ul class="flex flex-col gap-2 pb-2">
+          <li v-for="row in rows" :key="`${row.option.from}-${row.title}-${row.detail}`">
+            <button
+              type="button"
+              class="flex min-h-[56px] w-full items-start gap-3 rounded-xl border border-ink-200 bg-white px-4 py-3 text-left"
+              :aria-disabled="props.busy"
+              @click="pick(row.option)"
+            >
+              <Icon :name="row.icon" class="mt-0.5 shrink-0 text-accent-600" aria-hidden="true" />
+              <span class="flex min-w-0 flex-col">
+                <span class="text-base font-semibold text-ink-900">{{ row.title }}</span>
+                <span v-if="row.detail" class="text-sm tabular-nums text-ink-700">{{ row.detail }}</span>
+                <span class="text-sm text-ink-500">{{ row.origin }}</span>
+              </span>
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
   </section>
 </template>
+
+<style scoped>
+/* 0fr → 1fr animates to the content's own height, whatever the list holds. */
+.ReplacePicker__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 250ms ease-out,
+    opacity 200ms ease-out;
+}
+
+.ReplacePicker__panel--open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.ReplacePicker__chevron {
+  transition: transform 250ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ReplacePicker__panel,
+  .ReplacePicker__chevron {
+    transition: none;
+  }
+}
+</style>
