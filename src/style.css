@@ -38,6 +38,12 @@
 /* Pull vuiii's primary onto the app accent so its buttons/inputs match. */
 :root {
   --vuiii-color-primary: var(--color-accent-600);
+
+  /* vuiii's icon sizes (20.8 / 28 px) crowd text-sized UI; these sit just
+     above the 16 px body text. */
+  --vuiii-icon-size--small: 1rem;
+  --vuiii-icon-size: 1.125rem;
+  --vuiii-icon-size--large: 1.25rem;
 }
 
 .DialogStack__backdrop {

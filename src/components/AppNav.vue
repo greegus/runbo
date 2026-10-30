@@ -30,10 +30,10 @@ function isActive(to: string): boolean {
           class="flex min-h-[56px] flex-col items-center justify-center gap-0.5 py-1.5 text-xs font-medium"
           :class="isActive(item.to) ? 'text-accent-600' : 'text-ink-500'"
         >
-          <!-- vuiii's "large" (28 px) reads small for the only way around the
-               app, so the nav raises it to 32 px. The trimmed padding keeps the
+          <!-- The app's "large" (20 px) reads small for the only way around the
+               app, so the nav raises it to 24 px. The trimmed padding keeps the
                bar from growing more than the icons do. -->
-          <Icon :name="item.icon" size="large" class="[--vuiii-icon-size--large:2rem]" aria-hidden="true" />
+          <Icon :name="item.icon" size="large" class="[--vuiii-icon-size--large:1.5rem]" aria-hidden="true" />
           {{ item.label }}
         </RouterLink>
       </li>

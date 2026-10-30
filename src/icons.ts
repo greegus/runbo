@@ -59,8 +59,11 @@ export function registerMdiIcons() {
   registerCustomIconResolver((name) => {
     const path = MDI_PATHS[name]
     if (!path) return undefined
+    // Fill vuiii's `.Icon` box, as its own icons do: that box is what the
+    // `size` prop and the `--vuiii-icon-size*` variables set. A fixed `1em`
+    // would tie the icon to the surrounding font size instead.
     return () =>
-      h('svg', { viewBox: '0 0 24 24', fill: 'currentColor', width: '1em', height: '1em', 'aria-hidden': 'true' }, [
+      h('svg', { viewBox: '0 0 24 24', fill: 'currentColor', width: '100%', height: '100%', 'aria-hidden': 'true' }, [
         h('path', { d: path }),
       ])
   })
