@@ -28,7 +28,7 @@ function isActive(to: string): boolean {
         <RouterLink
           :to="item.to"
           class="flex min-h-[56px] flex-col items-center justify-center gap-0.5 py-1.5 text-xs font-medium"
-          :class="isActive(item.to) ? 'text-accent-600' : 'text-ink-500'"
+          :class="isActive(item.to) ? 'text-accent-600' : 'text-ink-500 hover:text-ink-800'"
         >
           <!-- The app's "large" (20 px) reads small for the only way around the
                app, so the nav raises it to 24 px. The trimmed padding keeps the

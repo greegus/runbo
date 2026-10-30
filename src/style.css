@@ -59,3 +59,27 @@ body,
 body {
   @apply bg-white text-ink-900;
 }
+
+/*
+ * One light hover for every hand-rolled button, whatever its fill: an inset
+ * shadow lays a faint ink tint over the background (transparent, white or
+ * accent alike) and follows the rounded corners. vuiii's own buttons keep
+ * theirs. Pointer devices only, so a tap on a phone never leaves it stuck.
+ */
+@layer base {
+  button:not(.vuiii-button) {
+    transition: box-shadow 120ms ease-out;
+  }
+
+  /* Tailwind v4 dropped the pointer from buttons; vuiii's own set theirs. */
+  button:not(:disabled):not([aria-disabled='true']),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    button:not(.vuiii-button):not(:disabled):not([aria-disabled='true']):hover {
+      box-shadow: inset 0 0 0 100vmax rgb(20 24 31 / 0.05);
+    }
+  }
+}
