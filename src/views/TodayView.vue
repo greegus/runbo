@@ -65,7 +65,9 @@ const model = computed(() =>
 const override = ref<TodayOverride | null>(null)
 
 const item = computed<PlannedItem | null>(() => (override.value ? override.value.item : (model.value?.item ?? null)))
-const explanation = computed(() => override.value?.explanation ?? model.value?.explanation ?? null)
+// Only the sentence about the athlete's own swap or pick: the week's first
+// placement line is about some other day and reads as noise on today's card.
+const explanation = computed(() => override.value?.explanation ?? null)
 
 /**
  * Derived from the EFFECTIVE item, not from the model: a swapped or replaced

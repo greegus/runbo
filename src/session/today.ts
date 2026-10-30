@@ -41,7 +41,6 @@ export interface TodayModel {
   swap: PlannedItem | null
   isDeloadWeek: boolean
   headline: string | null
-  explanation: string | null
   activeSession: Session | null
   /**
    * Today's already-logged session, if the day is finished. `composeWeek` keeps
@@ -101,7 +100,6 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
     swap: activeSession || hasDoneSession ? null : swapOption(plan, todayIso, replacements),
     isDeloadWeek: resolution.isDeloadWeek,
     headline: resolution.item?.kind === 'strength' ? strengthHeadline(profile, resolution.item.programDay) : null,
-    explanation: plan.week.explanations[0] ?? null,
     activeSession,
     doneSession,
     streak: currentStreak(profile, sessions, todayIso),

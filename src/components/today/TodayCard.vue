@@ -71,13 +71,11 @@ function primary(): void {
 </script>
 
 <template>
-  <section class="flex flex-col gap-4 rounded-xl border border-ink-200 bg-white p-4" aria-labelledby="today-card-title">
-    <header class="flex flex-wrap items-center gap-2">
-      <h2 id="today-card-title" class="text-sm font-medium text-ink-500">Today</h2>
-
-      <!-- A lighter week is planned, not a mistake. -->
+  <section class="flex flex-col gap-4 rounded-xl border border-ink-200 bg-white p-4" aria-label="Today's plan">
+    <!-- The page title already says "Today"; the header only carries the deload
+         badge. A lighter week is planned, not a mistake. -->
+    <header v-if="props.isDeloadWeek" class="flex flex-wrap items-center gap-2">
       <span
-        v-if="props.isDeloadWeek"
         class="rounded-full border border-accent-300 bg-accent-50 px-2 py-0.5 text-xs font-semibold text-accent-800"
       >
         Deload week
@@ -86,7 +84,7 @@ function primary(): void {
 
     <!-- Strength -->
     <div v-if="props.item?.kind === 'strength'" class="flex items-start gap-3">
-      <Icon name="dumbbell" size="large" class="mt-1 shrink-0 text-accent-600" aria-hidden="true" />
+      <Icon name="dumbbell" size="large" class="TodayCard__icon shrink-0 text-accent-600" aria-hidden="true" />
       <div class="min-w-0">
         <p class="text-2xl font-bold text-ink-900">Strength · {{ props.item.programDay }}</p>
         <p v-if="props.headline" class="text-lg leading-snug font-semibold tabular-nums text-ink-700">
@@ -104,7 +102,7 @@ function primary(): void {
 
     <!-- Rest -->
     <div v-else class="flex items-start gap-3">
-      <Icon name="check" size="large" class="mt-1 shrink-0 text-ink-400" aria-hidden="true" />
+      <Icon name="meditation" size="large" class="TodayCard__icon shrink-0 text-accent-600" aria-hidden="true" />
       <div>
         <p class="text-2xl font-bold text-ink-900">Rest day</p>
         <p class="text-sm text-ink-500">Nothing is planned. Recovery is part of the week.</p>
@@ -143,3 +141,15 @@ function primary(): void {
     <p v-if="props.error" role="alert" class="text-sm text-accent-700">{{ props.error }}</p>
   </section>
 </template>
+
+<style scoped>
+/*
+ * Sized so the title starts where the workout names in ReplacePicker do, the
+ * panel right below: there the name sits 60 px in (border 1 + p-1 4 + px-2 8 +
+ * row border 1 + px-4 16 + an 18 px icon + gap-3 12), here 1 + p-4 16 + gap-3
+ * 12 leave 31 px for the icon. Its height also matches the text-2xl title line.
+ */
+.TodayCard__icon {
+  --vuiii-icon-size--large: 1.9375rem;
+}
+</style>

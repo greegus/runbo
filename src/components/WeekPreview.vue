@@ -89,7 +89,7 @@ const rows = computed(() => model.value.days.map((day) => ({ ...day, to: linkFor
 
           <span v-if="day.kind === 'strength'" class="flex min-w-0 flex-col text-sm text-ink-900">
             <span class="flex min-w-0 items-center gap-2">
-              <Icon name="dumbbell" class="shrink-0 text-ink-500" aria-hidden="true" />
+              <Icon name="dumbbell" class="shrink-0 text-accent-600" aria-hidden="true" />
               <span class="font-medium">{{ day.title }}</span>
             </span>
             <span v-if="props.showStatus && day.detail" class="pl-7 text-xs text-ink-500">{{ day.detail }}</span>
@@ -97,7 +97,7 @@ const rows = computed(() => model.value.days.map((day) => ({ ...day, to: linkFor
 
           <span v-else-if="day.kind === 'cardio'" class="flex min-w-0 flex-col text-sm text-ink-900">
             <span class="flex min-w-0 items-center gap-2">
-              <Icon name="run" class="shrink-0 text-ink-500" aria-hidden="true" />
+              <Icon name="run" class="shrink-0 text-accent-600" aria-hidden="true" />
               <span>{{ day.title }}</span>
             </span>
             <span v-if="props.showStatus && day.detail" class="pl-7 text-xs text-ink-500">{{ day.detail }}</span>
