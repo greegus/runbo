@@ -172,6 +172,7 @@ watch(result, (value) => emit('result', value), { immediate: true })
       <FilePicker :disabled="busy" accept="application/json,.json" label="Choose JSON file" @files="onFiles" />
       <span v-if="fileName" class="text-sm text-ink-700">{{ fileName }}</span>
       <Button
+        color="primary"
         v-if="fileName"
         variant="text"
         class="min-h-[48px]"

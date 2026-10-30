@@ -165,7 +165,7 @@ function useFallback(): void {
         </span>
       </p>
 
-      <Button class="min-h-[56px]" label="Use this program" @click="useThisProgram()" />
+      <Button color="primary" class="min-h-[56px]" label="Use this program" @click="useThisProgram()" />
     </div>
 
     <div v-else class="flex flex-col gap-4">
@@ -192,6 +192,7 @@ function useFallback(): void {
 
       <div v-if="!showFallback">
         <Button
+          color="primary"
           class="min-h-[56px]"
           variant="outlined"
           label="Keep my weights, run the built-in GZCLP"
@@ -269,8 +270,9 @@ function useFallback(): void {
         <p v-if="fallbackError" role="alert" class="text-sm text-accent-700">{{ fallbackError }}</p>
 
         <div class="flex flex-wrap gap-3">
-          <Button class="min-h-[56px]" label="Use the built-in GZCLP" @click="useFallback()" />
+          <Button color="primary" class="min-h-[56px]" label="Use the built-in GZCLP" @click="useFallback()" />
           <Button
+            color="primary"
             class="min-h-[56px]"
             variant="text"
             label="Back to editing my program"

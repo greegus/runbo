@@ -358,7 +358,14 @@ onBeforeUnmount(() => {
     <div v-else-if="phase === 'missing'" class="flex-1 px-4 py-6">
       <h1 class="text-2xl font-bold text-ink-900">Session not found</h1>
       <p class="mt-2 text-ink-500">This session no longer exists, or it belongs to another account.</p>
-      <Button :to="{ name: 'today' }" label="Back to today" size="large" variant="outlined" class="mt-6 min-h-[48px]" />
+      <Button
+        color="primary"
+        :to="{ name: 'today' }"
+        label="Back to today"
+        size="large"
+        variant="outlined"
+        class="mt-6 min-h-[48px]"
+      />
     </div>
 
     <template v-else-if="session">
@@ -424,6 +431,7 @@ onBeforeUnmount(() => {
 
         <!-- `replace`, so the back button cannot walk into a finished session. -->
         <Button
+          color="primary"
           v-if="isDone || isImported"
           label="Done"
           size="large"
@@ -436,6 +444,7 @@ onBeforeUnmount(() => {
           <p v-if="blockedReason" class="mb-3 text-sm text-accent-700" role="status">{{ blockedReason }}</p>
 
           <Button
+            color="primary"
             label="Finish session"
             size="large"
             block

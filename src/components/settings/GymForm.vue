@@ -163,6 +163,7 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
           {{ modelValue.units }} set.
         </p>
         <Button
+          color="primary"
           label="Use a standard set"
           variant="outlined"
           class="mt-3 min-h-[48px]"
@@ -267,7 +268,14 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
 
       <p v-if="inventoryError" role="alert" class="text-sm text-accent-700">{{ inventoryError }}</p>
 
-      <Button label="Add a plate size" prefix-icon="plus" variant="outlined" class="min-h-[48px]" @click="addPlate()" />
+      <Button
+        color="primary"
+        label="Add a plate size"
+        prefix-icon="plus"
+        variant="outlined"
+        class="min-h-[48px]"
+        @click="addPlate()"
+      />
     </section>
 
     <!-- The proof that the inventory works. A user who mistypes a count sees it

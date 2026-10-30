@@ -363,7 +363,13 @@ watch(
         </p>
 
         <div v-if="entry.reason === 'not-in-program'">
-          <Button variant="outlined" class="min-h-[48px]" label="Edit the program text" @click="editProgramText()" />
+          <Button
+            color="primary"
+            variant="outlined"
+            class="min-h-[48px]"
+            label="Edit the program text"
+            @click="editProgramText()"
+          />
         </div>
 
         <div v-else-if="entry.candidateKeys?.length" class="flex flex-col gap-2">
@@ -377,6 +383,7 @@ watch(
           </p>
           <div>
             <Button
+              color="primary"
               variant="outlined"
               class="min-h-[48px]"
               label="Take me to that lift"

@@ -204,7 +204,7 @@ async function remove(entry: HistoryEntry): Promise<void> {
         class="flex flex-col gap-3 rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm"
       >
         <p class="text-ink-900">{{ firstPageError }}</p>
-        <Button label="Try again" variant="outlined" class="min-h-[48px]" @click="loadFirstPage()" />
+        <Button color="primary" label="Try again" variant="outlined" class="min-h-[48px]" @click="loadFirstPage()" />
       </div>
 
       <!-- `isLoadingHistory` matters here because a delete empties the list and
@@ -218,7 +218,7 @@ async function remove(entry: HistoryEntry): Promise<void> {
           No finished sessions yet. Your first logged session shows up here, and you can delete the most recent one if
           you log it by mistake.
         </p>
-        <Button label="Go to Today" :to="{ name: 'today' }" class="min-h-[48px]" />
+        <Button color="primary" label="Go to Today" :to="{ name: 'today' }" class="min-h-[48px]" />
       </div>
 
       <template v-else>
@@ -241,6 +241,7 @@ async function remove(entry: HistoryEntry): Promise<void> {
         </section>
 
         <Button
+          color="primary"
           v-if="sessionsStore.hasMoreHistory"
           label="Load more"
           variant="outlined"

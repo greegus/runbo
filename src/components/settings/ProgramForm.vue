@@ -173,6 +173,7 @@ function plateHint(draft: LiftSeedDraft): string {
 
         <div class="mt-3">
           <Button
+            color="primary"
             variant="text"
             size="small"
             class="min-h-[48px]"
@@ -204,6 +205,7 @@ function plateHint(draft: LiftSeedDraft): string {
           </FormGroup>
 
           <Button
+            color="primary"
             class="min-h-[48px]"
             variant="outlined"
             label="Work it out"

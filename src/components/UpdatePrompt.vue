@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Button } from 'vuiii'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
+import { Button } from 'vuiii'
 
 /**
  * "A new version is available."
@@ -40,8 +40,8 @@ function dismiss(): void {
     >
       <p class="flex-1 text-sm text-ink-900">A new version is available.</p>
 
-      <Button label="Later" variant="text" size="small" class="min-h-[44px]" @click="dismiss()" />
-      <Button label="Update" size="small" class="min-h-[44px]" @click="updateServiceWorker(true)" />
+      <Button color="primary" label="Later" variant="text" size="small" class="min-h-[44px]" @click="dismiss()" />
+      <Button color="primary" label="Update" size="small" class="min-h-[44px]" @click="updateServiceWorker(true)" />
     </div>
   </div>
 </template>

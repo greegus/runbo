@@ -174,6 +174,7 @@ defineExpose({ focusLine })
 
     <div>
       <Button
+        color="primary"
         variant="outlined"
         prefix-icon="check"
         class="min-h-[48px]"

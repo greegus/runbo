@@ -100,7 +100,15 @@ async function copyJson(): Promise<void> {
   <div class="flex flex-col gap-4">
     <p class="text-sm text-ink-500">Download your profile, every session and every weigh-in as a JSON file.</p>
 
-    <Button label="Download JSON" size="large" block class="min-h-[48px]" :loading="busy" @click="exportData()" />
+    <Button
+      color="primary"
+      label="Download JSON"
+      size="large"
+      block
+      class="min-h-[48px]"
+      :loading="busy"
+      @click="exportData()"
+    />
 
     <p v-if="error" role="alert" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm">{{ error }}</p>
 
@@ -119,6 +127,7 @@ async function copyJson(): Promise<void> {
 
         <div class="flex flex-col gap-3 border-t border-ink-200 p-3">
           <Button
+            color="primary"
             variant="outlined"
             class="min-h-[48px] self-start"
             :label="copied ? 'Copied' : 'Copy JSON'"

@@ -543,7 +543,7 @@ onBeforeRouteLeave(() => {
     <div v-else-if="notFound" class="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
       <Icon name="alert" size="large" class="text-accent-600" />
       <p class="text-ink-900">Session not found.</p>
-      <Button label="Back to Today" variant="outlined" class="min-h-[48px]" @click="leave()" />
+      <Button color="primary" label="Back to Today" variant="outlined" class="min-h-[48px]" @click="leave()" />
     </div>
 
     <template v-else-if="session">
@@ -573,6 +573,7 @@ onBeforeRouteLeave(() => {
         <p class="mb-3 text-ink-900">This session can’t be built from your program:</p>
         <DiagnosticsList :diagnostics="plan.diagnostics" />
         <Button
+          color="primary"
           label="Open the program editor"
           variant="outlined"
           class="mt-4 min-h-[48px]"
@@ -665,6 +666,7 @@ onBeforeRouteLeave(() => {
           <!-- The obvious next move once a lift is done, so finishing one does
                not send the athlete back to the strip to hunt for the next. -->
           <Button
+            color="primary"
             v-if="nextExercise"
             class="mt-4 min-h-[48px]"
             variant="outlined"
@@ -710,7 +712,14 @@ onBeforeRouteLeave(() => {
         </p>
 
         <template v-if="isDone">
-          <Button label="Done" size="large" block class="min-h-[56px]" @click="router.replace({ name: 'today' })" />
+          <Button
+            color="primary"
+            label="Done"
+            size="large"
+            block
+            class="min-h-[56px]"
+            @click="router.replace({ name: 'today' })"
+          />
         </template>
 
         <template v-else-if="plan && plan.diagnostics.length === 0">
@@ -729,6 +738,7 @@ onBeforeRouteLeave(() => {
           </p>
 
           <Button
+            color="primary"
             label="Finish session"
             size="large"
             block

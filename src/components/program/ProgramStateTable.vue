@@ -143,6 +143,7 @@ function repsLabel(set: PrescribedSet): string {
         </div>
 
         <Button
+          color="primary"
           v-if="row.sets.length && row.weight"
           label="Upcoming sessions"
           prefix-icon="chart"

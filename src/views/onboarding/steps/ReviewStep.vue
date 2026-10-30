@@ -131,6 +131,7 @@ const sections = computed(() => [
                navigation, and the wizard's own step map already renders whatever
                the URL says. -->
           <Button
+            color="primary"
             label="Edit"
             variant="text"
             class="min-h-[48px]"
@@ -145,6 +146,7 @@ const sections = computed(() => [
         <header class="flex items-center justify-between gap-2">
           <h2 class="font-semibold text-ink-900">Program</h2>
           <Button
+            color="primary"
             label="Edit"
             variant="text"
             class="min-h-[48px]"

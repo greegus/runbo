@@ -331,6 +331,7 @@ function setComebackGap(value: unknown): void {
               </span>
             </p>
             <Button
+              color="primary"
               label="Save"
               size="large"
               class="min-h-[48px]"
@@ -353,6 +354,7 @@ function setComebackGap(value: unknown): void {
           </p>
 
           <Button
+            color="primary"
             label="Edit program"
             variant="outlined"
             size="large"
@@ -452,6 +454,7 @@ function setComebackGap(value: unknown): void {
               </span>
             </p>
             <Button
+              color="primary"
               label="Save"
               size="large"
               class="min-h-[48px]"
@@ -476,6 +479,7 @@ function setComebackGap(value: unknown): void {
               </span>
             </p>
             <Button
+              color="primary"
               label="Save"
               size="large"
               class="min-h-[48px]"
@@ -508,6 +512,7 @@ function setComebackGap(value: unknown): void {
               </span>
             </p>
             <Button
+              color="primary"
               label="Save"
               size="large"
               class="min-h-[48px]"
@@ -532,6 +537,7 @@ function setComebackGap(value: unknown): void {
               </span>
             </p>
             <Button
+              color="primary"
               label="Save"
               size="large"
               class="min-h-[48px]"

@@ -204,6 +204,7 @@ function tonnageValue(value: { value: number } | null): string {
     >
       <p>{{ loadError }}</p>
       <Button
+        color="primary"
         label="Try again"
         variant="outlined"
         class="min-h-[48px]"
@@ -228,7 +229,7 @@ function tonnageValue(value: { value: number } | null): string {
       <p class="text-sm text-ink-600">
         Nothing to chart yet. Log a session and your weights, cardio minutes and records start showing up here.
       </p>
-      <Button :to="{ name: 'today' }" size="large" class="mt-3 min-h-[48px]">Go to Today</Button>
+      <Button color="primary" :to="{ name: 'today' }" size="large" class="mt-3 min-h-[48px]">Go to Today</Button>
     </Card>
 
     <!-- Nothing loaded AND the load failed renders neither state: the alert

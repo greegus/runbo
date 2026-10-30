@@ -234,6 +234,7 @@ async function onNext(): Promise<void> {
            visit there is nothing to keep, and Continue is disabled until one of
            the two paths is picked. -->
       <Button
+        color="primary"
         v-if="hasCommittedProgram"
         variant="text"
         class="min-h-[48px] self-start"
@@ -275,6 +276,7 @@ async function onNext(): Promise<void> {
     <div v-else class="flex flex-col gap-6">
       <div>
         <Button
+          color="primary"
           variant="text"
           prefix-icon="chevron-left"
           class="min-h-[48px]"

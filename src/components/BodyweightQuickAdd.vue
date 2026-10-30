@@ -91,6 +91,7 @@ function save(): void {
       </FormGroup>
 
       <Button
+        color="primary"
         label="Save"
         size="large"
         class="min-h-[48px]"

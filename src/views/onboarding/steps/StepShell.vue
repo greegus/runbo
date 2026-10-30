@@ -97,6 +97,7 @@ const percent = computed(() => Math.round((props.step / LAST_STEP) * 100))
       </p>
 
       <Button
+        color="primary"
         :label="nextLabel"
         size="large"
         block
@@ -109,6 +110,7 @@ const percent = computed(() => Math.round((props.step / LAST_STEP) * 100))
 
       <div class="mt-2 flex items-center justify-between gap-2">
         <Button
+          color="primary"
           v-if="canBack"
           label="Back"
           variant="text"

@@ -39,11 +39,48 @@
 :root {
   --vuiii-color-primary: var(--color-accent-600);
 
+  /* vuiii sizes fields at 2.5em of their own font, so a large input and a large
+     button beside it came out 50 and 45 px — and the `min-h-*` utilities lose
+     to vuiii's unlayered CSS. One fixed height lines them all up at the 48 px
+     tap target the hand-rolled buttons use. */
+  --vuiii-field-height: 3rem;
+
+  /* vuiii buttons take the shape of the hand-rolled ones ("Start session",
+     "Claim today"): rounded-xl, semibold, text-base / text-lg when large. */
+  --vuiii-button-fontWeight: 600;
+  --vuiii-button-borderRadius: 0.75rem;
+  --vuiii-button-borderRadius--small: 0.75rem;
+  --vuiii-button-borderRadius--large: 0.75rem;
+  --vuiii-button-fontSize--large: 1.125rem;
+
+  /* Primary is the accent: filled orange, or an orange outline. */
+  --vuiii-button-surface--primary--hover: var(--color-accent-700);
+  --vuiii-button-accent--primary--hover: var(--color-accent-700);
+
+  /* Secondary is the neutral ink outline ("Not today", "Train something else"). */
+  --vuiii-button-surface--secondary: var(--color-ink-100);
+  --vuiii-button-surface--secondary--hover: var(--color-ink-200);
+  --vuiii-button-onSurface--secondary: var(--color-ink-800);
+  --vuiii-button-accent--secondary: var(--color-ink-300);
+  --vuiii-button-accent--secondary--hover: var(--color-ink-400);
+
   /* vuiii's icon sizes (20.8 / 28 px) crowd text-sized UI; these sit just
      above the 16 px body text. */
   --vuiii-icon-size--small: 1rem;
   --vuiii-icon-size: 1.125rem;
   --vuiii-icon-size--large: 1.25rem;
+}
+
+/* vuiii draws an outline's text in its border colour; the app's outlines keep
+   a darker label than the border, so the two are split here. */
+.vuiii-button.vuiii-button--color-primary:is(.vuiii-button--variant-outlined, .vuiii-button--variant-text) {
+  --textColor: var(--color-accent-700);
+  --textColor--hover: var(--color-accent-800);
+}
+
+.vuiii-button.vuiii-button--color-secondary:is(.vuiii-button--variant-outlined, .vuiii-button--variant-text) {
+  --textColor: var(--color-ink-700);
+  --textColor--hover: var(--color-ink-900);
 }
 
 .DialogStack__backdrop {

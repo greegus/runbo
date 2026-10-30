@@ -84,6 +84,7 @@ const { submit: signOut, isSubmitting: isSigningOut } = useSubmitAction(() => au
       </div>
 
       <Button
+        color="primary"
         label="Use another account"
         variant="outlined"
         size="large"
@@ -95,6 +96,7 @@ const { submit: signOut, isSubmitting: isSigningOut } = useSubmitAction(() => au
     </div>
 
     <Button
+      color="primary"
       v-else
       label="Continue with Google"
       prefix-icon="google"

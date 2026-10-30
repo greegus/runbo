@@ -281,6 +281,7 @@ async function save(): Promise<void> {
             </p>
 
             <Button
+              color="primary"
               label="Save program"
               size="large"
               class="min-h-[56px]"
