@@ -635,13 +635,16 @@ onBeforeRouteLeave(() => {
         <!-- Sticky: between sets the athlete looks up to find where they are,
              and a strip that has scrolled away answers nothing. It scrolls
              horizontally on its own so a twelve-lift day does not wrap into a
-             wall of chips. -->
+             wall of chips. The gutter is padding on the scroller itself, not
+             on the bar around it: that way the whole row scrolls, and the
+             first and last tab still rest a gutter away from the screen edge.
+             `scroll-px-4` keeps a tab brought into view off the edge too. -->
         <div class="sticky top-0 z-10 border-b border-ink-200 bg-white">
           <TabsNav
             v-model="selectedTab"
             :tabs="tabs"
             id-base="exercise"
-            class="overflow-x-auto [&_[role=tab]]:min-h-[48px]"
+            class="scroll-px-4 overflow-x-auto px-4 [&_[role=tab]]:min-h-[48px]"
             aria-label="Exercises in this session"
           />
         </div>
