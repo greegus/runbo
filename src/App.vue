@@ -49,7 +49,12 @@ watch(
   </div>
 
   <div v-else class="flex h-full flex-col">
-    <main class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+    <!-- `relative` makes the scroller the containing block of anything absolute
+         with no positioned parent of its own (`sr-only` text, vuiii's hidden
+         checkbox inputs). Otherwise they sit on the page below the fold, make
+         the document taller than the screen, and focusing one scrolls the
+         whole document: the nav rides up over blank space. -->
+    <main class="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
       <RouterView />
     </main>
 
