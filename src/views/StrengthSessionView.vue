@@ -549,7 +549,6 @@ onBeforeRouteLeave(() => {
     <template v-else-if="session">
       <header class="flex items-center gap-3 px-4 pt-4">
         <div class="min-w-0 flex-1">
-          <p class="text-sm font-medium text-ink-500">{{ session.date }}</p>
           <h1 class="text-2xl font-bold text-ink-900">
             <!-- The day name is the athlete's own, and plenty of programs already
                  call theirs "Day 1" — prefixing unconditionally reads "Day Day 1". -->
