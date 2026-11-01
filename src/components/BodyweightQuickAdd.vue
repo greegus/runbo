@@ -67,10 +67,8 @@ function save(): void {
 
 <template>
   <section class="flex flex-col gap-3 rounded-lg border border-ink-200 p-4" aria-label="Bodyweight">
-    <!-- The heading doubles as the field's label: one line says what and when. -->
-    <h2 class="text-base font-semibold text-ink-900">
-      Today's bodyweight <span class="font-normal text-ink-500">({{ props.unit }})</span>
-    </h2>
+    <!-- The heading doubles as the field's label; the unit sits in the field. -->
+    <h2 class="text-base font-semibold text-ink-900">Today's bodyweight</h2>
 
     <div class="flex items-center gap-3">
       <Input
@@ -86,12 +84,14 @@ function save(): void {
         :aria-label="`Today's bodyweight in ${props.unit}`"
         @update:model-value="setWeight"
       >
-        <template v-if="isSaved" #suffix>
+        <template #suffix>
           <!-- vuiii's own suffixIcon is greyed at half opacity; the slot gets no
-               wrapper of its own, so this one centres the check and keeps it
-               off the edge. -->
-          <span class="flex shrink-0 items-center pr-3">
+               wrapper of its own, so this one centres the unit and the check and
+               keeps them off the edge. -->
+          <span class="flex shrink-0 items-center gap-2 pr-3">
+            <span class="text-base text-ink-500" aria-hidden="true">{{ props.unit }}</span>
             <Icon
+              v-if="isSaved"
               name="check-circle"
               class="shrink-0 text-green-600 [--vuiii-icon-size:1.5rem]"
               role="img"
