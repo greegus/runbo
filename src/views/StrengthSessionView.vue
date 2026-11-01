@@ -82,7 +82,6 @@ const RECORD_LABELS: Record<NewRecord['kind'], string> = {
 
 const session = shallowRef<Session | null>(null)
 const logged = ref<LoggedSet[][]>([])
-const collapsed = ref<boolean[]>([])
 
 const resolving = ref(true)
 const notFound = ref(false)
@@ -265,7 +264,6 @@ function onVisibilityChange(): void {
 function hydrate(doc: Session): void {
   session.value = doc
   logged.value = loggedSetsFromSession(doc)
-  collapsed.value = logged.value.map(() => false)
 
   // The sheet is offered once per screen, and never on a session that already
   // carries answers or is already history.
@@ -656,10 +654,8 @@ onBeforeRouteLeave(() => {
             :exercise="activeExercise"
             :model-value="logged[activeIndex] ?? []"
             :settings="profile.settings"
-            :collapsed="collapsed[activeIndex] ?? false"
             :busy="busy"
             @update:model-value="setExerciseSets(activeIndex, $event)"
-            @update:collapsed="collapsed[activeIndex] = $event"
             @update:weight="setWeight(activeIndex, $event)"
             @first-log="onFirstLog(activeIndex, $event)"
             @show-projection="showProjection()"

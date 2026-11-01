@@ -26,15 +26,13 @@ const props = withDefaults(
     /** Same length and order as `exercise.sets`. */
     modelValue: LoggedSet[]
     settings: Profile['settings']
-    collapsed?: boolean
     busy?: boolean
   }>(),
-  { collapsed: false, busy: false },
+  { busy: false },
 )
 
 const emit = defineEmits<{
   'update:modelValue': [sets: LoggedSet[]]
-  'update:collapsed': [collapsed: boolean]
   'first-log': [payload: { setIndex: number; restSec: number }]
   'update:weight': [weight: WeightValue]
   /** Open the upcoming-sessions table for this lift. */
@@ -138,8 +136,10 @@ function selectAll(event: FocusEvent): void {
 </script>
 
 <template>
-  <section class="rounded-2xl border border-ink-200 bg-white">
-    <header class="flex items-start gap-3 p-4">
+  <!-- No card around it: the screen shows one lift at a time, so there is
+       nothing to set it apart from, and nothing to collapse it out of the way of. -->
+  <section>
+    <header class="flex items-start gap-3">
       <span
         class="shrink-0 rounded-lg bg-accent-600 px-2.5 py-1 text-sm font-bold text-white"
         :aria-label="exercise.tier ? `Tier ${exercise.tier}` : 'Accessory'"
@@ -166,19 +166,9 @@ function selectAll(event: FocusEvent): void {
         :aria-label="`Upcoming ${exercise.name} sessions`"
         @click="emit('show-projection')"
       />
-
-      <IconButton
-        :icon="collapsed ? 'chevron-down' : 'chevron-up'"
-        variant="text"
-        size="large"
-        class="min-h-[48px] min-w-[48px]"
-        :aria-label="collapsed ? `Show ${exercise.name} sets` : `Hide ${exercise.name} sets`"
-        :aria-expanded="!collapsed"
-        @click="emit('update:collapsed', !collapsed)"
-      />
     </header>
 
-    <div v-if="!collapsed" class="flex flex-col gap-4 px-4 pb-4">
+    <div class="mt-4 flex flex-col gap-4">
       <!-- A prescription the engine could not build is never silently rendered:
            the athlete would train off numbers that mean nothing. -->
       <DiagnosticsList v-if="exercise.diagnostics.length" :diagnostics="exercise.diagnostics" />
