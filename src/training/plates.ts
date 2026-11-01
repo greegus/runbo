@@ -61,35 +61,49 @@ export function nextLoadableDown(target: WeightValue, settings: GymSettings): We
 }
 
 /** The paint on a plate — what the lifter looks for on the rack. */
-export type PlateColor = 'red' | 'blue' | 'yellow' | 'green' | 'white' | 'silver' | 'black'
+export type PlateColor =
+  | 'red'
+  | 'blue'
+  | 'yellow'
+  | 'green'
+  | 'grey'
+  | 'pale-red'
+  | 'pale-blue'
+  | 'pale-yellow'
+  | 'pale-green'
+  | 'pale-grey'
+  | 'silver'
+  | 'black'
 
-// DECISION: kg follows the IWF competition colours (25 red, 20 blue, 15 yellow,
-// 10 green, 5 white, and the same five again for the 2.5–0.5 change plates);
-// 1.25 is not an IWF size, and the gyms that have one have it in chrome. lb has
-// no standard, so it takes the colour of the kg plate it stands in for on the
-// rack — 45 lb is the "20", 55 lb the "25". Anything else is a black iron plate,
-// which is what an unusual size almost always is.
+// DECISION: kg follows the IWF competition hues (25 red, 20 blue, 15 yellow,
+// 10 green), with grey for the 5 rather than IWF white — a white disc on a white
+// screen reads as a hole. The change plates a tenth of those sizes (2.5–0.5)
+// take the same hue in a pastel, so a 2.5 is never mistaken for a 25 at a
+// glance. 1.25 is not an IWF size, and the gyms that have one have it in
+// chrome. lb has no standard, so it takes the colour of the kg plate it stands
+// in for on the rack — 45 lb is the "20", 55 lb the "25". Anything else is a
+// black iron plate, which is what an unusual size almost always is.
 const PLATE_COLORS: Record<GymSettings['units'], Record<number, PlateColor>> = {
   kg: {
     25: 'red',
     20: 'blue',
     15: 'yellow',
     10: 'green',
-    5: 'white',
-    2.5: 'red',
-    2: 'blue',
-    1.5: 'yellow',
+    5: 'grey',
+    2.5: 'pale-red',
+    2: 'pale-blue',
+    1.5: 'pale-yellow',
     1.25: 'silver',
-    1: 'green',
-    0.5: 'white',
+    1: 'pale-green',
+    0.5: 'pale-grey',
   },
   lb: {
     55: 'red',
     45: 'blue',
     35: 'yellow',
     25: 'green',
-    10: 'white',
-    5: 'red',
+    10: 'grey',
+    5: 'pale-red',
     2.5: 'silver',
   },
 }

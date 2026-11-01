@@ -97,20 +97,20 @@ describe('rounding helpers delegate to the engine', () => {
 })
 
 describe('plateColor', () => {
-  it('paints kg plates in the IWF competition colours', () => {
+  it('paints kg plates in the IWF hues, pastel for the change plates', () => {
     expect([25, 20, 15, 10, 5].map((weight) => plateColor(weight, 'kg'))).toEqual([
       'red',
       'blue',
       'yellow',
       'green',
-      'white',
+      'grey',
     ])
     expect([2.5, 2, 1.5, 1, 0.5].map((weight) => plateColor(weight, 'kg'))).toEqual([
-      'red',
-      'blue',
-      'yellow',
-      'green',
-      'white',
+      'pale-red',
+      'pale-blue',
+      'pale-yellow',
+      'pale-green',
+      'pale-grey',
     ])
     expect(plateColor(1.25, 'kg')).toBe('silver')
   })
@@ -126,7 +126,7 @@ describe('plateColor', () => {
   })
 
   it('finds the colour of a weight that drifted in floating point', () => {
-    expect(plateColor(2.4999999, 'kg')).toBe('red')
+    expect(plateColor(2.4999999, 'kg')).toBe('pale-red')
     expect(plateColor(1.2500001, 'kg')).toBe('silver')
   })
 
