@@ -49,7 +49,8 @@ The Today card shows "Sauna claimed" with an Undo, because one tap to claim shou
 - **The rest day right after a training day**, earlier in the week first; otherwise the earliest rest day.
 - **Only from today on**; a missed workout does not count as training when choosing the day after one.
 - **Not when a sauna is already claimed that week.**
-- **Opt-in**: `availability.saunaOnRestDays`, off by default and off when absent. Switching it off drops the field
+- **Opt-in**: `cardioTrack.saunaOnRestDays`, a switch in Settings → Cardio beside the cardio it recovers from; off by
+  default and off when absent. Switching it off drops the field
   rather than writing `false`, so an off → on → off round trip leaves no difference behind to read as unsaved.
 - No interference rule with the next day's lifting: it is a suggestion the athlete can ignore.
 
@@ -65,8 +66,8 @@ The Today card shows "Sauna claimed" with an Undo, because one tap to claim shou
 ### Data model and rules
 
 - `SessionKind` gains `'sauna'`; `TrainingKind` names the two that train.
-- `Profile.availability.saunaOnRestDays?: boolean`.
-- Firestore rules do not enumerate `kind` or validate `availability` fields, so they are unchanged. The JSON
+- `Profile.cardioTrack.saunaOnRestDays?: boolean`.
+- Firestore rules do not enumerate `kind` or validate `cardioTrack` fields, so they are unchanged. The JSON
   export carries sessions and the profile as stored.
 
 ## Later

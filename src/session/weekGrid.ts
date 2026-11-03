@@ -272,7 +272,7 @@ export function weekGridFromPlans(
   // A missed day is neither rest nor training — nothing happened on it. Opt-in
   // (absent is off), and a week with a sauna already claimed needs no nudge.
   const suggested =
-    safeProfile.availability.saunaOnRestDays !== true || days.some((day) => day.sauna === 'claimed')
+    safeProfile.cardioTrack.saunaOnRestDays !== true || days.some((day) => day.sauna === 'claimed')
       ? null
       : saunaDate(
           days.map((day) => ({

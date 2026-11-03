@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { Checkbox, FormGroup } from 'vuiii'
+import { FormGroup } from 'vuiii'
 
 import RangeSlider from '@/components/RangeSlider.vue'
 import WeekdayPicker from '@/components/settings/WeekdayPicker.vue'
@@ -105,17 +105,6 @@ function patch(changes: Partial<Availability>, base: Availability = props.modelV
   })
 }
 
-/**
- * Opt-in, and stored only while on: an absent field is what "off" means, so
- * switching it off drops the field rather than writing `false`. Otherwise an
- * off → on → off round trip left a draft that differed from the saved
- * profile only in a key, and the section read "Unsaved changes".
- */
-function setSauna(on: boolean): void {
-  const { saunaOnRestDays: _previous, ...rest } = props.modelValue
-  patch(on ? { saunaOnRestDays: true } : {}, rest)
-}
-
 function dayCountText(value: number): string {
   return `${value} ${value === 1 ? 'day' : 'days'}`
 }
@@ -217,16 +206,5 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
         so both tracks keep moving.
       </template>
     </div>
-
-    <!-- A switch, not a day count: the suggestion picks its own rest day
-         (see saunaDate). Off unless switched on. Claiming a sauna from "Train
-         something else today" works either way. -->
-    <Checkbox
-      switch
-      label="Suggest sauna on rest days"
-      description="One rest day a week, the day after training when there is one. A suggestion only — never a training day."
-      :model-value="modelValue.saunaOnRestDays === true"
-      @update:model-value="setSauna($event === true)"
-    />
   </div>
 </template>

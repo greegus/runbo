@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { CheckboxGroup, FormGroup, Icon, Input } from 'vuiii'
+import { Checkbox, CheckboxGroup, FormGroup, Icon, Input } from 'vuiii'
 
 import type { CardioTrack } from '@/onboarding/types'
 import type { Modality } from '@/types'
@@ -36,6 +36,17 @@ function toMinutes(value: unknown): number {
  */
 function apply(patch: Partial<CardioTrack>): void {
   emit('update:modelValue', { ...props.modelValue, ...patch })
+}
+
+/**
+ * Opt-in, and stored only while on: an absent field is what "off" means, so
+ * switching it off drops the field rather than writing `false`. Otherwise an
+ * off → on → off round trip left a draft that differed from the saved
+ * profile only in a key, and the section read "Unsaved changes".
+ */
+function setSauna(on: boolean): void {
+  const { saunaOnRestDays: _previous, ...rest } = props.modelValue
+  emit('update:modelValue', on ? { ...rest, saunaOnRestDays: true } : rest)
 }
 
 function setModalities(value: unknown[] | undefined): void {
@@ -150,5 +161,17 @@ watch(isValid, (valid) => emit('update:valid', valid), { immediate: true })
       Not sure? 60 minutes a week with a 30-minute long session is the starting point we assume — a 2 × 30 min baseline,
       not a target.
     </p>
+
+    <!-- With cardio, not with the schedule: it is a recovery habit beside the
+         cardio, and it never takes a day from the week. The suggestion picks
+         its own rest day (see saunaDate). Claiming a sauna from "Train
+         something else today" works either way. -->
+    <Checkbox
+      switch
+      label="Suggest sauna on rest days"
+      description="One rest day a week, the day after training when there is one. A suggestion only — never a training day."
+      :model-value="props.modelValue.saunaOnRestDays === true"
+      @update:model-value="setSauna($event === true)"
+    />
   </div>
 </template>

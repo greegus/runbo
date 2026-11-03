@@ -11,8 +11,8 @@ import ZonesForm from '@/components/settings/ZonesForm.vue'
 import type { Availability, CardioTrack, CardioZones, GymSettings, ZonesDraft } from '@/onboarding/types'
 import { emptyZonesDraft, zonesDraftFrom } from '@/onboarding/zonesDraft'
 import { useAuthStore } from '@/stores/auth'
-import type { Modality } from '@/types'
 import { useProfileStore } from '@/stores/profile'
+import type { Modality } from '@/types'
 
 const authStore = useAuthStore()
 const profileStore = useProfileStore()
@@ -107,11 +107,13 @@ const cardioDirty = computed(() => {
       modalities: draft.modalities,
       weeklyMinutes: draft.weeklyMinutes,
       longestSessionMinutes: draft.longestSessionMinutes,
+      saunaOnRestDays: draft.saunaOnRestDays === true,
     },
     {
       modalities: live.modalities,
       weeklyMinutes: live.weeklyMinutes,
       longestSessionMinutes: live.longestSessionMinutes,
+      saunaOnRestDays: live.saunaOnRestDays === true,
     },
   )
 })
@@ -238,12 +240,17 @@ async function saveCardio(): Promise<void> {
   const draft = cardioDraft.value
   if (!live || !draft) return
 
+  // Off is an absent key, never `false`: the whole object is republished, so
+  // leaving it out is what removes it.
+  const { saunaOnRestDays: _stored, ...cardioTrack } = live.cardioTrack
+
   await profileStore.save({
     cardioTrack: {
-      ...live.cardioTrack,
+      ...cardioTrack,
       modalities: draft.modalities,
       weeklyMinutes: draft.weeklyMinutes,
       longestSessionMinutes: draft.longestSessionMinutes,
+      ...(draft.saunaOnRestDays === true ? { saunaOnRestDays: true } : {}),
     },
   })
 }

@@ -203,7 +203,7 @@ describe('buildWeekGrid', () => {
   /** The athlete opted in to the rest-day suggestion; absent is off. */
   function saunaProfile(): Profile {
     const opted = profile()
-    opted.availability = { ...opted.availability, saunaOnRestDays: true }
+    opted.cardioTrack = { ...opted.cardioTrack, saunaOnRestDays: true }
     return opted
   }
 
