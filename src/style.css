@@ -33,6 +33,17 @@
   --color-ink-700: #3e4551;
   --color-ink-800: #272c35;
   --color-ink-900: #14181f;
+
+  /* The sheets' desktop entrance: a centred dialog fades and grows into place
+     instead of rising from an edge it is no longer attached to. */
+  --animate-dialog-in: dialog-in 160ms ease-out;
+
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
 }
 
 /* Pull vuiii's primary onto the app accent so its buttons/inputs match. */

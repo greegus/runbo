@@ -34,12 +34,15 @@ useFocusTrap(panel, { initialFocus: () => panel.value })
 
 <template>
   <Teleport to="body">
-    <div class="fixed inset-0 z-50 flex items-end justify-center">
+    <!-- A bottom sheet on a phone, where the thumb is; from \`sm\` up a
+         centred dialog, because a sheet glued to the bottom of a desktop
+         window is a long way from where the eye is. -->
+    <div class="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
       <div class="absolute inset-0 bg-ink-900/40" @click="emit('close')" />
 
       <div
         ref="panel"
-        class="relative flex max-h-[90vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-t-2xl bg-white px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-xl focus:outline-none"
+        class="relative flex max-h-[90vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-t-2xl bg-white px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-xl focus:outline-none sm:rounded-2xl sm:pb-4 sm:motion-safe:animate-dialog-in"
         role="dialog"
         aria-modal="true"
         aria-labelledby="projection-title"
