@@ -440,6 +440,20 @@ onBeforeUnmount(() => {
           @update:model-value="onDraft"
           @update:blocked-reason="blockedReason = $event"
         />
+
+        <!-- In the page, not under "Finish session": the bar holds the one
+             thing to do next, and a destructive action beside it is a mis-tap
+             away. Here it sits after the form, as on the strength session. -->
+        <Button
+          v-if="!isDone && !isImported"
+          label="Abandon session"
+          variant="text"
+          color="secondary"
+          class="min-h-[48px] self-start"
+          :disabled="busy"
+          :aria-disabled="busy"
+          @click="!busy && abandon()"
+        />
       </div>
 
       <!-- Sticky, not fixed: a fixed bar is covered by the software keyboard
@@ -474,17 +488,6 @@ onBeforeUnmount(() => {
             :aria-disabled="blockedReason !== null || busy"
             :loading="busy"
             @click="blockedReason === null && !busy && finish()"
-          />
-
-          <Button
-            label="Abandon session"
-            size="large"
-            variant="text"
-            color="secondary"
-            block
-            class="mt-2 min-h-[48px]"
-            :aria-disabled="busy"
-            @click="!busy && abandon()"
           />
         </template>
       </div>
