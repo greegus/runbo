@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { Button, FormGroup, Icon, IconButton, Input, RadioButtonGroup } from 'vuiii'
+import { computed, nextTick, ref, watch } from 'vue'
+import { Button, FormGroup, Icon, Input, RadioButtonGroup } from 'vuiii'
 
+import CountStepper from '@/components/CountStepper.vue'
 import PlateStack from '@/components/strength/PlateStack.vue'
 import { smallestStep } from '@/liftoscript/weight'
 import {
@@ -135,11 +136,6 @@ function setPlateCount(index: number, value: unknown): void {
   setPlates(plates.value.map((row, i) => (i === index ? { ...row, count: toNumber(value) } : row)))
 }
 
-function stepPlateCount(index: number, delta: number): void {
-  const current = plates.value[index]
-  setPlateCount(index, Math.max(1, Math.round(toNumber(current.count)) + delta))
-}
-
 // Re-sorting on every keystroke would drag the row out from under the thumb
 // while it is being typed into, so the order is only restored on blur.
 function sortRows(): void {
@@ -178,8 +174,12 @@ function setPlateColor(index: number, color: PlateColor): void {
   colorRow.value = null
 }
 
+/** The new row's weight is the next thing to type, so it gets the focus. */
 function addPlate(): void {
+  const index = plates.value.length
   setPlates([...plates.value, { weight: 0, count: 2 }])
+  // After the parent has written the row back through v-model and it rendered.
+  void nextTick(() => document.getElementById(`plate-weight-${index}`)?.focus())
 }
 
 function removePlate(index: number): void {
@@ -276,7 +276,13 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
 
       <ul class="flex flex-col gap-3">
         <li v-for="(plate, index) in plates" :key="index" class="flex flex-col gap-1">
-          <div class="flex items-center gap-2">
+          <!-- Sized to fit a 375px phone on one line with the weight field at
+               vuiii's default left padding: the gaps are 4px, the field drops
+               the right padding before its unit suffix and hides the browser's
+               spin arrows (they took 13px, and − / + sit right beside it), the
+               count is one framed stepper, and the remove button is 28px — rarely used, and a mis-tap there is undone by "Add a
+               plate size". -->
+          <div class="flex items-center gap-1">
 
             <Input
               :model-value="plate.weight"
@@ -286,7 +292,8 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
               step="0.25"
               min="0"
               size="large"
-              class="min-h-[48px] w-[5.5rem] shrink-0 text-lg [--vuiii-input-padding--large:0.25rem]"
+              :id="`plate-weight-${index}`"
+              class="min-h-[48px] w-28 shrink-0 text-lg [&_input]:pr-0! [&_input]:[appearance:textfield] [&_input::-webkit-inner-spin-button]:appearance-none"
               :aria-label="`Plate weight in ${modelValue.units}`"
               :aria-describedby="rowError(index) ? `plate-error-${index}` : undefined"
               :invalid="rowError(index) !== null"
@@ -294,13 +301,8 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
               @blur="sortRows()"
               @update:model-value="setPlateWeight(index, $event)"
             >
-              <!-- The unit rides inside the field: beside it, with the paint
-                   bucket, the row no longer fit a 375px phone. The padding is
-                   cut for the same reason — vuiii applies its 1.35em twice, on
-                   the wrapper and on the input inside, and at the default a
-                   suffixed field needs ~150px before "1.25" shows at all. -->
               <template #suffix>
-                <span class="flex shrink-0 items-center pr-1.5 text-base text-ink-500" aria-hidden="true">
+                <span class="flex shrink-0 items-center pr-3 text-base text-ink-500" aria-hidden="true">
                   {{ modelValue.units }}
                 </span>
               </template>
@@ -311,7 +313,7 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
                  the weight: the size is what the row is about. -->
             <button
               type="button"
-              class="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-ink-300 bg-white focus-visible:outline-2 focus-visible:outline-accent-600"
+              class="ml-1 flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-ink-300 bg-white focus-visible:outline-2 focus-visible:outline-accent-600"
               :class="colorRow === index ? 'border-accent-600' : ''"
               :aria-expanded="colorRow === index"
               :aria-controls="`plate-colors-${index}`"
@@ -325,42 +327,27 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
               />
             </button>
 
-            <div class="ml-auto flex items-center gap-0.5">
-              <IconButton
-                icon="minus"
-                variant="outlined"
-                size="large"
-                class="min-h-[48px] min-w-[48px]"
-                :title="`Fewer ${plate.weight} ${modelValue.units} pairs`"
-                @click="stepPlateCount(index, -1)"
-              />
-              <!-- Text, not an input. A `size="large"` field carries 27px of
-                   padding a side, so inside the 64px this row can spare there
-                   were 8px left for the digits and the count rendered
-                   invisible. It is 1-4 pairs with a button on either side —
-                   nothing here needs a keyboard. -->
-              <output
-                class="w-9 text-center text-lg font-semibold tabular-nums text-ink-900"
-                :aria-label="`Pairs of ${plate.weight} ${modelValue.units} plates`"
-                >{{ plate.count }}</output
-              >
-              <IconButton
-                icon="plus"
-                variant="outlined"
-                size="large"
-                class="min-h-[48px] min-w-[48px]"
-                :title="`More ${plate.weight} ${modelValue.units} pairs`"
-                @click="stepPlateCount(index, 1)"
-              />
-              <IconButton
-                icon="close"
-                variant="text"
-                size="large"
-                class="min-h-[48px] min-w-[48px]"
-                :title="`Remove the ${plate.weight} ${modelValue.units} plates`"
-                @click="removePlate(index)"
-              />
-            </div>
+            <CountStepper
+              :model-value="plate.count"
+              :min="1"
+              class="ml-auto"
+              :label="`Pairs of ${plate.weight} ${modelValue.units} plates`"
+              :decrease-label="`Fewer ${plate.weight} ${modelValue.units} pairs`"
+              :increase-label="`More ${plate.weight} ${modelValue.units} pairs`"
+              @update:model-value="setPlateCount(index, $event)"
+            />
+
+            <!-- Hand-rolled, not an IconButton: vuiii pads its buttons to at
+                 least 36px, and this one has 28 to spare. -->
+            <button
+              type="button"
+              class="flex h-12 w-7 shrink-0 items-center justify-center rounded-lg text-ink-700 focus-visible:outline-2 focus-visible:outline-accent-600"
+              :aria-label="`Remove the ${plate.weight} ${modelValue.units} plates`"
+              :title="`Remove the ${plate.weight} ${modelValue.units} plates`"
+              @click="removePlate(index)"
+            >
+              <Icon name="close" aria-hidden="true" />
+            </button>
           </div>
 
           <div
