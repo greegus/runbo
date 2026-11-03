@@ -19,6 +19,7 @@ import {
   loggedSetsFromSession,
   projectPlannedExercise,
 } from '@/session/strengthSession'
+import { strengthHeadline } from '@/session/today'
 import type { LoggedSet } from '@/session/types'
 import { useProfileStore } from '@/stores/profile'
 import { useSessionsStore } from '@/stores/sessions'
@@ -114,11 +115,16 @@ const plan = computed(() => {
   return buildStrengthPlan(profile.value, current.programDay ?? '')
 })
 
-/** Program days are named by the athlete, and many are already called "Day 1". */
-const dayLabel = computed(() => {
-  const name = session.value?.programDay?.trim()
-  if (!name) return 'Session'
-  return /^day\b/i.test(name) ? name : `Day ${name}`
+/**
+ * The line under the title, the same one the Today card shows for this day.
+ * Not on a finished session: it reads the program's CURRENT weights, which the
+ * finish has already moved on — 52.5 kg under a session lifted at 50.
+ */
+const headline = computed(() => {
+  const programDay = session.value?.programDay
+  if (!profile.value || !programDay || isDone.value) return null
+
+  return strengthHeadline(profile.value, programDay)
 })
 
 const isDone = computed(() => session.value?.status === 'done' || finished.value !== null)
@@ -545,20 +551,35 @@ onBeforeRouteLeave(() => {
     </div>
 
     <template v-else-if="session">
-      <header class="flex items-center gap-3 px-4 pt-4">
+      <!-- Laid out like the Today card, so the workout reads the same on the
+           way in as it did on Today: the dumbbell, "Strength · # DAY 4", and
+           the day's main lifts on the line under it. -->
+      <header class="flex items-start gap-3 px-4 pt-4">
+        <Icon
+          name="dumbbell"
+          size="large"
+          class="shrink-0 text-accent-600 [--vuiii-icon-size--large:1.9375rem]"
+          aria-hidden="true"
+        />
         <div class="min-w-0 flex-1">
           <h1 class="text-2xl font-bold text-ink-900">
-            <!-- The day name is the athlete's own, and plenty of programs already
-                 call theirs "Day 1" — prefixing unconditionally reads "Day Day 1". -->
-            {{ isDone ? 'Session done' : dayLabel }}
+            {{ session.programDay ? `Strength · ${session.programDay}` : 'Strength session' }}
           </h1>
+          <p v-if="headline" class="text-lg leading-snug font-semibold tabular-nums text-ink-700">
+            {{ headline }}
+          </p>
         </div>
-
+        <span v-if="isDone" class="flex shrink-0 items-center gap-1 pt-1.5 text-sm font-semibold text-accent-700">
+          <Icon name="check" aria-hidden="true" />
+          Logged
+        </span>
+        <!-- `self-start` because vuiii centres its buttons with align-self,
+             which beats the header's items-start. -->
         <IconButton
           icon="close"
           variant="text"
           size="large"
-          class="min-h-[48px] min-w-[48px]"
+          class="-mt-2 -mr-2 min-h-[48px] min-w-[48px] shrink-0 self-start"
           aria-label="Back to Today"
           @click="leave()"
         />
@@ -672,17 +693,18 @@ onBeforeRouteLeave(() => {
             :label="`Next: ${nextExercise.tier ? `T${nextExercise.tier} ` : ''}${nextExercise.name}`"
             @click="goToNext()"
           />
-        </div>
 
-        <Button
-          label="Delete this session"
-          variant="text"
-          color="secondary"
-          class="mt-6 min-h-[48px]"
-          :disabled="busy"
-          :aria-disabled="busy"
-          @click="!busy && abandon()"
-        />
+          <Button
+            label="Delete this session"
+            prefix-icon="trash"
+            variant="text"
+            color="secondary"
+            class="mt-6"
+            :disabled="busy"
+            :aria-disabled="busy"
+            @click="!busy && abandon()"
+          />
+        </div>
       </div>
 
       <!-- Sticky, not fixed: the primary action has to sit under the thumb
