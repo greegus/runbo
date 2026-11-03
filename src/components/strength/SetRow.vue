@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { Icon } from 'vuiii'
 
 import { format } from '@/liftoscript/weight'
-import { resetSet, setAmrapReps, skipSet, startsRest, tapSet } from '@/session/setCycle'
+import { setAmrapReps, startsRest, tapSet } from '@/session/setCycle'
 import type { LoggedSet } from '@/session/types'
 import type { Profile } from '@/types'
 
@@ -231,29 +231,6 @@ function onStep(delta: number): void {
           @click="onStep(1)"
         >
           <Icon name="plus" size="large" />
-        </button>
-      </div>
-
-      <div class="mt-2 flex justify-end gap-4">
-        <button
-          type="button"
-          class="min-h-[48px] px-2 text-sm font-medium underline"
-          :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-600'"
-          :disabled="disabled"
-          :aria-disabled="disabled"
-          @click="commit(skipSet(set))"
-        >
-          Skip
-        </button>
-        <button
-          type="button"
-          class="min-h-[48px] px-2 text-sm font-medium underline"
-          :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-600'"
-          :disabled="disabled"
-          :aria-disabled="disabled"
-          @click="commit(resetSet(set))"
-        >
-          Clear
         </button>
       </div>
     </div>
