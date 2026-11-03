@@ -684,11 +684,16 @@ onBeforeRouteLeave(() => {
                  read to be told apart from "4/5", a check does not. -->
             <template v-for="tab in tabs" :key="tab.key" #[`label:${tab.key}`]>
               <span>{{ tab.name }}</span>
-              <template v-if="tab.complete">
-                <Icon name="check" class="shrink-0 text-green-600" aria-hidden="true" />
-                <span class="sr-only">done</span>
-              </template>
-              <span v-else class="tabular-nums">· {{ tab.progress }}</span>
+              <!-- One fixed-width slot for the count and the check, so a tab
+                 does not change width — and shift the strip — when its last
+                 set is logged. -->
+              <span class="flex w-7 shrink-0 items-center justify-center text-xs tabular-nums">
+                <template v-if="tab.complete">
+                  <Icon name="check" class="text-green-600" aria-hidden="true" />
+                  <span class="sr-only">done</span>
+                </template>
+                <template v-else>{{ tab.progress }}</template>
+              </span>
             </template>
           </TabsNav>
         </div>
