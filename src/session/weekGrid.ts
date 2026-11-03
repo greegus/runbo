@@ -43,13 +43,6 @@ export interface WeekGridDay {
   title: string
   /** What was logged, when something was; `null` for a day that only holds a plan. */
   detail: string | null
-  /**
-   * The weekday label of a missed day whose lift this day takes over — 'Mon'.
-   * The rotation follows what was logged, so a missed DAY 4 is planned again
-   * on the next strength day, and the grid shows DAY 4 twice in a row; this is
-   * what says why.
-   */
-  catchesUp: string | null
   status: DayStatus
   /** Set when a done or active session sits on that day, so the row can link to it. */
   sessionId: string | null
@@ -171,31 +164,6 @@ function detailOf(session: Session | null): string | null {
 }
 
 /**
- * Pairs each missed strength day with the first later, still-open day planned
- * with the same program day, in order, so two missed lifts mark two days and
- * one missed lift never marks both of its repeats.
- */
-function markCatchUps(days: WeekGridDay[], planned: (PlannedItem | null)[]): void {
-  const programDay = (index: number) => {
-    const item = planned[index]
-    return item?.kind === 'strength' ? item.programDay : null
-  }
-  const missed = days.flatMap((day, index) =>
-    day.status === 'missed' && programDay(index) !== null ? [{ index, taken: false }] : [],
-  )
-
-  for (const [index, day] of days.entries()) {
-    if ((day.status !== 'planned' && day.status !== 'future') || day.sessionId !== null) continue
-    const match = missed.find(
-      (entry) => !entry.taken && entry.index < index && programDay(entry.index) === programDay(index),
-    )
-    if (!match || programDay(index) === null) continue
-    match.taken = true
-    day.catchesUp = days[match.index].label
-  }
-}
-
-/**
  * One week, planned and done.
  *
  * `options.fromDate` is the frontier `planWeek` takes: pass `todayIso` for the
@@ -227,12 +195,8 @@ export function buildWeekGrid(
   const plan = planWeek(safeProfile, sessions, anchorIso, fromDate)
   const wholeWeek = fromDate === undefined ? plan : planWeek(safeProfile, sessions, anchorIso)
 
-  const plannedItems = plan.week.days.map((day, index) =>
-    fromDate !== undefined && day.date < fromDate ? wholeWeek.week.days[index].planned : day.planned,
-  )
-
   const days = plan.week.days.map((day, index): WeekGridDay => {
-    const planned = plannedItems[index]
+    const planned = fromDate !== undefined && day.date < fromDate ? wholeWeek.week.days[index].planned : day.planned
     const onDay = sessions.filter((session) => session.date === day.date)
     // A done session on a day the planner still calls "strength" is the case
     // `planned === null` cannot see: composeWeek keeps the plan on a trained
@@ -261,15 +225,10 @@ export function buildWeekGrid(
       modality: modalityOf(planned, session),
       title: titleOf(planned, session, safeProfile),
       detail: detailOf(session),
-      catchesUp: null,
       status,
       sessionId: session?.id ?? null,
     }
   })
-
-  // Without a frontier every later day keeps its original plan, so a repeat of
-  // a missed program day there is the rotation coming round, not a catch-up.
-  if (fromDate !== undefined) markCatchUps(days, plannedItems)
 
   return {
     weekStart: plan.week.weekStart,
