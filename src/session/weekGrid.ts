@@ -15,7 +15,7 @@
 import { coerceProfileForPreview } from '@/onboarding/previewProfile'
 import { planWeek } from '@/training/schedule'
 import { describePrescription } from '@/training/zones'
-import type { PlannedItem, Profile, Session } from '@/types'
+import type { Modality, PlannedItem, Profile, Session } from '@/types'
 import {
   addDays,
   daysBetween,
@@ -34,6 +34,12 @@ export interface WeekGridDay {
   human: string
   isToday: boolean
   kind: 'strength' | 'cardio' | null
+  /**
+   * The sport of a cardio day, from the same source as its title. The title
+   * does not name it, and the pace unit follows the sport (/km for a run, km/h
+   * for a ride), so without it a ride reads as a run with a strange pace.
+   */
+  modality: Modality | null
   title: string
   /** What was logged, when something was; `null` for a day that only holds a plan. */
   detail: string | null
@@ -127,6 +133,13 @@ function titleOf(planned: PlannedItem | null, session: Session | null, profile: 
   return 'Rest'
 }
 
+function modalityOf(planned: PlannedItem | null, session: Session | null): Modality | null {
+  if (planned?.kind === 'cardio') return planned.prescription.modality
+  if (planned?.kind === 'strength') return null
+
+  return session?.kind === 'cardio' ? (session.prescription?.modality ?? null) : null
+}
+
 /** What was logged, in the fewest words that are still true. `null` for a plan. */
 function detailOf(session: Session | null): string | null {
   if (!session) return null
@@ -200,6 +213,7 @@ export function buildWeekGrid(
       human: formatHuman(day.date),
       isToday: day.date === todayIso,
       kind: session?.kind ?? planned?.kind ?? null,
+      modality: modalityOf(planned, session),
       title: titleOf(planned, session, safeProfile),
       detail: detailOf(session),
       status,

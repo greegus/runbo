@@ -4,6 +4,7 @@ import type { RouteLocationRaw } from 'vue-router'
 import { Icon } from 'vuiii'
 
 import { buildWeekGrid, type WeekGridDay } from '@/session/weekGrid'
+import { MODALITY_LABELS } from '@/training/zones'
 import type { Profile, Session } from '@/types'
 
 const props = withDefaults(
@@ -97,8 +98,15 @@ const rows = computed(() => model.value.days.map((day) => ({ ...day, to: linkFor
 
           <span v-else-if="day.kind === 'cardio'" class="flex min-w-0 flex-col text-sm text-ink-900">
             <span class="flex min-w-0 items-center gap-2">
-              <Icon name="run" class="shrink-0 text-accent-600" aria-hidden="true" />
-              <span>{{ day.title }}</span>
+              <!-- The sport is named by its icon only: the title does not say
+                   it, and a ride's km/h next to a runner read as a run with
+                   the wrong pace unit. A cardio day logged with no
+                   prescription has no sport on record, and keeps the runner. -->
+              <Icon :name="day.modality ?? 'run'" class="shrink-0 text-accent-600" aria-hidden="true" />
+              <span>
+                <span v-if="day.modality" class="sr-only">{{ MODALITY_LABELS[day.modality] }}: </span>
+                {{ day.title }}
+              </span>
             </span>
             <span v-if="props.showStatus && day.detail" class="pl-7 text-xs text-ink-500">{{ day.detail }}</span>
           </span>

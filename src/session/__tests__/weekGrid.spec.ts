@@ -182,6 +182,15 @@ describe('buildWeekGrid', () => {
     expect(cardio?.detail).toBeNull()
   })
 
+  it('names the sport of a cardio day, so its pace unit has a reason', () => {
+    const model = buildWeekGrid(profile(), [], WED, WED)
+    const cardio = model.days.filter((day) => day.kind === 'cardio')
+
+    expect(cardio.length).toBeGreaterThan(0)
+    for (const day of cardio) expect(['run', 'bike', 'swim']).toContain(day.modality)
+    for (const day of model.days.filter((day) => day.kind !== 'cardio')) expect(day.modality).toBeNull()
+  })
+
   it('survives a half-filled profile the way the onboarding preview does', () => {
     const draft = profile({
       availability: { daysPerWeek: Number.NaN, preferredDays: [], longSessionDay: Number.NaN },
