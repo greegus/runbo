@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Icon } from 'vuiii'
 
-import PrescriptionCard from '@/components/cardio/PrescriptionCard.vue'
+import { describePrescription, MODALITY_LABELS } from '@/training/zones'
 import type { PlannedItem, Profile, Session } from '@/types'
 
 /**
@@ -55,6 +55,11 @@ const emit = defineEmits<{
  */
 const isDone = computed(() => props.doneSession !== null && props.activeSession === null)
 
+/** The same one line the week calendar and the session screen show. */
+const cardioLine = computed(() =>
+  props.item?.kind === 'cardio' ? describePrescription(props.item.prescription, props.zones) : null,
+)
+
 const primaryLabel = computed(() => (props.activeSession ? 'Resume session' : 'Start session'))
 
 function primary(): void {
@@ -93,12 +98,24 @@ function primary(): void {
       </div>
     </div>
 
-    <!-- Cardio -->
-    <PrescriptionCard
-      v-else-if="props.item?.kind === 'cardio'"
-      :prescription="props.item.prescription"
-      :zones="props.zones"
-    />
+    <!-- Cardio. Laid out like strength rather than as a PrescriptionCard: that
+         card brings its own frame, which nested a box inside this one. The
+         intervals breakdown it adds is for mid-session, and the line below
+         already carries it. -->
+    <div v-else-if="props.item?.kind === 'cardio'" class="flex items-start gap-3">
+      <Icon
+        :name="props.item.prescription.modality"
+        size="large"
+        class="TodayCard__icon shrink-0 text-accent-600"
+        aria-hidden="true"
+      />
+      <div class="min-w-0">
+        <p class="text-2xl font-bold text-ink-900">
+          {{ MODALITY_LABELS[props.item.prescription.modality] }} · {{ props.item.prescription.kind }}
+        </p>
+        <p class="text-lg leading-snug font-semibold tabular-nums text-ink-700">{{ cardioLine }}</p>
+      </div>
+    </div>
 
     <!-- Rest -->
     <div v-else class="flex items-start gap-3">
