@@ -127,8 +127,13 @@ export function tapSet(set: LoggedSet): LoggedSet {
 }
 
 /** The AMRAP stepper. Floors at 0, no upper bound, integers only, always confirms the set. */
+/**
+ * Zero reps is a skip: an AMRAP stepped down to nothing was not attempted, and
+ * the stepper is the set's only control — it has no separate Skip.
+ */
 export function setAmrapReps(set: LoggedSet, reps: number | null): LoggedSet {
-  return { ...set, phase: 'done', completedReps: wholeReps(reps) }
+  const whole = wholeReps(reps)
+  return whole === 0 ? skipSet(set) : { ...set, phase: 'done', completedReps: whole }
 }
 
 export function skipSet(set: LoggedSet): LoggedSet {

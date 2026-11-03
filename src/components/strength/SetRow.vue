@@ -76,8 +76,10 @@ function onTap(): void {
   commit(tapSet(set.value))
 }
 
+/** From a skipped AMRAP (zero reps) the stepper counts up from zero, not from the prescription. */
 function onStep(delta: number): void {
-  commit(setAmrapReps(set.value, amrapReps.value + delta))
+  const from = set.value.phase === 'skipped' ? 0 : amrapReps.value
+  commit(setAmrapReps(set.value, from + delta))
 }
 </script>
 

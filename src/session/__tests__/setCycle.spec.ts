@@ -143,11 +143,11 @@ describe('AMRAP sets', () => {
     expect(setAmrapReps(amrap(), 12)).toMatchObject({ phase: 'done', completedReps: 12 })
   })
 
-  it('floors at 0 and rounds, and treats null / NaN as 0', () => {
-    expect(setAmrapReps(amrap(), -4).completedReps).toBe(0)
+  it('rounds, and reads zero — or less, null, NaN — as a skipped set', () => {
     expect(setAmrapReps(amrap(), 7.6).completedReps).toBe(8)
-    expect(setAmrapReps(amrap(), null).completedReps).toBe(0)
-    expect(setAmrapReps(amrap(), Number.NaN).completedReps).toBe(0)
+    for (const reps of [0, -4, null, Number.NaN]) {
+      expect(setAmrapReps(amrap(), reps)).toMatchObject({ phase: 'skipped', completedReps: null })
+    }
   })
 
   it('starts rest on the first stepper change out of untouched', () => {
