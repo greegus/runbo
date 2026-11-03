@@ -54,7 +54,7 @@ const SWATCH_CLASSES: Record<PlateColor, string> = {
   'pale-yellow': 'bg-yellow-100 ring-1 ring-yellow-300 ring-inset',
   'pale-green': 'bg-green-200 ring-1 ring-green-300 ring-inset',
   'pale-grey': 'bg-ink-100 ring-1 ring-ink-300 ring-inset',
-  silver: 'bg-linear-to-r from-white to-ink-300 ring-1 ring-ink-400 ring-inset',
+  silver: 'bg-ink-300 ring-1 ring-ink-400 ring-inset',
   black: 'bg-ink-800',
 }
 
