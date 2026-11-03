@@ -148,6 +148,9 @@ const tabs = computed(() =>
       // No tier prefix: the strip is for finding a lift, and "T1 T2 T3" in
       // front of every name only pushed the names apart.
       label: `${exercise.name} · ${done}/${sets.length}`,
+      name: exercise.name,
+      progress: `${done}/${sets.length}`,
+      complete: sets.length > 0 && done === sets.length,
     }
   }),
 )
@@ -676,7 +679,18 @@ onBeforeRouteLeave(() => {
             id-base="exercise"
             class="scroll-px-4 overflow-x-auto px-4 [&_[role=tab]]:min-h-[48px]"
             aria-label="Exercises in this session"
-          />
+          >
+            <!-- A finished lift trades its count for a check: "5/5" has to be
+                 read to be told apart from "4/5", a check does not. -->
+            <template v-for="tab in tabs" :key="tab.key" #[`label:${tab.key}`]>
+              <span>{{ tab.name }}</span>
+              <template v-if="tab.complete">
+                <Icon name="check" class="shrink-0 text-green-600" aria-hidden="true" />
+                <span class="sr-only">done</span>
+              </template>
+              <span v-else class="tabular-nums">· {{ tab.progress }}</span>
+            </template>
+          </TabsNav>
         </div>
 
         <div class="px-4 py-4">
