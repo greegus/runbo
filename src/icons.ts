@@ -22,6 +22,7 @@ import {
   mdiScaleBathroom,
   mdiSwim,
   mdiTimerOutline,
+  mdiTrashCanOutline,
   mdiWeightKilogram,
 } from '@mdi/js'
 import { h } from 'vue'
@@ -56,6 +57,7 @@ const MDI_PATHS: Record<string, string> = {
   'scale': mdiScaleBathroom,
   'swim': mdiSwim,
   'timer': mdiTimerOutline,
+  'trash': mdiTrashCanOutline,
   'weight': mdiWeightKilogram,
 }
 

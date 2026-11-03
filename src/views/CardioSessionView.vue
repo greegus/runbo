@@ -447,6 +447,7 @@ onBeforeUnmount(() => {
         <Button
           v-if="!isDone && !isImported"
           label="Abandon session"
+          prefix-icon="trash"
           variant="text"
           color="secondary"
           class="min-h-[48px] self-start"
