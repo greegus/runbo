@@ -481,7 +481,7 @@ function setComebackGap(value: unknown): void {
         id="settings-panel-strength"
         role="tabpanel"
         aria-labelledby="settings-tab-strength"
-        class="flex flex-col gap-4"
+        class="flex flex-col gap-4 pt-8"
       >
         <Card title="Gym">
           <div class="flex flex-col gap-6">
@@ -615,7 +615,7 @@ function setComebackGap(value: unknown): void {
         id="settings-panel-cardio"
         role="tabpanel"
         aria-labelledby="settings-tab-cardio"
-        class="flex flex-col gap-4"
+        class="flex flex-col gap-4 pt-8"
       >
         <Card title="Cardio">
           <div class="flex flex-col gap-6">
@@ -658,7 +658,7 @@ function setComebackGap(value: unknown): void {
         id="settings-panel-schedule"
         role="tabpanel"
         aria-labelledby="settings-tab-schedule"
-        class="flex flex-col gap-4"
+        class="flex flex-col gap-4 pt-8"
       >
         <Card title="Availability">
           <div class="flex flex-col gap-6">
@@ -680,7 +680,7 @@ function setComebackGap(value: unknown): void {
         id="settings-panel-account"
         role="tabpanel"
         aria-labelledby="settings-tab-account"
-        class="flex flex-col gap-4"
+        class="flex flex-col gap-4 pt-8"
       >
         <Card title="Multisport">
           <div v-if="multisportDraft" class="flex flex-col gap-6">
