@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Icon } from 'vuiii'
 
-import { describePrescription, MODALITY_LABELS } from '@/training/zones'
+import { describeTargets, prescriptionTitle } from '@/training/zones'
 import type { PlannedItem, Profile, Session } from '@/types'
 
 /**
@@ -55,9 +55,9 @@ const emit = defineEmits<{
  */
 const isDone = computed(() => props.doneSession !== null && props.activeSession === null)
 
-/** The same one line the week calendar and the session screen show. */
+/** The targets under the title, as the session screen shows them. */
 const cardioLine = computed(() =>
-  props.item?.kind === 'cardio' ? describePrescription(props.item.prescription, props.zones) : null,
+  props.item?.kind === 'cardio' ? describeTargets(props.item.prescription, props.zones) : null,
 )
 
 const primaryLabel = computed(() => (props.activeSession ? 'Resume session' : 'Start session'))
@@ -111,7 +111,7 @@ function primary(): void {
       />
       <div class="min-w-0">
         <p class="text-2xl font-bold text-ink-900">
-          {{ MODALITY_LABELS[props.item.prescription.modality] }} · {{ props.item.prescription.kind }}
+          {{ prescriptionTitle(props.item.prescription) }}
         </p>
         <p class="text-lg leading-snug font-semibold tabular-nums text-ink-700">{{ cardioLine }}</p>
       </div>

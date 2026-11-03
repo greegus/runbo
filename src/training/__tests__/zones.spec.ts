@@ -1,6 +1,15 @@
 import type { CardioPrescription } from '@/types'
 
-import { describePrescription, formatPaceZone, hrZones, maxFromAge, paceZones, thresholdPace } from '../zones'
+import {
+  describePrescription,
+  describeTargets,
+  formatPaceZone,
+  hrZones,
+  maxFromAge,
+  paceZones,
+  prescriptionTitle,
+  thresholdPace,
+} from '../zones'
 
 describe('maxFromAge', () => {
   it('uses 208 - 0.7 x age', () => {
@@ -146,5 +155,24 @@ describe('describePrescription', () => {
     expect(describePrescription(intervals, undefined)).toBe(
       '38 min intervals - 6x3min work / 2min rest - RPE 7-8 - hard, short sentences only',
     )
+  })
+})
+
+describe('prescriptionTitle / describeTargets', () => {
+  it('names the sport, kind and length, and leaves the targets for the line under it', () => {
+    expect(prescriptionTitle({ ...easyRun, targetMinutes: 66 })).toBe('Run · easy 66 min')
+    expect(describeTargets(easyRun, { hr: { lthr: 160 }, pace: { run: 270 } })).toBe('109-133 bpm - 5:21-6:00 /km')
+  })
+
+  it('keeps the interval structure and the RPE fallback in the targets', () => {
+    const intervals: CardioPrescription = {
+      modality: 'run',
+      kind: 'intervals',
+      targetMinutes: 38,
+      zone: 4,
+      structure: { reps: 6, workMinutes: 3, restMinutes: 2 },
+    }
+
+    expect(describeTargets(intervals, undefined)).toBe('6x3min work / 2min rest - RPE 7-8 - hard, short sentences only')
   })
 })

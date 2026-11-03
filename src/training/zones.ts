@@ -191,18 +191,27 @@ function describeStructure(structure: NonNullable<CardioPrescription['structure'
 }
 
 /**
- * The one-line string the UI shows, e.g.
- * '40 min easy - 128-145 bpm - 5:40-6:10 /km'.
+ * A cardio workout's name, as a header shows it: 'Run · easy 66 min'. The
+ * sport, the kind and the length are what tell one session from another;
+ * `describeTargets` carries the rest on the line under it.
+ */
+export function prescriptionTitle(prescription: CardioPrescription): string {
+  return `${MODALITY_LABELS[prescription.modality]} · ${KIND_LABELS[prescription.kind]} ${prescription.targetMinutes} min`
+}
+
+/**
+ * Everything but the length and kind, for the line under `prescriptionTitle`:
+ * '6x3min work / 2min rest - 128-145 bpm - 5:40-6:10 /km'.
  *
  * HR and pace segments appear only when configured; when NEITHER is, the RPE cue
- * takes their place so the line is never just a duration.
+ * takes their place so the targets are never empty.
  */
-export function describePrescription(
+export function describeTargets(
   prescription: CardioPrescription,
   zones: Profile['cardioTrack']['zones'] | undefined,
 ): string {
   const zone = prescription.zone as Zone
-  const parts = [`${prescription.targetMinutes} min ${KIND_LABELS[prescription.kind]}`]
+  const parts: string[] = []
 
   if (prescription.structure) {
     parts.push(describeStructure(prescription.structure))
@@ -216,6 +225,17 @@ export function describePrescription(
   if (!hr && !pace) parts.push(RPE_CUES[zone])
 
   return parts.join(' - ')
+}
+
+/**
+ * The one-line string for a place with no header above it — the week
+ * calendar, the replace picker — e.g. '40 min easy - 128-145 bpm - 5:40-6:10 /km'.
+ */
+export function describePrescription(
+  prescription: CardioPrescription,
+  zones: Profile['cardioTrack']['zones'] | undefined,
+): string {
+  return `${prescription.targetMinutes} min ${KIND_LABELS[prescription.kind]} - ${describeTargets(prescription, zones)}`
 }
 
 /** Exposed so views can show the cue alongside numbers when they want to. */

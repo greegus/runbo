@@ -14,14 +14,14 @@ import { useProfileStore } from '@/stores/profile'
 import { useSessionsStore } from '@/stores/sessions'
 import { growLongestSession } from '@/training/cardioPlan'
 import type { ReadinessInput } from '@/training/readiness'
-import { describePrescription, MODALITY_LABELS } from '@/training/zones'
+import { describeTargets, prescriptionTitle } from '@/training/zones'
 import type { Session } from '@/types'
 
 /**
  * One cardio session, from the prescription to the logged minutes.
  *
  * The screen decides nothing: `cardioLog.ts` owns the draft, the blocking rule
- * and the Firestore patch, `describePrescription` owns the target line, and
+ * and the Firestore patch, `prescriptionTitle` and `describeTargets` own the header, and
  * `useSessionsStore.finishSession` owns the terminal write. What lives here is
  * the ORDER of the writes and the lifecycle around them.
  *
@@ -371,8 +371,8 @@ onBeforeUnmount(() => {
 
     <template v-else-if="session">
       <!-- Laid out like the Today card, so the workout reads the same on the
-           way in as it did on Today: the sport's icon, "Run · easy", and the
-           whole prescription on one line under it. -->
+           way in as it did on Today: the sport's icon, "Run · easy 66 min", and
+           the targets — intervals, heart rate, pace — on one line under it. -->
       <header class="flex items-start gap-3 px-4 pt-4">
         <Icon
           :name="prescription?.modality ?? 'run'"
@@ -382,10 +382,10 @@ onBeforeUnmount(() => {
         />
         <div class="min-w-0 flex-1">
           <h1 class="text-2xl font-bold text-ink-900">
-            {{ prescription ? `${MODALITY_LABELS[prescription.modality]} · ${prescription.kind}` : 'Cardio session' }}
+            {{ prescription ? prescriptionTitle(prescription) : 'Cardio session' }}
           </h1>
           <p v-if="prescription" class="text-lg leading-snug font-semibold tabular-nums text-ink-700">
-            {{ describePrescription(prescription, profile.cardioTrack.zones) }}
+            {{ describeTargets(prescription, profile.cardioTrack.zones) }}
           </p>
         </div>
         <span v-if="isDone" class="flex shrink-0 items-center gap-1 pt-1.5 text-sm font-semibold text-accent-700">
