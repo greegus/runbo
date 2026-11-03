@@ -11,6 +11,7 @@ import ZonesForm from '@/components/settings/ZonesForm.vue'
 import type { Availability, CardioTrack, CardioZones, GymSettings, ZonesDraft } from '@/onboarding/types'
 import { emptyZonesDraft, zonesDraftFrom } from '@/onboarding/zonesDraft'
 import { useAuthStore } from '@/stores/auth'
+import type { Modality } from '@/types'
 import { useProfileStore } from '@/stores/profile'
 
 const authStore = useAuthStore()
@@ -36,6 +37,14 @@ const cardioValid = ref(true)
 
 const zonesValue = ref<CardioZones | undefined>(undefined)
 const zonesDraft = ref<ZonesDraft>(emptyZonesDraft())
+/**
+ * The other sections start as `null` and read as clean until seeded. Zones
+ * cannot: `undefined` is a real value ("no zones set"), so before the first
+ * seed the empty draft compared unequal to stored zones, the section read as
+ * dirty, and the seed skipped it as if it held typing — the stored zones never
+ * reached the form, and saving it wrote them away.
+ */
+const zonesSeeded = ref(false)
 
 const availabilityDraft = ref<Availability | null>(null)
 const availabilityValid = ref(true)
@@ -107,11 +116,28 @@ const cardioDirty = computed(() => {
   )
 })
 
+/**
+ * The stored zones as the form can show them. `ZonesForm` prunes the paces of
+ * sports that are not selected, so a profile still carrying a bike pace from
+ * when bike was ticked would read as changed the moment the page opened — and
+ * stay "unsaved" no matter what the athlete did.
+ */
+function zonesForModalities(zones: CardioZones | undefined, modalities: Modality[]): CardioZones | undefined {
+  if (!zones?.pace) return zones
+
+  const pace = Object.fromEntries(
+    Object.entries(zones.pace).filter(([modality]) => modalities.includes(modality as Modality)),
+  ) as NonNullable<CardioZones['pace']>
+  const { pace: _stored, ...rest } = zones
+
+  return Object.keys(pace).length > 0 ? { ...rest, pace } : rest
+}
+
 const zonesDirty = computed(() => {
   const live = profile.value?.cardioTrack
-  if (!live) return false
+  if (!live || !zonesSeeded.value) return false
 
-  return differs(zonesValue.value, live.zones)
+  return differs(zonesValue.value, zonesForModalities(live.zones, cardioDraft.value?.modalities ?? live.modalities))
 })
 
 /**
@@ -165,9 +191,10 @@ watch(
       })
     }
     if (!cardioDirty.value) cardioDraft.value = structuredClone(next.cardioTrack)
-    if (!zonesDirty.value && !zonesDraftUnrecoverable.value) {
+    if (!zonesSeeded.value || (!zonesDirty.value && !zonesDraftUnrecoverable.value)) {
       zonesValue.value = next.cardioTrack.zones ? structuredClone(next.cardioTrack.zones) : undefined
       zonesDraft.value = zonesDraftFrom(next.cardioTrack.zones)
+      zonesSeeded.value = true
     }
     if (!availabilityDirty.value) availabilityDraft.value = structuredClone(next.availability)
   },
