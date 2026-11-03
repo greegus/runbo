@@ -101,9 +101,8 @@ export function planWeek(profile: Profile, allSessions: Session[], anchorIso: st
 }
 
 /** Today's card: the planned item, or a rest day. */
-export function resolveToday(profile: Profile, allSessions: Session[], todayIso: string): TodayResolution {
-  // A claimed sauna is not training: a day holding only one is a rest day.
-  const sessions = trainingSessions(allSessions)
+export function resolveToday(profile: Profile, sessions: Session[], todayIso: string): TodayResolution {
+  // Saunas reach every callee below and each drops them itself.
   const plan = planWeek(profile, sessions, todayIso, todayIso)
   const item = plan.week.days.find((day) => day.date === todayIso)?.planned ?? null
 

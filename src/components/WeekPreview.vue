@@ -50,7 +50,15 @@ function linkFor(day: WeekGridDay): RouteLocationRaw | null {
 
 // The link is resolved once per row rather than in the template: `:is` and `:to`
 // both read it, and a fresh object per read would re-render every keystroke.
-const rows = computed(() => model.value.days.map((day) => ({ ...day, to: linkFor(day) })))
+// A rest day with a claimed sauna gets the done mark too: the claim is the
+// one thing that day asked for.
+const rows = computed(() =>
+  model.value.days.map((day) => ({
+    ...day,
+    to: linkFor(day),
+    showDone: day.status === 'done' || (day.status === 'rest' && day.sauna === 'claimed'),
+  })),
+)
 </script>
 
 <template>
@@ -88,22 +96,12 @@ const rows = computed(() => model.value.days.map((day) => ({ ...day, to: linkFor
             <span class="sr-only">{{ day.human }}{{ day.isToday ? ' (today)' : '' }}</span>
           </time>
 
-          <span v-if="day.kind === 'strength'" class="flex min-w-0 flex-col text-sm text-ink-900">
-            <span class="flex min-w-0 items-center gap-2">
+          <span v-if="day.kind" class="flex min-w-0 flex-col text-sm text-ink-900">
+            <span v-if="day.kind === 'strength'" class="flex min-w-0 items-center gap-2">
               <Icon name="dumbbell" class="shrink-0 text-accent-600" aria-hidden="true" />
               <span class="font-medium">{{ day.title }}</span>
             </span>
-            <span v-if="props.showStatus && day.detail" class="pl-7 text-xs text-ink-500">{{ day.detail }}</span>
-            <!-- A sauna claimed on a training day is a note under it; the plan
-                 and its status above are untouched. -->
-            <span v-if="day.sauna === 'claimed'" class="flex items-center gap-1 pl-7 text-xs text-ink-500">
-              <Icon name="sauna" class="shrink-0 text-accent-600 [--vuiii-icon-size:0.875rem]" aria-hidden="true" />
-              Sauna claimed
-            </span>
-          </span>
-
-          <span v-else-if="day.kind === 'cardio'" class="flex min-w-0 flex-col text-sm text-ink-900">
-            <span class="flex min-w-0 items-center gap-2">
+            <span v-else class="flex min-w-0 items-center gap-2">
               <!-- The sport is named by its icon only: the title does not say
                    it, and a ride's km/h next to a runner read as a run with
                    the wrong pace unit. A cardio day logged with no
@@ -133,10 +131,7 @@ const rows = computed(() => model.value.days.map((day) => ({ ...day, to: linkFor
 
           <!-- Status is a word and a shape, never colour alone: the app is used
                in a bright gym at arm's length, and "done" must survive that. -->
-          <span
-            v-if="props.showStatus && (day.status === 'done' || (day.status === 'rest' && day.sauna === 'claimed'))"
-            class="ml-auto flex shrink-0 items-center"
-          >
+          <span v-if="props.showStatus && day.showDone" class="ml-auto flex shrink-0 items-center">
             <Icon name="check" class="text-accent-600" aria-hidden="true" />
             <span class="sr-only">done</span>
           </span>

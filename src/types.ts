@@ -61,7 +61,7 @@ export interface Profile {
     // what `DEFAULT_STRENGTH_DAYS_PER_WEEK` preserves.
     strengthDaysPerWeek?: number // default 3
     // Whether a rest day carries the week's sauna suggestion. Opt-in: absent
-    // means OFF, and switching it off drops the field (see `saunaDates`).
+    // means OFF, and switching it off drops the field (see `setSauna` in AvailabilityForm).
     saunaOnRestDays?: boolean // default off
   }
   strengthTrack: {

@@ -64,33 +64,31 @@ const rows = computed(() => {
     choose: () => emit('pick', option),
   }))
 
-  const swap = props.swap
-    ? [
-        {
-          ...describeItem(props.swap),
-          key: 'swap',
-          origin: "Swaps tracks — today's session moves later in the week",
-          choose: () => emit('swap'),
-        },
-      ]
-    : []
+  const rows = [...picks]
+
+  if (props.swap) {
+    rows.push({
+      ...describeItem(props.swap),
+      key: 'swap',
+      origin: "Swaps tracks — today's session moves later in the week",
+      choose: () => emit('swap'),
+    })
+  }
 
   // Always on offer, every day: a sauna is not training, so it replaces
   // nothing — today's plan stays exactly as it is, and the claim sits beside it.
-  const sauna = props.sauna
-    ? [
-        {
-          icon: 'sauna',
-          title: 'Sauna',
-          detail: null,
-          key: 'sauna',
-          origin: "Claim it for today — in addition, today's plan stays",
-          choose: () => emit('sauna'),
-        },
-      ]
-    : []
+  if (props.sauna) {
+    rows.push({
+      icon: 'sauna',
+      title: 'Sauna',
+      detail: null,
+      key: 'sauna',
+      origin: "Claim it for today — in addition, today's plan stays",
+      choose: () => emit('sauna'),
+    })
+  }
 
-  return [...picks, ...swap, ...sauna]
+  return rows
 })
 
 function choose(row: { choose: () => void }): void {

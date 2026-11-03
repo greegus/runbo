@@ -219,7 +219,7 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
     </div>
 
     <!-- A switch, not a day count: the suggestion picks its own rest day
-         (see saunaDates). Off unless switched on. Claiming a sauna from "Train
+         (see saunaDate). Off unless switched on. Claiming a sauna from "Train
          something else today" works either way. -->
     <Checkbox
       switch

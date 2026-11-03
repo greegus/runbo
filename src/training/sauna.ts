@@ -23,9 +23,6 @@ export function trainingSessions(sessions: Session[]): (Session & { kind: Traini
   return sessions.filter((session): session is Session & { kind: TrainingKind } => !isSauna(session))
 }
 
-/** One a week: a nudge towards a habit, not a second schedule to keep up with. */
-export const SAUNA_PER_WEEK = 1
-
 /** One day of a composed week, as much of it as the suggestion needs. */
 export interface SaunaDay {
   date: string
@@ -36,29 +33,15 @@ export interface SaunaDay {
 }
 
 /**
- * The dates that get a sauna suggestion: rest days from `fromDate` on, at most
- * `max`, never two in a row, the day after a training day first and earlier
- * days first among equals. A past rest day gets none — a suggestion for a day
- * that is over is noise.
+ * The one rest day a week that gets a sauna suggestion — a nudge towards a
+ * habit, not a second schedule to keep up with: from `fromDate` on, the day
+ * after a training day first, the earliest among equals. A past rest day gets
+ * none — a suggestion for a day that is over is noise.
  */
-export function saunaDates(days: SaunaDay[], fromDate: string, max = SAUNA_PER_WEEK): Set<string> {
+export function saunaDate(days: SaunaDay[], fromDate: string): string | null {
   const byDate = new Map(days.map((day) => [day.date, day]))
   const afterTraining = (date: string): boolean => byDate.get(addDays(date, -1))?.trained ?? false
+  const candidates = days.filter((day) => day.isRest && day.date >= fromDate)
 
-  const candidates = days
-    .filter((day) => day.isRest && day.date >= fromDate)
-    .sort((a, b) => {
-      const preference = Number(afterTraining(b.date)) - Number(afterTraining(a.date))
-      return preference !== 0 ? preference : a.date < b.date ? -1 : a.date > b.date ? 1 : 0
-    })
-
-  const picked = new Set<string>()
-
-  for (const day of candidates) {
-    if (picked.size >= max) break
-    if (picked.has(addDays(day.date, -1)) || picked.has(addDays(day.date, 1))) continue
-    picked.add(day.date)
-  }
-
-  return picked
+  return (candidates.find((day) => afterTraining(day.date)) ?? candidates[0])?.date ?? null
 }

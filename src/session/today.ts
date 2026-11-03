@@ -11,7 +11,8 @@
 import { exerciseKey, prescribe } from '@/liftoscript/evaluator'
 import { parseProgram } from '@/liftoscript/parser'
 import { format } from '@/liftoscript/weight'
-import { buildWeekGrid } from '@/session/weekGrid'
+import { coerceProfileForPreview } from '@/onboarding/previewProfile'
+import { weekGridFromPlans } from '@/session/weekGrid'
 import { applyComeback, type ComebackProposal } from '@/training/comeback'
 import { type ReplacementOption, replacementOptions, replaceToday, swapToday } from '@/training/composer'
 import { evalContextFromSettings } from '@/training/plates'
@@ -88,13 +89,14 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
   // I do now", wrong for "what did this week ask of me": by Sunday it had thrown
   // the week away and the tiles read "0 of 0 planned" for a week with three
   // strength days and 132 minutes of cardio in it.
-  const wholeWeek = planWeek(profile, sessions, todayIso).week
+  const wholePlan = planWeek(profile, sessions, todayIso)
+  const wholeWeek = wholePlan.week
 
   // Training only: a claimed sauna neither makes today "done" nor blocks a
   // replace, since a day holding only a sauna is a rest day.
-  const todaysSessions = trainingSessions(sessions).filter((session) => session.date === todayIso)
-  const saunaClaimed =
-    sessions.find((session) => isSauna(session) && session.status === 'done' && session.date === todayIso) ?? null
+  const onToday = sessions.filter((session) => session.date === todayIso)
+  const todaysSessions = trainingSessions(onToday)
+  const saunaClaimed = onToday.find(isSauna) ?? null
   const doneSession = todaysSessions.find((session) => session.status === 'done') ?? null
   const hasDoneSession = doneSession !== null
   const activeSession = todaysSessions.find((session) => session.status === 'active') ?? null
@@ -118,9 +120,12 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
     streak: currentStreak(profile, sessions, todayIso),
     rollup: weeklyRollup(profile, sessions, startOfWeekMonday(todayIso), wholeWeek),
     saunaClaimed,
+    // The calendar's own grid, built from the two weeks composed above — so
+    // Today and the calendar cannot disagree, and nothing is composed twice.
     saunaSuggested:
-      buildWeekGrid(profile, sessions, todayIso, todayIso, { fromDate: todayIso }).days.find((day) => day.isToday)
-        ?.sauna === 'suggested',
+      weekGridFromPlans(coerceProfileForPreview(profile), sessions, plan, wholePlan, todayIso, todayIso).days.find(
+        (day) => day.isToday,
+      )?.sauna === 'suggested',
   }
 }
 
