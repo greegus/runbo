@@ -1,75 +1,76 @@
-# Proposal: sauna on rest days
+# Proposal: sauna
 
 Status: proposed (November 2026). Not yet folded into `runbo-requirements.md` / `runbo-implementation.md`;
 fold it in once the MVP below is accepted.
 
 ## What
 
-The planner suggests a **sauna** on some rest days. A rest day stays a rest day: the Today card still reads
-"Rest day", with a sauna suggestion under it, and the week calendar marks the same days.
+Two things, both about a sauna that is **not training**:
+
+1. **Claiming a sauna.** "Train something else today" always offers *Sauna*. One tap records a dated entry for
+   today — mainly so there is a record that the Multisport card was used. Nothing else about the day changes.
+2. **A rest-day suggestion** (opt-in). When switched on, the planner marks one rest day a week as a good day for
+   a sauna; the Today card offers to claim it in one tap.
 
 ## Decisions
 
-### A suggestion, not a planned item
+### A claimed sauna is a note on the day, never a training session
 
-Sauna is **not** a `PlannedItem` and not a third track. It is derived from the composed week after the fact and
-attached to rest days. That keeps every existing rule untouched:
+It is stored as a `Session` with `kind: 'sauna'`, `status: 'done'`, a `date` and optional `minutes` — the same
+collection, rules and export path as every other entry, and one dated document per visit, which is exactly what a
+later Multisport count per calendar month needs to read.
 
-- it never counts as a training day and never consumes `daysPerWeek` or `strengthDaysPerWeek`;
-- the strength rotation, the cardio budget and the block/deload logic never see it;
-- the streak, the weekly roll-up tiles, comeback detection and progression ignore it;
-- swap / replace today work exactly as before — a rest day with a sauna suggestion is a rest day.
+Every training consumer drops it first, through one helper (`trainingSessions` in `src/training/sauna.ts`):
 
-A third track would have to answer all of those questions, and every answer would be "ignore it".
+- the planner and composer (`planWeek`): a day holding only a sauna is a rest day — it fills no slot, holds no
+  fixed day, and the frontier frees it like any unlogged day;
+- the strength rotation, the cardio budget, `daysPerWeek`, the cardio block ratio and deload;
+- comeback and the gap since the last session: a sauna does not close a gap in training;
+- the streak: a sauna neither extends nor keeps one alive — the streak counts training, and a claim takes one tap,
+  so counting it would let the streak be kept without training;
+- the weekly roll-up (sessions, minutes, tonnage) and every progress stat;
+- the week calendar's status, title and link, and Today's `doneSession` / `activeSession`.
 
-### Which rest days
+Tests cover the planner, comeback, streak, roll-up and calendar cases.
 
-- **At most two per week.** Two to three sessions a week is where the usual sauna benefits are reported, and
-  two is enough to make it a habit without crowding the plan.
-- **Never two days in a row**, so the suggestions spread over the week.
-- **The day after a training day first** — that is where a recovery session helps most and where it is most
-  likely to be wanted. Among equals, earlier in the week first.
-- **Only from today on.** A suggestion for a day that is already past is noise; past rest days stay plain.
-- A day with any logged session is not a rest day, so it never gets one.
+### Claiming on a training day: an addition
 
-No interference rule with the next day's lifting: a sauna session on its own does not hurt next-day
-strength enough to be worth a rule, and the athlete can ignore any suggestion.
+Picking *Sauna* never replaces today's workout. It is offered as "Claim it for today — in addition, today's plan
+stays": the planned session is still there to start, and the claim sits beside it. Treating it as a replacement
+would displace a workout for something that is not one, and the week would quietly lose a session. On a rest
+day the day stays a rest day.
 
-### Display-only for now
+The option is permanent — every day, whatever the setting — and drops out of the picker once today has a claim.
+The Today card shows "Sauna claimed" with an Undo, because one tap to claim should be one tap to take back.
 
-The MVP does not log sauna. Logging would need a new `Session.kind`, a form, history rows, export handling and
-a decision on whether it touches the streak — a milestone-2 question once it is clear the suggestion is used.
+### The rest-day suggestion
 
-### A setting, on by default
-
-`availability.saunaOnRestDays` (Schedule tab in Settings, "Suggest sauna on rest days"). Optional with no
-migration, like `strengthDaysPerWeek`: an absent field means **on**, because the athlete asked for the feature
-and an existing profile should get it without a save. Turning it off removes every suggestion.
-
-It lives in `availability` rather than `settings` because it is about the shape of the week and is saved by the
-same Schedule section.
+- **One a week** — a nudge towards a habit, not a second schedule.
+- **The rest day right after a training day**, earlier in the week first; otherwise the earliest rest day.
+- **Only from today on**; a missed workout does not count as training when choosing the day after one.
+- **Not when a sauna is already claimed that week.**
+- **Opt-in**: `availability.saunaOnRestDays`, off by default and off when absent. Switching it off drops the field
+  rather than writing `false`, so an off → on → off round trip leaves no difference behind to read as unsaved.
+- No interference rule with the next day's lifting: it is a suggestion the athlete can ignore.
 
 ### Where it shows
 
-- **Today card**, rest branch: "Rest day" with a sauna line under it ("Sauna suggested — 15–20 min, easy heat,
-  drink water").
-- **Week calendar** (Plan and the onboarding preview): a rest row reads "Rest · sauna" with the sauna icon.
-- **Not** in the replace picker: it is not a workout to move or owe.
+- **Today card**: "Sauna claimed" (with minutes when given) and Undo, on any day; on the suggested rest day,
+  "Sauna suggested" with a one-tap Claim.
+- **Week calendar**: a rest row reads "Rest · sauna claimed" (with the done mark) or "Rest · sauna suggested"; a
+  training row with a claim gets a "Sauna claimed" line under it.
+- **History**: a "Sauna" row with its minutes, marked "Not counted as training".
+- **Replace picker**: the permanent *Sauna* option.
 
 ### Data model and rules
 
-- `Profile.availability.saunaOnRestDays?: boolean` — the only stored change.
-- Firestore rules do not validate `availability` fields, so nothing changes there. The JSON export carries the
-  profile as it is, so the field is exported with it.
-- No new collection, no new session kind.
-
-## MVP scope
-
-1. `src/training/sauna.ts`: a pure `saunaDates(days, fromDate)` with tests.
-2. `WeekGridDay.sauna` from `buildWeekGrid` (current week, from today on) and `TodayModel.saunaToday`.
-3. Today card rest branch and calendar rest rows; the Settings toggle.
+- `SessionKind` gains `'sauna'`; `TrainingKind` names the two that train.
+- `Profile.availability.saunaOnRestDays?: boolean`.
+- Firestore rules do not enumerate `kind` or validate `availability` fields, so they are unchanged. The JSON
+  export carries sessions and the profile as stored.
 
 ## Later
 
-Logging a sauna session (minutes, optional temperature), a per-week count chosen by the athlete, and whether a
-logged sauna belongs in the streak.
+- Minutes on a claim from the UI (the store already accepts them).
+- The Multisport card setting: count gym sessions, swims and claimed saunas per calendar month against the card
+  price. Saunas are dated `Session` documents of their own kind, so the count is a filter by kind and month.
