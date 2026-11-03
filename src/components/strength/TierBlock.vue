@@ -215,19 +215,19 @@ function selectAll(event: FocusEvent): void {
           @click="warmupOpen = !warmupOpen"
         >
           <span class="text-sm font-medium text-ink-700">Warmup · {{ exercise.warmup.length }} sets</span>
-          <Icon :name="warmupOpen ? 'chevron-up' : 'chevron-down'" class="text-ink-400" />
+          <Icon
+            name="chevron-down"
+            class="collapse-chevron shrink-0 text-ink-400"
+            :class="{ 'rotate-180': warmupOpen }"
+            aria-hidden="true"
+          />
         </button>
 
-        <!-- Animated by the grid-rows trick: a 0fr→1fr row eases to the
-             content's own height, which `height: auto` cannot. `inert` while
-             closed keeps the hidden rows out of the tab order and the
-             accessibility tree. -->
-        <div
-          class="grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none"
-          :class="warmupOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
-          :inert="!warmupOpen"
-        >
-          <div class="overflow-hidden">
+        <!-- The same disclosure as the replace picker on Today (`collapse-panel`
+             in style.css). `inert` while closed keeps the hidden rows out of
+             the tab order and the accessibility tree. -->
+        <div class="collapse-panel" :class="{ 'collapse-panel--open': warmupOpen }" :inert="!warmupOpen">
+          <div class="min-h-0 overflow-hidden">
             <ul role="list" class="flex flex-col gap-1 px-3 pb-3">
               <li
                 v-for="(warmup, index) in exercise.warmup"

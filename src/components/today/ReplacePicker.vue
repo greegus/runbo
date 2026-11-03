@@ -110,7 +110,7 @@ function choose(row: { choose: () => void }): void {
       Train something else today
       <Icon
         name="chevron-down"
-        class="ReplacePicker__chevron shrink-0 text-ink-500"
+        class="collapse-chevron shrink-0 text-ink-500"
         :class="{ 'rotate-180': open }"
         aria-hidden="true"
       />
@@ -119,8 +119,8 @@ function choose(row: { choose: () => void }): void {
     <!-- Stays mounted so the height can animate; `inert` keeps the closed list out of reach. -->
     <div
       id="replace-picker-list"
-      class="ReplacePicker__panel"
-      :class="{ 'ReplacePicker__panel--open': open }"
+      class="collapse-panel"
+      :class="{ 'collapse-panel--open': open }"
       :inert="!open"
     >
       <div class="flex min-h-0 flex-col gap-2 overflow-hidden px-2">
@@ -150,31 +150,3 @@ function choose(row: { choose: () => void }): void {
     </div>
   </section>
 </template>
-
-<style scoped>
-/* 0fr → 1fr animates to the content's own height, whatever the list holds. */
-.ReplacePicker__panel {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition:
-    grid-template-rows 250ms ease-out,
-    opacity 200ms ease-out;
-}
-
-.ReplacePicker__panel--open {
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
-
-.ReplacePicker__chevron {
-  transition: transform 250ms ease-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ReplacePicker__panel,
-  .ReplacePicker__chevron {
-    transition: none;
-  }
-}
-</style>

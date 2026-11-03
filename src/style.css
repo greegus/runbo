@@ -131,3 +131,34 @@ body {
     }
   }
 }
+
+/*
+ * One expand/collapse for every disclosure in the app: the replace picker on
+ * Today, the warmup on a lift. 0fr → 1fr animates to the content's own height,
+ * whatever it holds; the panel's single child needs `min-h-0 overflow-hidden`.
+ * The chevron is one icon turned over, not two swapped.
+ */
+.collapse-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 250ms ease-out,
+    opacity 200ms ease-out;
+}
+
+.collapse-panel--open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.collapse-chevron {
+  transition: transform 250ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collapse-panel,
+  .collapse-chevron {
+    transition: none;
+  }
+}
