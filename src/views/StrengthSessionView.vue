@@ -145,7 +145,9 @@ const tabs = computed(() =>
 
     return {
       key: exercise.key,
-      label: `${exercise.tier ? `T${exercise.tier}` : ''} ${exercise.name} · ${done}/${sets.length}`.trim(),
+      // No tier prefix: the strip is for finding a lift, and "T1 T2 T3" in
+      // front of every name only pushed the names apart.
+      label: `${exercise.name} · ${done}/${sets.length}`,
     }
   }),
 )
@@ -658,7 +660,7 @@ onBeforeRouteLeave(() => {
              on the bar around it: that way the whole row scrolls, and the
              first and last tab still rest a gutter away from the screen edge.
              `scroll-px-4` keeps a tab brought into view off the edge too. -->
-        <div class="sticky top-0 z-10 border-b border-ink-200 bg-white">
+        <div class="sticky top-0 z-10 mt-4 border-b border-ink-200 bg-white">
           <TabsNav
             v-model="selectedTab"
             :tabs="tabs"
@@ -694,16 +696,17 @@ onBeforeRouteLeave(() => {
             @click="goToNext()"
           />
 
-          <Button
-            label="Delete this session"
-            prefix-icon="trash"
-            variant="text"
-            color="secondary"
-            class="mt-6"
-            :disabled="busy"
-            :aria-disabled="busy"
-            @click="!busy && abandon()"
-          />
+          <div class="mt-6 flex justify-center">
+            <Button
+              label="Abandon session"
+              prefix-icon="trash"
+              variant="text"
+              color="secondary"
+              :disabled="busy"
+              :aria-disabled="busy"
+              @click="!busy && abandon()"
+            />
+          </div>
         </div>
       </div>
 

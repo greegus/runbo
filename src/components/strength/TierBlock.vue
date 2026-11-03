@@ -41,10 +41,12 @@ const emit = defineEmits<{
 
 const WEIGHT_BLOCKED = 'Enter a weight to log this exercise'
 
-/** Warmups are display-only, and on a phone they push the working sets off screen. */
-const warmupOpen = ref(false)
-
-const tierLabel = computed(() => (props.exercise.tier ? `T${props.exercise.tier}` : 'Extra'))
+/**
+ * Open by default: the ramp is the first thing done at the bar, and one lift
+ * at a time leaves room for it. It still folds away once the working sets
+ * start.
+ */
+const warmupOpen = ref(true)
 
 /**
  * The weight the rows are actually carrying. The sets are the source of truth,
@@ -85,7 +87,7 @@ watch(currentWeight, (weight) => {
 const weightLabel = computed(() => {
   const weight = currentWeight.value
 
-  return weight ? format(weight) : 'weight not set'
+  return weight ? format(weight) : 'no weight yet'
 })
 
 function toNumberOrNull(value: unknown): number | null {
@@ -140,16 +142,17 @@ function selectAll(event: FocusEvent): void {
        nothing to set it apart from, and nothing to collapse it out of the way of. -->
   <section>
     <header class="flex items-start gap-3">
-      <span
-        class="shrink-0 rounded-lg bg-accent-600 px-2.5 py-1 text-sm font-bold text-white"
-        :aria-label="exercise.tier ? `Tier ${exercise.tier}` : 'Accessory'"
-      >
-        {{ tierLabel }}
-      </span>
-
       <div class="min-w-0 flex-1">
-        <h2 class="text-lg leading-tight font-bold text-ink-900">{{ exercise.name }}</h2>
-        <p class="text-sm text-ink-500 tabular-nums">{{ weightLabel }}</p>
+        <!-- One line: the tier as a plain prefix, the lift, and the weight it
+             carries in a quieter shade — the name and the number are read
+             together at the bar. -->
+        <h2 class="text-lg leading-tight font-bold text-ink-900">
+          <span v-if="exercise.tier" class="text-ink-500">
+            <span class="sr-only">Tier {{ exercise.tier }}:</span><span aria-hidden="true">T{{ exercise.tier }}</span>
+          </span>
+          {{ exercise.name }}
+          <span class="font-semibold text-ink-400 tabular-nums">{{ weightLabel }}</span>
+        </h2>
         <PlateHint
           v-if="exercise.showPlates && currentWeight"
           :weight="currentWeight"
@@ -215,19 +218,31 @@ function selectAll(event: FocusEvent): void {
           <Icon :name="warmupOpen ? 'chevron-up' : 'chevron-down'" class="text-ink-400" />
         </button>
 
-        <ul v-if="warmupOpen" role="list" class="flex flex-col gap-1 px-3 pb-3">
-          <li
-            v-for="(warmup, index) in exercise.warmup"
-            :key="index"
-            class="flex flex-wrap items-center gap-x-3 text-sm text-ink-700 tabular-nums"
-          >
-            <span class="font-semibold">{{ warmup.reps }} reps</span>
-            <span>{{ format(warmup.weight) }}</span>
-            <PlateHint v-if="exercise.showPlates" :weight="warmup.weight" :settings="settings" compact />
-          </li>
-        </ul>
+        <!-- Animated by the grid-rows trick: a 0fr→1fr row eases to the
+             content's own height, which `height: auto` cannot. `inert` while
+             closed keeps the hidden rows out of the tab order and the
+             accessibility tree. -->
+        <div
+          class="grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none"
+          :class="warmupOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
+          :inert="!warmupOpen"
+        >
+          <div class="overflow-hidden">
+            <ul role="list" class="flex flex-col gap-1 px-3 pb-3">
+              <li
+                v-for="(warmup, index) in exercise.warmup"
+                :key="index"
+                class="flex flex-wrap items-center gap-x-3 text-sm text-ink-700 tabular-nums"
+              >
+                <span class="font-semibold">{{ warmup.reps }} reps</span>
+                <span>{{ format(warmup.weight) }}</span>
+                <PlateHint v-if="exercise.showPlates" :weight="warmup.weight" :settings="settings" compact />
+              </li>
+            </ul>
 
-        <p v-if="warmupOpen" class="px-3 pb-3 text-xs text-ink-500">Warmups are not recorded.</p>
+            <p class="px-3 pb-3 text-xs text-ink-500">Warmups are not recorded.</p>
+          </div>
+        </div>
       </div>
 
       <!-- The reason rides on the first row only: repeated under all five it
