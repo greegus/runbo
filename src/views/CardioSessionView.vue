@@ -514,6 +514,7 @@ onBeforeUnmount(() => {
         :busy="busy"
         @submit="acceptReadiness"
         @skip="skipReadiness"
+        @cancel="skipReadiness"
       />
     </template>
   </section>

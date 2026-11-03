@@ -795,6 +795,7 @@ onBeforeRouteLeave(() => {
         :busy="busy"
         @submit="submitReadiness"
         @skip="skipReadiness()"
+        @cancel="skipReadiness()"
       />
 
       <ProjectionSheet
