@@ -470,7 +470,7 @@ function setComebackGap(value: unknown): void {
         v-model="selectedTab"
         :tabs="tabs"
         id-base="settings"
-        class="-mx-4 scroll-px-4 overflow-x-auto px-4 [&_[role=tab]]:min-h-[48px]"
+        class="-mx-4 scroll-px-4 px-4 [&_[role=tab]]:min-h-[48px]"
         aria-label="Settings sections"
       />
 

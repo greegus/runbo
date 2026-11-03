@@ -653,7 +653,7 @@ onBeforeRouteLeave(() => {
             v-model="selectedTab"
             :tabs="tabs"
             id-base="exercise"
-            class="scroll-px-4 overflow-x-auto px-4 [&_[role=tab]]:min-h-[48px]"
+            class="scroll-px-4 px-4 [&_[role=tab]]:min-h-[48px]"
             aria-label="Exercises in this session"
           >
             <!-- A finished lift trades its count for a check: "5/5" has to be

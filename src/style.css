@@ -166,3 +166,23 @@ body {
     transition: none;
   }
 }
+
+/*
+ * Tab strips scroll sideways only. `overflow-x: auto` turns the other axis to
+ * `auto` too, and vuiii pulls each tab 1px down over the strip's bottom border
+ * (`margin-bottom: -1px`) so the active underline covers it — that 1px was
+ * enough for a vertical scroll, and clipping it would eat a pixel of the
+ * underline. So the strip's line is drawn INSIDE it, as an inset shadow under
+ * the tabs, and the tabs sit on it without overhanging. The extra selectors
+ * outrank vuiii's scoped rules.
+ */
+.TabsNav.TabsNav[role='tablist'] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-bottom: none;
+  box-shadow: inset 0 -1px 0 var(--vuiii-tabs-borderColor);
+}
+
+.TabsNav[role='tablist'] .TabsNav__tab {
+  margin-bottom: 0;
+}
