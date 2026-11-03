@@ -6,7 +6,14 @@
 
 export type LiftId = string // exercise name as written in the program, e.g. 'Squat'
 export type Modality = 'run' | 'bike' | 'swim'
-export type SessionKind = 'strength' | 'cardio'
+/** What the planner schedules and every training stat counts. */
+export type TrainingKind = 'strength' | 'cardio'
+/**
+ * `sauna` is a claimed entry, not training: a dated note that the athlete
+ * went (and, later, that a Multisport card was used). Every training consumer
+ * drops it through `trainingSessions` — a day with only a sauna is a rest day.
+ */
+export type SessionKind = TrainingKind | 'sauna'
 export type GoalType = 'open' | 'race' | 'numeric' // MVP uses only 'open'
 
 /** The paint on a plate — what the lifter looks for on the rack. */
@@ -53,10 +60,9 @@ export interface Profile {
     // field existed must keep splitting its week exactly as it did, which is
     // what `DEFAULT_STRENGTH_DAYS_PER_WEEK` preserves.
     strengthDaysPerWeek?: number // default 3
-    // Whether rest days carry a sauna suggestion. Optional for the same
-    // reason: absent means ON, so a profile written before the field existed
-    // gets the suggestion without a save (see `saunaDates`).
-    saunaOnRestDays?: boolean // default true
+    // Whether a rest day carries the week's sauna suggestion. Opt-in: absent
+    // means OFF, and switching it off drops the field (see `saunaDates`).
+    saunaOnRestDays?: boolean // default off
   }
   strengthTrack: {
     goal: { type: GoalType } // MVP: { type: 'open' }
@@ -126,7 +132,7 @@ export interface Session {
   progressionSummary?: string[] // human lines, e.g. 'Squat: 5×3+ → 6×2+, weight held at 100 kg'
   stateSnapshot?: Record<string, ExerciseState> // programState BEFORE this session — enables delete-last-and-restore
 
-  // cardio:
+  // cardio (and `minutes` for a sauna):
   prescription?: CardioPrescription
   source?: 'manual' | 'strava'
   externalId?: string // Strava activity id, for dedup

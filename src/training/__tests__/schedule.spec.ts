@@ -79,6 +79,10 @@ const FULL_WEEK: Session[] = [
   cardio(SAT, 112),
 ]
 
+function sauna(date: string): Session {
+  return { id: `sauna-${date}`, uid: 'u1', date, kind: 'sauna', status: 'done', minutes: 20 }
+}
+
 describe('planWeek', () => {
   it('composes the whole week the anchor day falls in', () => {
     const plan = planWeek(profile(), [], WED)
@@ -87,6 +91,15 @@ describe('planWeek', () => {
     expect(plan.week.days).toHaveLength(7)
     expect(plan.week.days.filter((day) => day.planned?.kind === 'strength')).toHaveLength(3)
     expect(plan.week.days.filter((day) => day.planned?.kind === 'cardio')).toHaveLength(2)
+  })
+
+  it('treats a day holding only a claimed sauna as a rest day', () => {
+    const plain = planWeek(profile(), [], MON, WED)
+    const withSauna = planWeek(profile(), [sauna(MON), sauna(TUE), sauna(WED)], MON, WED)
+
+    // The frontier frees Mon and Tue either way: a sauna does not hold a slot.
+    expect(withSauna.week.days.map((day) => day.planned)).toEqual(plain.week.days.map((day) => day.planned))
+    expect(withSauna.input.completedSessions).toEqual([])
   })
 
   it('runs the GZCLP rotation from the profile cursor', () => {

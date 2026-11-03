@@ -108,6 +108,19 @@ function cardioSubtitle(session: Session): string | null {
 export function describeSession(session: Session, profile: Profile): HistoryEntry {
   const isCardio = session.kind === 'cardio'
 
+  // A claimed sauna is listed like any entry — the record is the point of
+  // claiming it — titled for what it was, with its minutes when they were given.
+  if (session.kind === 'sauna') {
+    return {
+      session,
+      title: 'Sauna',
+      subtitle: typeof session.minutes === 'number' ? `${session.minutes} min` : null,
+      human: formatHuman(session.date),
+      isActive: false,
+      restoresState: false,
+    }
+  }
+
   return {
     session,
     title: isCardio ? cardioTitle(session) : strengthTitle(session),

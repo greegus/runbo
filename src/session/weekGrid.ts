@@ -13,7 +13,7 @@
  */
 
 import { coerceProfileForPreview } from '@/onboarding/previewProfile'
-import { saunaDates } from '@/training/sauna'
+import { isSauna, saunaDates, trainingSessions } from '@/training/sauna'
 import { planWeek } from '@/training/schedule'
 import { describePrescription } from '@/training/zones'
 import type { Modality, PlannedItem, Profile, Session } from '@/types'
@@ -47,8 +47,12 @@ export interface WeekGridDay {
   status: DayStatus
   /** Set when a done or active session sits on that day, so the row can link to it. */
   sessionId: string | null
-  /** A rest day from today on that carries a sauna suggestion. Still a rest day. */
-  sauna: boolean
+  /**
+   * A note on the day, never a status of it: `claimed` when a sauna was logged
+   * that day, `suggested` for the week's one rest-day suggestion. Either way a
+   * day that holds nothing else is still a rest day.
+   */
+  sauna: 'claimed' | 'suggested' | null
 }
 
 export interface WeekGridModel {
@@ -188,15 +192,20 @@ function detailOf(session: Session | null): string | null {
  */
 export function buildWeekGrid(
   profile: Profile,
-  sessions: Session[],
+  allSessions: Session[],
   anchorIso: string,
   todayIso: string,
   options?: { fromDate?: string | null },
 ): WeekGridModel {
   const safeProfile = coerceProfileForPreview(profile)
   const fromDate = options?.fromDate ?? undefined
-  const plan = planWeek(safeProfile, sessions, anchorIso, fromDate)
-  const wholeWeek = fromDate === undefined ? plan : planWeek(safeProfile, sessions, anchorIso)
+  const plan = planWeek(safeProfile, allSessions, anchorIso, fromDate)
+  const wholeWeek = fromDate === undefined ? plan : planWeek(safeProfile, allSessions, anchorIso)
+  // Status, titles and links are about training; a claimed sauna is a note.
+  const sessions = trainingSessions(allSessions)
+  const claimed = new Set(
+    allSessions.filter((session) => isSauna(session) && session.status === 'done').map((session) => session.date),
+  )
 
   const days = plan.week.days.map((day, index): WeekGridDay => {
     const planned = fromDate !== undefined && day.date < fromDate ? wholeWeek.week.days[index].planned : day.planned
@@ -234,15 +243,16 @@ export function buildWeekGrid(
       detail: detailOf(session),
       status,
       sessionId: session?.id ?? null,
-      sauna: false,
+      sauna: claimed.has(day.date) ? 'claimed' : null,
     }
   })
 
   // Read off the finished grid rather than planned alongside it: a suggestion
   // must never reach the composer, where it would start counting as a day.
-  // A missed day is neither rest nor training — nothing happened on it.
-  const sauna =
-    safeProfile.availability.saunaOnRestDays === false
+  // A missed day is neither rest nor training — nothing happened on it. Opt-in
+  // (absent is off), and a week with a sauna already claimed needs no nudge.
+  const suggested =
+    safeProfile.availability.saunaOnRestDays !== true || days.some((day) => day.sauna === 'claimed')
       ? new Set<string>()
       : saunaDates(
           days.map((day) => ({
@@ -252,7 +262,7 @@ export function buildWeekGrid(
           })),
           todayIso,
         )
-  for (const day of days) day.sauna = sauna.has(day.date)
+  for (const day of days) if (suggested.has(day.date)) day.sauna = 'suggested'
 
   return {
     weekStart: plan.week.weekStart,

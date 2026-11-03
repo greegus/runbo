@@ -6,7 +6,7 @@
  * program can only stay honest if every weight change comes from logged work.
  */
 
-import type { SessionKind } from '@/types'
+import type { TrainingKind } from '@/types'
 
 export type ReadinessBand = 'good' | 'ok' | 'poor'
 
@@ -24,7 +24,7 @@ export interface ReadinessScore {
 /** At or below this the session screen offers a suggestion. */
 export const ADVICE_THRESHOLD = 7
 
-const ADVICE: Record<SessionKind, string> = {
+const ADVICE: Record<TrainingKind, string> = {
   strength: 'Consider skipping the AMRAP set',
   cardio: 'Shorten to about 70% of the target',
 }
@@ -50,6 +50,6 @@ export function readinessBand(total: number): ReadinessBand {
 }
 
 /** A suggestion for a poor score, `null` otherwise. Never changes anything. */
-export function readinessAdvice(score: number, kind: SessionKind): string | null {
+export function readinessAdvice(score: number, kind: TrainingKind): string | null {
   return score <= ADVICE_THRESHOLD ? ADVICE[kind] : null
 }

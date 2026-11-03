@@ -21,6 +21,7 @@ import type { BodyweightEntry, ComposedWeek, Profile, Session, SetLog, WeightVal
 import { daysBetween, inWeek, WEEK_LENGTH } from '@/utils/date'
 
 import { DEFAULT_GAP_DAYS } from './comeback'
+import { trainingSessions } from './sauna'
 
 /** The key a logged exercise's records are grouped under, e.g. `'T1:Squat'`. */
 export function sessionExerciseKey(exercise: { name: string; tier?: 1 | 2 | 3 }): string {
@@ -311,7 +312,9 @@ export function streakGapLimit(profile: Profile): number {
  * if the athlete is already past the limit the streak is 0 before the sessions
  * behind it are even looked at.
  */
-export function currentStreak(profile: Profile, sessions: Session[], todayIso: string): number {
+export function currentStreak(profile: Profile, allSessions: Session[], todayIso: string): number {
+  // A claimed sauna is not training: it never extends or keeps a streak.
+  const sessions = trainingSessions(allSessions)
   const limit = streakGapLimit(profile)
 
   const days = [
@@ -358,10 +361,12 @@ export function bodyweightTrend(entries: BodyweightEntry[]): BodyweightPoint[] {
  */
 export function weeklyRollup(
   profile: Profile,
-  sessions: Session[],
+  allSessions: Session[],
   weekStart: string,
   composedWeek?: ComposedWeek,
 ): WeeklyRollup {
+  // A claimed sauna is not training: it is neither planned nor done work.
+  const sessions = trainingSessions(allSessions)
   const thisWeek = sessions.filter((session) => inWeek(session.date, weekStart))
   const done = (kind: Session['kind']) => thisWeek.filter((session) => isDone(session) && session.kind === kind).length
 

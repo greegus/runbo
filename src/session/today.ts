@@ -15,6 +15,7 @@ import { buildWeekGrid } from '@/session/weekGrid'
 import { applyComeback, type ComebackProposal } from '@/training/comeback'
 import { type ReplacementOption, replacementOptions, replaceToday, swapToday } from '@/training/composer'
 import { evalContextFromSettings } from '@/training/plates'
+import { isSauna, trainingSessions } from '@/training/sauna'
 import { planWeek, resolveToday, type TodayResolution, type WeekPlan } from '@/training/schedule'
 import { currentStreak, weeklyRollup, type WeeklyRollup } from '@/training/stats'
 import type { ExerciseState, PlannedItem, Profile, Session } from '@/types'
@@ -53,10 +54,12 @@ export interface TodayModel {
   streak: number
   rollup: WeeklyRollup
   /**
-   * Today is a rest day that carries a sauna suggestion. Taken from the week
-   * grid itself, so the Today card and the calendar can never disagree on it.
+   * Today is the week's suggested sauna day. Taken from the week grid itself,
+   * so the Today card and the calendar can never disagree on it.
    */
-  saunaToday: boolean
+  saunaSuggested: boolean
+  /** The sauna claimed today, if any — a note on the day, never its session. */
+  saunaClaimed: Session | null
 }
 
 /**
@@ -87,7 +90,11 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
   // strength days and 132 minutes of cardio in it.
   const wholeWeek = planWeek(profile, sessions, todayIso).week
 
-  const todaysSessions = sessions.filter((session) => session.date === todayIso)
+  // Training only: a claimed sauna neither makes today "done" nor blocks a
+  // replace, since a day holding only a sauna is a rest day.
+  const todaysSessions = trainingSessions(sessions).filter((session) => session.date === todayIso)
+  const saunaClaimed =
+    sessions.find((session) => isSauna(session) && session.status === 'done' && session.date === todayIso) ?? null
   const doneSession = todaysSessions.find((session) => session.status === 'done') ?? null
   const hasDoneSession = doneSession !== null
   const activeSession = todaysSessions.find((session) => session.status === 'active') ?? null
@@ -110,12 +117,10 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
     doneSession,
     streak: currentStreak(profile, sessions, todayIso),
     rollup: weeklyRollup(profile, sessions, startOfWeekMonday(todayIso), wholeWeek),
-    saunaToday:
-      resolution.item === null &&
-      todaysSessions.length === 0 &&
-      (buildWeekGrid(profile, sessions, todayIso, todayIso, { fromDate: todayIso }).days.find((day) => day.isToday)
-        ?.sauna ??
-        false),
+    saunaClaimed,
+    saunaSuggested:
+      buildWeekGrid(profile, sessions, todayIso, todayIso, { fromDate: todayIso }).days.find((day) => day.isToday)
+        ?.sauna === 'suggested',
   }
 }
 

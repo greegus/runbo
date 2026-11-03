@@ -22,6 +22,7 @@ import { type ComebackProposal, daysSinceLastSession, proposeComeback } from './
 import { type ComposedWeekPlan, type ComposeWeekInput, composeWeek, weeklyTrackBudget } from './composer'
 import { isHeavyLowerDay } from './gzclp'
 import { rotationDays } from './rotation'
+import { trainingSessions } from './sauna'
 
 /** Everything one week needs, kept together so callers can re-run an override. */
 export interface WeekPlan {
@@ -61,7 +62,9 @@ export function plannedCardioDays(availability: Profile['availability']): number
  * cannot happen any more and their work rolls forward. Omit it to plan a whole
  * week (the onboarding preview, PlanView of a future week).
  */
-export function planWeek(profile: Profile, sessions: Session[], anchorIso: string, fromDate?: string): WeekPlan {
+export function planWeek(profile: Profile, allSessions: Session[], anchorIso: string, fromDate?: string): WeekPlan {
+  // A claimed sauna is not training: a day holding only one is a rest day.
+  const sessions = trainingSessions(allSessions)
   const weekStart = startOfWeekMonday(anchorIso)
 
   // The cardio planner needs to know how many days it will get before the
@@ -98,7 +101,9 @@ export function planWeek(profile: Profile, sessions: Session[], anchorIso: strin
 }
 
 /** Today's card: the planned item, or a rest day. */
-export function resolveToday(profile: Profile, sessions: Session[], todayIso: string): TodayResolution {
+export function resolveToday(profile: Profile, allSessions: Session[], todayIso: string): TodayResolution {
+  // A claimed sauna is not training: a day holding only one is a rest day.
+  const sessions = trainingSessions(allSessions)
   const plan = planWeek(profile, sessions, todayIso, todayIso)
   const item = plan.week.days.find((day) => day.date === todayIso)?.planned ?? null
 

@@ -200,34 +200,68 @@ describe('buildWeekGrid', () => {
     expect(missed.every((day) => day.title === 'Strength')).toBe(true)
   })
 
-  it('suggests a sauna on at most two rest days, never on a training day or a past day', () => {
-    const model = buildWeekGrid(profile(), [], MON, MON)
-    const sauna = model.days.filter((day) => day.sauna)
+  /** The athlete opted in to the rest-day suggestion; absent is off. */
+  function saunaProfile(): Profile {
+    const opted = profile()
+    opted.availability = { ...opted.availability, saunaOnRestDays: true }
+    return opted
+  }
 
-    expect(sauna.length).toBeGreaterThan(0)
-    expect(sauna.length).toBeLessThanOrEqual(2)
-    expect(sauna.every((day) => day.status === 'rest')).toBe(true)
+  function saunaSession(date: string): Session {
+    return { id: `sauna-${date}`, uid: 'u1', date, kind: 'sauna', status: 'done', minutes: 20 }
+  }
 
-    const later = buildWeekGrid(profile(), [], MON, SUN)
-    expect(later.days.filter((day) => day.sauna && day.date < SUN)).toEqual([])
+  it('suggests no sauna unless the athlete opted in', () => {
+    expect(buildWeekGrid(profile(), [], MON, MON).days.some((day) => day.sauna !== null)).toBe(false)
   })
 
-  it('suggests no sauna when the athlete turned it off', () => {
-    const off = profile()
-    off.availability = { ...off.availability, saunaOnRestDays: false }
+  it('suggests one sauna a week, on a rest day, never on a past day', () => {
+    const model = buildWeekGrid(saunaProfile(), [], MON, MON)
+    const suggested = model.days.filter((day) => day.sauna === 'suggested')
 
-    expect(buildWeekGrid(off, [], MON, MON).days.some((day) => day.sauna)).toBe(false)
+    expect(suggested).toHaveLength(1)
+    expect(suggested[0].status).toBe('rest')
+
+    const later = buildWeekGrid(saunaProfile(), [], MON, SUN)
+    expect(later.days.filter((day) => day.sauna === 'suggested' && day.date < SUN)).toEqual([])
   })
 
-  it('agrees with the Today card on whether today carries the sauna', () => {
+  it('keeps a day with a claimed sauna a rest day, and drops the suggestion that week', () => {
+    const rest = buildWeekGrid(saunaProfile(), [], MON, MON).days.find((day) => day.status === 'rest')
+    if (!rest) throw new Error('no rest day')
+
+    const model = buildWeekGrid(saunaProfile(), [saunaSession(rest.date)], MON, MON)
+    const day = dayOn(model, rest.date)
+
+    expect(day.status).toBe('rest')
+    expect(day.kind).toBeNull()
+    expect(day.sessionId).toBeNull()
+    expect(day.sauna).toBe('claimed')
+    expect(model.days.some((entry) => entry.sauna === 'suggested')).toBe(false)
+  })
+
+  it('leaves the plan alone when a sauna is claimed on a training day', () => {
+    const plain = buildWeekGrid(profile(), [], MON, MON)
+    const training = plain.days.find((day) => day.kind !== null)
+    if (!training) throw new Error('no training day')
+
+    const model = buildWeekGrid(profile(), [saunaSession(training.date)], MON, MON)
+
+    expect(model.days.map((day) => [day.kind, day.title, day.status])).toEqual(
+      plain.days.map((day) => [day.kind, day.title, day.status]),
+    )
+    expect(dayOn(model, training.date).sauna).toBe('claimed')
+  })
+
+  it('agrees with the Today card on whether today carries the suggestion', () => {
     const answers = [MON, TUE, WED, THU, '2026-08-28', '2026-08-29', SUN].map((date) => {
-      const today = buildWeekGrid(profile(), [], date, date, { fromDate: date }).days.find((day) => day.isToday)
+      const today = buildWeekGrid(saunaProfile(), [], date, date, { fromDate: date }).days.find((day) => day.isToday)
 
-      expect(buildToday(profile(), [], date).saunaToday).toBe(today?.sauna ?? false)
-      return today?.sauna ?? false
+      expect(buildToday(saunaProfile(), [], date).saunaSuggested).toBe(today?.sauna === 'suggested')
+      return today?.sauna === 'suggested'
     })
 
-    // Not vacuous: some day of the week is a sauna day.
+    // Not vacuous: some day of the week is the sauna day.
     expect(answers).toContain(true)
   })
 

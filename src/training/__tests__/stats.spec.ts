@@ -187,6 +187,10 @@ describe('weekly volume', () => {
   })
 })
 
+function sauna(date: string): Session {
+  return { id: `sauna-${date}`, uid: 'u1', date, kind: 'sauna', status: 'done', minutes: 20 }
+}
+
 describe('currentStreak', () => {
   /** The fixture profile, re-cut for the two settings the streak reads. */
   const athlete = (daysPerWeek: number, comebackGapDays = 10): Profile => ({
@@ -209,6 +213,17 @@ describe('currentStreak', () => {
     ]
 
     expect(currentStreak(athlete(5), sessions, '2026-08-17')).toBe(3)
+  })
+
+  it('ignores a claimed sauna: it neither extends nor keeps a streak', () => {
+    const sessions = [cardio('c1', '2026-08-01', 30), cardio('c2', '2026-08-02', 30)]
+
+    // A sauna today does not count as a day trained...
+    expect(currentStreak(athlete(5), [...sessions, sauna('2026-08-03')], '2026-08-03')).toBe(
+      currentStreak(athlete(5), sessions, '2026-08-03'),
+    )
+    // ...and does not keep alive a streak the training gap has already broken.
+    expect(currentStreak(athlete(5), [...sessions, sauna('2026-08-07')], '2026-08-12')).toBe(0)
   })
 
   it('treats a gap to today of exactly the limit as still running', () => {
@@ -308,6 +323,12 @@ describe('weeklyRollup', () => {
       cardio: { planned: 2, done: 1, plannedMinutes: 120, doneMinutes: 45 },
       tonnage: { value: 500, unit: 'kg' },
     })
+  })
+
+  it('counts no claimed sauna as done work', () => {
+    expect(weeklyRollup(profile, [...sessions, sauna('2026-08-19')], WEEK)).toEqual(
+      weeklyRollup(profile, sessions, WEEK),
+    )
   })
 
   it('estimates through the composer, so the strength setting is not contradicted', () => {

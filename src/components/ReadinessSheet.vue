@@ -3,7 +3,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { IconButton, RadioButtonGroup } from 'vuiii'
 
 import { readinessAdvice, scoreReadiness, type ReadinessInput } from '@/training/readiness'
-import type { SessionKind } from '@/types'
+import type { TrainingKind } from '@/types'
 
 /**
  * The optional pre-session readiness check.
@@ -17,7 +17,7 @@ import type { SessionKind } from '@/types'
 
 interface Props {
   open: boolean
-  kind: SessionKind
+  kind: TrainingKind
   busy?: boolean
   /**
    * The sheet is also shown from inside an already-created session, where

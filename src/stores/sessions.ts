@@ -344,6 +344,35 @@ export const useSessionsStore = defineStore('sessions', () => {
   }
 
   /**
+   * Records a sauna as done in one write — there is nothing to run and nothing
+   * to evaluate, so it skips the active phase and touches no program state.
+   * One dated entry per claim is what a later Multisport count will read.
+   */
+  async function claimSauna(date: string, minutes?: number): Promise<Session> {
+    const profile = requireProfile()
+
+    const session: Session = {
+      id: uuid(),
+      uid: profile.id,
+      date,
+      kind: 'sauna',
+      status: 'done',
+      // Absent rather than undefined: Firestore rejects an undefined field.
+      ...(minutes !== undefined && minutes > 0 ? { minutes } : {}),
+    }
+    await saveSession(session, true)
+    invalidateAllHistory()
+
+    return session
+  }
+
+  /** Takes a claim back. A sauna carries no program state, so nothing is restored. */
+  async function unclaimSauna(id: string): Promise<void> {
+    await deleteSession(id)
+    invalidateAllHistory()
+  }
+
+  /**
    * Marks the session done and, for a strength session, advances the program in
    * the same batch. Returns the document as it was written.
    */
@@ -450,5 +479,7 @@ export const useSessionsStore = defineStore('sessions', () => {
     startSession,
     finishSession,
     deleteLastSession,
+    claimSauna,
+    unclaimSauna,
   }
 })

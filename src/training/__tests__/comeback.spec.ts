@@ -67,6 +67,10 @@ function makeProfile(overrides: Partial<Profile> = {}): Profile {
   }
 }
 
+function sauna(date: string): Session {
+  return { id: `sauna-${date}`, uid: 'u1', date, kind: 'sauna', status: 'done', minutes: 20 }
+}
+
 describe('daysSinceLastSession', () => {
   it('measures from the most recent completed session', () => {
     const sessions = [cardio('c1', '2026-08-01', 30), strengthSession('s1', '2026-08-12')]
@@ -79,6 +83,13 @@ describe('daysSinceLastSession', () => {
 
     expect(daysSinceLastSession(sessions, TODAY)).toBe(12)
     expect(daysSinceLastSession([strengthSession('s3', '2026-09-01')], TODAY)).toBeNull()
+  })
+
+  it('does not let a claimed sauna close a gap in training', () => {
+    const sessions = [strengthSession('s1', '2026-08-12'), sauna('2026-08-23')]
+
+    expect(daysSinceLastSession(sessions, TODAY)).toBe(12)
+    expect(daysSinceLastSession([sauna('2026-08-23')], TODAY)).toBeNull()
   })
 
   it('is null without any history', () => {
@@ -99,6 +110,10 @@ describe('proposeComeback', () => {
 
   it('is null when the gap is under the configured threshold', () => {
     expect(proposeComeback(makeProfile(), [...sessions, strengthSession('s2', '2026-08-20')], TODAY)).toBeNull()
+  })
+
+  it('still offers a comeback after a gap that holds only a sauna', () => {
+    expect(proposeComeback(makeProfile(), [...sessions, sauna('2026-08-22')], TODAY)).not.toBeNull()
   })
 
   it('is null without any history to come back from', () => {

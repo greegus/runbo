@@ -7,10 +7,24 @@
  * still a rest day. See docs/proposals/sauna-on-rest-days.md.
  */
 
+import type { Session, TrainingKind } from '@/types'
 import { addDays } from '@/utils/date'
 
-/** Two a week is where the usual benefits are reported, and enough for a habit. */
-export const SAUNA_PER_WEEK = 2
+export function isSauna(session: Session): boolean {
+  return session.kind === 'sauna'
+}
+
+/**
+ * The sessions that are training. Every planner, stat and gap check takes its
+ * list through here, so a claimed sauna never makes a rest day a training day,
+ * never fills a slot, never extends a streak and never closes a gap.
+ */
+export function trainingSessions(sessions: Session[]): (Session & { kind: TrainingKind })[] {
+  return sessions.filter((session): session is Session & { kind: TrainingKind } => !isSauna(session))
+}
+
+/** One a week: a nudge towards a habit, not a second schedule to keep up with. */
+export const SAUNA_PER_WEEK = 1
 
 /** One day of a composed week, as much of it as the suggestion needs. */
 export interface SaunaDay {

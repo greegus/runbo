@@ -24,6 +24,7 @@
 import type { Profile, Session } from '@/types'
 import { addDays, daysBetween, isIsoDay, startOfWeekMonday } from '@/utils/date'
 
+import { trainingSessions } from './sauna'
 import { cardioCompletionRatio } from './stats'
 
 /** Days in a block. Deliberately its own constant: this is not a week length. */
@@ -135,7 +136,9 @@ function firstCompletedDate(sessions: Session[], todayIso: string): string | nul
  * so measuring a completed deload against the baseline would score it at ~0.5
  * and hold the block after it for no reason.
  */
-export function blockRatio(cardioTrack: CardioTrack, sessions: Session[]): number {
+export function blockRatio(cardioTrack: CardioTrack, allSessions: Session[]): number {
+  // A claimed sauna is not training: a day holding only one is a rest day.
+  const sessions = trainingSessions(allSessions)
   const start = blockWindowStart(cardioTrack)
   if (start === null) return 1
 
@@ -161,7 +164,13 @@ export function blockRatio(cardioTrack: CardioTrack, sessions: Session[]): numbe
  * Applying the action and asking again yields `idle` — that idempotence is what
  * lets a second tab, a reload or a duplicated snapshot re-run this safely.
  */
-export function cardioBlockAction(cardioTrack: CardioTrack, sessions: Session[], todayIso: string): CardioBlockAction {
+export function cardioBlockAction(
+  cardioTrack: CardioTrack,
+  allSessions: Session[],
+  todayIso: string,
+): CardioBlockAction {
+  // A claimed sauna is not training: a day holding only one is a rest day.
+  const sessions = trainingSessions(allSessions)
   const start = blockWindowStart(cardioTrack)
 
   if (start === null) {

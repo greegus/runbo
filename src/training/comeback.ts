@@ -12,6 +12,7 @@ import { addDays, daysBetween, WEEK_LENGTH } from '@/utils/date'
 
 import { blockAnchorOf } from './cardioBlock'
 import { evalContextFromSettings } from './plates'
+import { trainingSessions } from './sauna'
 import { weeklyCardioMinutes } from './stats'
 
 /** Working weights drop to this share of current; stages are kept. */
@@ -49,7 +50,9 @@ export interface ComebackProposal {
 const CARDIO_LOOKBACK_WEEKS = 8
 
 /** Days since the most recent completed session; `null` when there is none. */
-export function daysSinceLastSession(sessions: Session[], todayIso: string): number | null {
+export function daysSinceLastSession(allSessions: Session[], todayIso: string): number | null {
+  // A claimed sauna is not training: it does not close a gap in training.
+  const sessions = trainingSessions(allSessions)
   const dates = sessions
     .filter((session) => session.status === 'done' && session.date <= todayIso)
     .map((session) => session.date)
@@ -107,7 +110,9 @@ function lastCompletedCardioMinutes(sessions: Session[], todayIso: string): numb
  * The comeback offer, or `null` when the gap is shorter than the profile's
  * threshold (or when there is nothing to come back from).
  */
-export function proposeComeback(profile: Profile, sessions: Session[], todayIso: string): ComebackProposal | null {
+export function proposeComeback(profile: Profile, allSessions: Session[], todayIso: string): ComebackProposal | null {
+  // A claimed sauna is not training: it does not close a gap in training.
+  const sessions = trainingSessions(allSessions)
   const gap = daysSinceLastSession(sessions, todayIso)
   const threshold = profile.settings.comebackGapDays || DEFAULT_GAP_DAYS
   if (gap === null || gap < threshold) return null
