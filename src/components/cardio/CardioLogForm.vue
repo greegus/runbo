@@ -21,7 +21,6 @@ const emit = defineEmits<{
   'update:blockedReason': [reason: string | null]
 }>()
 
-
 /**
  * Coerced on the way in, not validated on the way out. An empty numeric input
  * emits `null` and a half-typed one can emit `NaN`; both mean "not recorded",
@@ -63,7 +62,7 @@ watch(
 <template>
   <div class="flex flex-col gap-6">
     <FormGroup
-      label="Minutes"
+      label="Duration"
       :error="blockedReason ?? false"
       hint="The only thing we need — everything else is extra."
     >
@@ -74,7 +73,7 @@ watch(
         <Input
           :id="id"
           :model-value="modelValue.minutes"
-          aria-label="Minutes"
+          aria-label="Duration in minutes"
           type="number"
           value-as-number
           inputmode="numeric"
@@ -85,7 +84,13 @@ watch(
           :invalid="blockedReason !== null"
           class="min-h-[48px] text-3xl font-semibold tabular-nums"
           @update:model-value="patch({ minutes: toOptionalNumber($event) })"
-        />
+        >
+          <template #suffix>
+            <span class="flex shrink-0 items-center pr-4 text-base font-normal text-ink-500" aria-hidden="true"
+              >min</span
+            >
+          </template>
+        </Input>
       </template>
     </FormGroup>
 
@@ -95,7 +100,7 @@ watch(
     </p>
     <p v-else-if="minutesDelta === 0" class="-mt-4 text-sm text-ink-500">Exactly the target.</p>
 
-    <FormGroup label="Distance" hint="In kilometres. Leave it empty if you did not measure it.">
+    <FormGroup label="Distance" hint="Leave it empty if you did not measure it.">
       <template #default="{ id }">
         <Input
           :id="id"
@@ -110,16 +115,22 @@ watch(
           :disabled="busy"
           class="min-h-[48px] text-lg tabular-nums"
           @update:model-value="patch({ distanceKm: toOptionalNumber($event) })"
-        />
+        >
+          <template #suffix>
+            <span class="flex shrink-0 items-center pr-4 text-base font-normal text-ink-500" aria-hidden="true"
+              >km</span
+            >
+          </template>
+        </Input>
       </template>
     </FormGroup>
 
-    <FormGroup label="Average heart rate" hint="In bpm, from your watch or strap. Optional.">
+    <FormGroup label="Average heart rate" hint="From your watch or strap. Optional.">
       <template #default="{ id }">
         <Input
           :id="id"
           :model-value="modelValue.avgHr"
-          aria-label="Average heart rate"
+          aria-label="Average heart rate in bpm"
           type="number"
           value-as-number
           inputmode="numeric"
@@ -129,7 +140,13 @@ watch(
           :disabled="busy"
           class="min-h-[48px] text-lg tabular-nums"
           @update:model-value="patch({ avgHr: toOptionalNumber($event) })"
-        />
+        >
+          <template #suffix>
+            <span class="flex shrink-0 items-center pr-4 text-base font-normal text-ink-500" aria-hidden="true"
+              >bpm</span
+            >
+          </template>
+        </Input>
       </template>
     </FormGroup>
 
