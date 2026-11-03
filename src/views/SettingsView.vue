@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Button, Card, FormGroup, Icon, Input, useSubmitAction } from 'vuiii'
+import { useRoute, useRouter } from 'vue-router'
+import { Button, Card, FormGroup, Icon, Input, TabsNav, useSubmitAction } from 'vuiii'
 
 import AvailabilityForm from '@/components/settings/AvailabilityForm.vue'
 import CardioForm from '@/components/settings/CardioForm.vue'
@@ -14,6 +15,8 @@ import { useProfileStore } from '@/stores/profile'
 
 const authStore = useAuthStore()
 const profileStore = useProfileStore()
+const route = useRoute()
+const router = useRouter()
 
 const profile = computed(() => profileStore.profile)
 
@@ -281,6 +284,58 @@ const programSummary = computed(() => {
   return { total: keys.length, asking: asking.length }
 })
 
+/**
+ * Eight cards stacked made the page a long scroll to reach the one section you
+ * came for. Grouped by what the athlete is adjusting, each tab is a screen or
+ * two at most.
+ */
+type SettingsTab = 'strength' | 'cardio' | 'schedule' | 'account'
+
+const TAB_LABELS: Record<SettingsTab, string> = {
+  strength: 'Strength',
+  cardio: 'Cardio',
+  schedule: 'Schedule',
+  account: 'Account',
+}
+
+function isSettingsTab(value: unknown): value is SettingsTab {
+  return typeof value === 'string' && value in TAB_LABELS
+}
+
+/**
+ * Kept in the query, not in a ref: "Edit program" leaves for the program editor,
+ * and coming back must land on Strength again rather than on the first tab.
+ */
+const activeTab = computed<SettingsTab>({
+  get: () => (isSettingsTab(route.query.tab) ? route.query.tab : 'strength'),
+  set: (tab) => {
+    void router.replace({ query: { ...route.query, tab } })
+  },
+})
+
+const tabDirty = computed<Record<SettingsTab, boolean>>(() => ({
+  strength: gymDirty.value || timersDirty.value,
+  cardio: cardioDirty.value || zonesDirty.value,
+  schedule: availabilityDirty.value,
+  account: false,
+}))
+
+// A hidden tab hides its "Unsaved changes" line too, so the strip carries the
+// mark: an edit left behind on another tab must not look like a saved one.
+const tabs = computed(() =>
+  (Object.keys(TAB_LABELS) as SettingsTab[]).map((key) => ({
+    key,
+    label: tabDirty.value[key] ? `${TAB_LABELS[key]} •` : TAB_LABELS[key],
+  })),
+)
+
+const selectedTab = computed<string | undefined>({
+  get: () => activeTab.value,
+  set: (key) => {
+    if (isSettingsTab(key)) activeTab.value = key
+  },
+})
+
 function setTimer(tier: 't1' | 't2' | 't3', value: unknown): void {
   if (!timersDraft.value) return
 
@@ -318,259 +373,301 @@ function setComebackGap(value: unknown): void {
     <p v-if="!profile" class="py-8 text-center text-ink-500" role="status">Loading…</p>
 
     <template v-else>
-      <Card title="Gym">
-        <div class="flex flex-col gap-6">
-          <GymForm v-if="gymDraft" v-model="gymDraft" v-model:valid="gymValid" />
+      <TabsNav
+        v-model="selectedTab"
+        :tabs="tabs"
+        id-base="settings"
+        class="-mx-4 scroll-px-4 overflow-x-auto px-4 [&_[role=tab]]:min-h-[48px]"
+        aria-label="Settings sections"
+      />
 
-          <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-            <p class="text-sm" role="status">
-              <span v-if="gymDirty" class="text-accent-600">Unsaved changes</span>
-              <span v-else-if="gymSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
-                <Icon name="check" />
-                Saved
-              </span>
+      <!-- v-show, not v-if: the forms keep state of their own (half-typed
+           fields, open pickers), and switching tabs must not throw it away. -->
+      <div
+        v-show="activeTab === 'strength'"
+        id="settings-panel-strength"
+        role="tabpanel"
+        aria-labelledby="settings-tab-strength"
+        class="flex flex-col gap-4"
+      >
+        <Card title="Gym">
+          <div class="flex flex-col gap-6">
+            <GymForm v-if="gymDraft" v-model="gymDraft" v-model:valid="gymValid" />
+
+            <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
+              <p class="text-sm" role="status">
+                <span v-if="gymDirty" class="text-accent-600">Unsaved changes</span>
+                <span v-else-if="gymSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
+                  <Icon name="check" />
+                  Saved
+                </span>
+              </p>
+              <Button
+                color="primary"
+                label="Save"
+                size="large"
+                class="min-h-[48px]"
+                :disabled="!gymDirty || !gymValid"
+                :loading="gymSave.isSubmitting.value"
+                @click="gymSave.submit()"
+              />
+            </div>
+          </div>
+        </Card>
+
+        <Card title="Program">
+          <div class="flex flex-col gap-4">
+            <p class="text-sm text-ink-500">
+              {{ programSummary.total }} lifts in your program,
+              <template v-if="programSummary.asking > 0">
+                {{ programSummary.asking }} still waiting for a first weight — we'll ask you at the gym.
+              </template>
+              <template v-else>all with a working weight.</template>
             </p>
+
             <Button
               color="primary"
-              label="Save"
+              label="Edit program"
+              variant="outlined"
               size="large"
+              block
               class="min-h-[48px]"
-              :disabled="!gymDirty || !gymValid"
-              :loading="gymSave.isSubmitting.value"
-              @click="gymSave.submit()"
+              :to="{ name: 'program' }"
             />
           </div>
-        </div>
-      </Card>
+        </Card>
 
-      <Card title="Program">
-        <div class="flex flex-col gap-4">
-          <p class="text-sm text-ink-500">
-            {{ programSummary.total }} lifts in your program,
-            <template v-if="programSummary.asking > 0">
-              {{ programSummary.asking }} still waiting for a first weight — we'll ask you at the gym.
-            </template>
-            <template v-else>all with a working weight.</template>
-          </p>
+        <Card title="Rest timers">
+          <div class="flex flex-col gap-6">
+            <p class="text-sm text-ink-500">How long the timer runs between sets, per tier. Seconds.</p>
 
+            <div class="grid grid-cols-3 gap-3">
+              <FormGroup v-if="timersDraft" label="T1">
+                <template #default="{ id }">
+                  <Input
+                    :id="id"
+                    type="number"
+                    value-as-number
+                    inputmode="numeric"
+                    min="0"
+                    step="15"
+                    size="large"
+                    class="min-h-[48px] text-xl font-semibold tabular-nums"
+                    :model-value="timersDraft.restTimers.t1"
+                    @update:model-value="setTimer('t1', $event)"
+                  />
+                </template>
+              </FormGroup>
+
+              <FormGroup v-if="timersDraft" label="T2">
+                <template #default="{ id }">
+                  <Input
+                    :id="id"
+                    type="number"
+                    value-as-number
+                    inputmode="numeric"
+                    min="0"
+                    step="15"
+                    size="large"
+                    class="min-h-[48px] text-xl font-semibold tabular-nums"
+                    :model-value="timersDraft.restTimers.t2"
+                    @update:model-value="setTimer('t2', $event)"
+                  />
+                </template>
+              </FormGroup>
+
+              <FormGroup v-if="timersDraft" label="T3">
+                <template #default="{ id }">
+                  <Input
+                    :id="id"
+                    type="number"
+                    value-as-number
+                    inputmode="numeric"
+                    min="0"
+                    step="15"
+                    size="large"
+                    class="min-h-[48px] text-xl font-semibold tabular-nums"
+                    :model-value="timersDraft.restTimers.t3"
+                    @update:model-value="setTimer('t3', $event)"
+                  />
+                </template>
+              </FormGroup>
+            </div>
+
+            <FormGroup
+              v-if="timersDraft"
+              label="Comeback after a break of"
+              hint="Days away before we offer an easier session to come back on."
+              :error="timersDraft.comebackGapDays < 1 ? 'Enter at least one day.' : ''"
+            >
+              <template #default="{ id }">
+                <Input
+                  :id="id"
+                  type="number"
+                  value-as-number
+                  inputmode="numeric"
+                  min="1"
+                  step="1"
+                  size="large"
+                  class="min-h-[48px] text-xl font-semibold tabular-nums"
+                  :invalid="timersDraft.comebackGapDays < 1"
+                  :model-value="timersDraft.comebackGapDays"
+                  @update:model-value="setComebackGap($event)"
+                />
+              </template>
+            </FormGroup>
+
+            <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
+              <p class="text-sm" role="status">
+                <span v-if="timersDirty" class="text-accent-600">Unsaved changes</span>
+                <span v-else-if="timersSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
+                  <Icon name="check" />
+                  Saved
+                </span>
+              </p>
+              <Button
+                color="primary"
+                label="Save"
+                size="large"
+                class="min-h-[48px]"
+                :disabled="!timersDirty || !timersValid"
+                :loading="timersSave.isSubmitting.value"
+                @click="timersSave.submit()"
+              />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div
+        v-show="activeTab === 'cardio'"
+        id="settings-panel-cardio"
+        role="tabpanel"
+        aria-labelledby="settings-tab-cardio"
+        class="flex flex-col gap-4"
+      >
+        <Card title="Cardio">
+          <div class="flex flex-col gap-6">
+            <CardioForm v-if="cardioDraft" v-model="cardioDraft" v-model:valid="cardioValid" />
+
+            <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
+              <p class="text-sm" role="status">
+                <span v-if="cardioDirty" class="text-accent-600">Unsaved changes</span>
+                <span v-else-if="cardioSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
+                  <Icon name="check" />
+                  Saved
+                </span>
+              </p>
+              <Button
+                color="primary"
+                label="Save"
+                size="large"
+                class="min-h-[48px]"
+                :disabled="!cardioDirty || !cardioValid"
+                :loading="cardioSave.isSubmitting.value"
+                @click="cardioSave.submit()"
+              />
+            </div>
+          </div>
+        </Card>
+
+        <Card title="Zones">
+          <div class="flex flex-col gap-6">
+            <!-- Bound to the cardio DRAFT's modalities, not the saved ones: a sport
+               ticked above appears here immediately, and the form prunes the
+               paces of sports that are no longer selected. -->
+            <ZonesForm
+              v-if="cardioDraft"
+              v-model="zonesValue"
+              v-model:draft="zonesDraft"
+              :modalities="cardioDraft.modalities"
+            />
+
+            <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
+              <p class="text-sm" role="status">
+                <span v-if="zonesDirty" class="text-accent-600">Unsaved changes</span>
+                <span v-else-if="zonesSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
+                  <Icon name="check" />
+                  Saved
+                </span>
+              </p>
+              <Button
+                color="primary"
+                label="Save"
+                size="large"
+                class="min-h-[48px]"
+                :disabled="!zonesDirty"
+                :loading="zonesSave.isSubmitting.value"
+                @click="zonesSave.submit()"
+              />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div
+        v-show="activeTab === 'schedule'"
+        id="settings-panel-schedule"
+        role="tabpanel"
+        aria-labelledby="settings-tab-schedule"
+        class="flex flex-col gap-4"
+      >
+        <Card title="Availability">
+          <div class="flex flex-col gap-6">
+            <AvailabilityForm v-if="availabilityDraft" v-model="availabilityDraft" v-model:valid="availabilityValid" />
+
+            <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
+              <p class="text-sm" role="status">
+                <span v-if="availabilityDirty" class="text-accent-600">Unsaved changes</span>
+                <span v-else-if="availabilitySave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
+                  <Icon name="check" />
+                  Saved
+                </span>
+              </p>
+              <Button
+                color="primary"
+                label="Save"
+                size="large"
+                class="min-h-[48px]"
+                :disabled="!availabilityDirty || !availabilityValid"
+                :loading="availabilitySave.isSubmitting.value"
+                @click="availabilitySave.submit()"
+              />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div
+        v-show="activeTab === 'account'"
+        id="settings-panel-account"
+        role="tabpanel"
+        aria-labelledby="settings-tab-account"
+        class="flex flex-col gap-4"
+      >
+        <!-- Named, but deliberately not built: a disabled toggle here would read
+           as a feature that is merely off. -->
+        <Card title="Strava and notifications">
+          <p class="text-sm text-ink-500">Connecting Strava and turning on reminders arrive in a later phase.</p>
+        </Card>
+
+        <Card title="Export your data">
+          <ExportDataCard />
+        </Card>
+
+        <Card title="Account">
           <Button
-            color="primary"
-            label="Edit program"
+            label="Sign out"
+            color="secondary"
             variant="outlined"
             size="large"
             block
             class="min-h-[48px]"
-            :to="{ name: 'program' }"
+            :loading="isSigningOut"
+            @click="signOut()"
           />
-        </div>
-      </Card>
-
-      <Card title="Rest timers">
-        <div class="flex flex-col gap-6">
-          <p class="text-sm text-ink-500">How long the timer runs between sets, per tier. Seconds.</p>
-
-          <div class="grid grid-cols-3 gap-3">
-            <FormGroup v-if="timersDraft" label="T1">
-              <template #default="{ id }">
-                <Input
-                  :id="id"
-                  type="number"
-                  value-as-number
-                  inputmode="numeric"
-                  min="0"
-                  step="15"
-                  size="large"
-                  class="min-h-[48px] text-xl font-semibold tabular-nums"
-                  :model-value="timersDraft.restTimers.t1"
-                  @update:model-value="setTimer('t1', $event)"
-                />
-              </template>
-            </FormGroup>
-
-            <FormGroup v-if="timersDraft" label="T2">
-              <template #default="{ id }">
-                <Input
-                  :id="id"
-                  type="number"
-                  value-as-number
-                  inputmode="numeric"
-                  min="0"
-                  step="15"
-                  size="large"
-                  class="min-h-[48px] text-xl font-semibold tabular-nums"
-                  :model-value="timersDraft.restTimers.t2"
-                  @update:model-value="setTimer('t2', $event)"
-                />
-              </template>
-            </FormGroup>
-
-            <FormGroup v-if="timersDraft" label="T3">
-              <template #default="{ id }">
-                <Input
-                  :id="id"
-                  type="number"
-                  value-as-number
-                  inputmode="numeric"
-                  min="0"
-                  step="15"
-                  size="large"
-                  class="min-h-[48px] text-xl font-semibold tabular-nums"
-                  :model-value="timersDraft.restTimers.t3"
-                  @update:model-value="setTimer('t3', $event)"
-                />
-              </template>
-            </FormGroup>
-          </div>
-
-          <FormGroup
-            v-if="timersDraft"
-            label="Comeback after a break of"
-            hint="Days away before we offer an easier session to come back on."
-            :error="timersDraft.comebackGapDays < 1 ? 'Enter at least one day.' : ''"
-          >
-            <template #default="{ id }">
-              <Input
-                :id="id"
-                type="number"
-                value-as-number
-                inputmode="numeric"
-                min="1"
-                step="1"
-                size="large"
-                class="min-h-[48px] text-xl font-semibold tabular-nums"
-                :invalid="timersDraft.comebackGapDays < 1"
-                :model-value="timersDraft.comebackGapDays"
-                @update:model-value="setComebackGap($event)"
-              />
-            </template>
-          </FormGroup>
-
-          <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-            <p class="text-sm" role="status">
-              <span v-if="timersDirty" class="text-accent-600">Unsaved changes</span>
-              <span v-else-if="timersSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
-                <Icon name="check" />
-                Saved
-              </span>
-            </p>
-            <Button
-              color="primary"
-              label="Save"
-              size="large"
-              class="min-h-[48px]"
-              :disabled="!timersDirty || !timersValid"
-              :loading="timersSave.isSubmitting.value"
-              @click="timersSave.submit()"
-            />
-          </div>
-        </div>
-      </Card>
-
-      <Card title="Cardio">
-        <div class="flex flex-col gap-6">
-          <CardioForm v-if="cardioDraft" v-model="cardioDraft" v-model:valid="cardioValid" />
-
-          <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-            <p class="text-sm" role="status">
-              <span v-if="cardioDirty" class="text-accent-600">Unsaved changes</span>
-              <span v-else-if="cardioSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
-                <Icon name="check" />
-                Saved
-              </span>
-            </p>
-            <Button
-              color="primary"
-              label="Save"
-              size="large"
-              class="min-h-[48px]"
-              :disabled="!cardioDirty || !cardioValid"
-              :loading="cardioSave.isSubmitting.value"
-              @click="cardioSave.submit()"
-            />
-          </div>
-        </div>
-      </Card>
-
-      <Card title="Zones">
-        <div class="flex flex-col gap-6">
-          <!-- Bound to the cardio DRAFT's modalities, not the saved ones: a sport
-               ticked above appears here immediately, and the form prunes the
-               paces of sports that are no longer selected. -->
-          <ZonesForm
-            v-if="cardioDraft"
-            v-model="zonesValue"
-            v-model:draft="zonesDraft"
-            :modalities="cardioDraft.modalities"
-          />
-
-          <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-            <p class="text-sm" role="status">
-              <span v-if="zonesDirty" class="text-accent-600">Unsaved changes</span>
-              <span v-else-if="zonesSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
-                <Icon name="check" />
-                Saved
-              </span>
-            </p>
-            <Button
-              color="primary"
-              label="Save"
-              size="large"
-              class="min-h-[48px]"
-              :disabled="!zonesDirty"
-              :loading="zonesSave.isSubmitting.value"
-              @click="zonesSave.submit()"
-            />
-          </div>
-        </div>
-      </Card>
-
-      <Card title="Availability">
-        <div class="flex flex-col gap-6">
-          <AvailabilityForm v-if="availabilityDraft" v-model="availabilityDraft" v-model:valid="availabilityValid" />
-
-          <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-            <p class="text-sm" role="status">
-              <span v-if="availabilityDirty" class="text-accent-600">Unsaved changes</span>
-              <span v-else-if="availabilitySave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
-                <Icon name="check" />
-                Saved
-              </span>
-            </p>
-            <Button
-              color="primary"
-              label="Save"
-              size="large"
-              class="min-h-[48px]"
-              :disabled="!availabilityDirty || !availabilityValid"
-              :loading="availabilitySave.isSubmitting.value"
-              @click="availabilitySave.submit()"
-            />
-          </div>
-        </div>
-      </Card>
-
-      <!-- Named, but deliberately not built: a disabled toggle here would read
-           as a feature that is merely off. -->
-      <Card title="Strava and notifications">
-        <p class="text-sm text-ink-500">Connecting Strava and turning on reminders arrive in a later phase.</p>
-      </Card>
-
-      <Card title="Export your data">
-        <ExportDataCard />
-      </Card>
-
-      <Card title="Account">
-        <Button
-          label="Sign out"
-          color="secondary"
-          variant="outlined"
-          size="large"
-          block
-          class="min-h-[48px]"
-          :loading="isSigningOut"
-          @click="signOut()"
-        />
-      </Card>
+        </Card>
+      </div>
     </template>
   </section>
 </template>
