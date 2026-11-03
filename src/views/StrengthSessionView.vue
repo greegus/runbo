@@ -672,7 +672,8 @@ onBeforeRouteLeave(() => {
              on the bar around it: that way the whole row scrolls, and the
              first and last tab still rest a gutter away from the screen edge.
              `scroll-px-4` keeps a tab brought into view off the edge too. -->
-        <div class="sticky top-0 z-10 mt-4 border-b border-ink-200 bg-white">
+        <!-- No border of its own: TabsNav draws the line under the strip. -->
+        <div class="sticky top-0 z-10 mt-4 bg-white">
           <TabsNav
             v-model="selectedTab"
             :tabs="tabs"
