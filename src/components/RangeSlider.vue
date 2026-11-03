@@ -29,6 +29,11 @@ const emit = defineEmits<{
  * release (`change`) is emitted: the parent clamps other fields against this
  * one, so emitting every step a drag passes over would let a drag that merely
  * dips to 1 on its way back permanently lower whatever is capped by it.
+ *
+ * The input's `:value` follows it too. Every step repaints the fill, and on a
+ * re-render Vue writes `:value` back into the DOM whenever the two differ —
+ * bound to `modelValue`, a tap on the track snapped the thumb back to the old
+ * value while the fill and the number showed the new one.
  */
 const dragging = ref<number | null>(null)
 
@@ -95,7 +100,7 @@ function onClick(event: Event): void {
       :min="min"
       :max="max"
       step="1"
-      :value="modelValue ?? resting"
+      :value="shown ?? resting"
       :aria-label="label"
       :aria-valuetext="ariaValueText"
       @input="onInput"
