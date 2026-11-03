@@ -20,7 +20,7 @@ describe('emptyCardioLogDraft', () => {
       minutes: 40,
       distanceKm: null,
       avgHr: null,
-      rpe: null,
+      rpe: 3,
       notes: '',
     })
   })
@@ -32,14 +32,18 @@ describe('emptyCardioLogDraft', () => {
 })
 
 describe('fromSession', () => {
-  it('rehydrates recorded values and maps missing ones to null', () => {
+  it('rehydrates recorded values, maps missing ones to null and RPE to its default', () => {
     expect(fromSession(session({ minutes: 42, distanceKm: 8.1, notes: 'windy' }))).toEqual({
       minutes: 42,
       distanceKm: 8.1,
       avgHr: null,
-      rpe: null,
+      rpe: 3,
       notes: 'windy',
     })
+  })
+
+  it('keeps a recorded RPE', () => {
+    expect(fromSession(session({ minutes: 42, rpe: 7 })).rpe).toBe(7)
   })
 })
 

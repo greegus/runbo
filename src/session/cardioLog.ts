@@ -21,6 +21,13 @@ function optionalNumber(value: number | null | undefined): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 
+/**
+ * Every log carries an effort. It starts at 3 — conversational, what most
+ * sessions are — so an easy run is logged without touching the slider, and a
+ * hard one is a short drag up rather than a choice from nothing.
+ */
+export const DEFAULT_RPE = 3
+
 export function emptyCardioLogDraft(prescription?: CardioPrescription): CardioLogDraft {
   // Minutes seeded from the target: most sessions are done as prescribed, and
   // retyping a number you were just shown is pure friction.
@@ -30,7 +37,7 @@ export function emptyCardioLogDraft(prescription?: CardioPrescription): CardioLo
     minutes: minutes !== null && minutes > 0 ? minutes : null,
     distanceKm: null,
     avgHr: null,
-    rpe: null,
+    rpe: DEFAULT_RPE,
     notes: '',
   }
 }
@@ -40,15 +47,16 @@ export function fromSession(session: Session): CardioLogDraft {
     minutes: optionalNumber(session.minutes),
     distanceKm: optionalNumber(session.distanceKm),
     avgHr: optionalNumber(session.avgHr),
-    rpe: optionalNumber(session.rpe),
+    rpe: optionalNumber(session.rpe) ?? DEFAULT_RPE,
     notes: session.notes ?? '',
   }
 }
 
 /**
  * The ONLY blocking rule: an athlete who ran without a watch still logged a
- * session, so distance, HR, RPE and notes are never required. Minutes are,
- * because every cardio stat sums `Session.minutes`.
+ * session, so distance, HR and notes are never required. Minutes are, because
+ * every cardio stat sums `Session.minutes`; RPE always has a value, since the
+ * draft starts at `DEFAULT_RPE`.
  */
 export function cardioLogBlockedReason(draft: CardioLogDraft): string | null {
   const minutes = optionalNumber(draft.minutes)
