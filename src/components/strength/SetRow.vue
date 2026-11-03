@@ -88,7 +88,7 @@ function onStep(delta: number): void {
     <button
       v-if="!set.isAmrap"
       type="button"
-      class="flex w-full min-h-[56px] items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
+      class="flex w-full min-h-[56px] items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600"
       :class="[
         set.phase === 'done' ? 'border-accent-600 bg-accent-600 text-white' : '',
         set.phase === 'untouched' ? 'border-ink-300 bg-white text-ink-900' : '',
@@ -145,7 +145,7 @@ function onStep(delta: number): void {
          reach 12 is absurd. -->
     <div
       v-else
-      class="rounded-xl border-2 px-4 py-3"
+      class="rounded-xl border px-4 py-3"
       :class="[
         set.phase === 'done' ? 'border-accent-600 bg-accent-600 text-white' : '',
         set.phase === 'untouched' ? 'border-ink-300 bg-white' : '',
@@ -179,7 +179,7 @@ function onStep(delta: number): void {
       <div class="mt-3 flex items-center justify-between gap-3">
         <button
           type="button"
-          class="flex min-h-[48px] min-w-[48px] items-center justify-center rounded-lg border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+          class="flex min-h-[48px] min-w-[48px] items-center justify-center rounded-lg border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
           :class="
             set.phase === 'done'
               ? 'border-white/50 text-white focus-visible:outline-white'
@@ -219,7 +219,7 @@ function onStep(delta: number): void {
 
         <button
           type="button"
-          class="flex min-h-[48px] min-w-[48px] items-center justify-center rounded-lg border-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+          class="flex min-h-[48px] min-w-[48px] items-center justify-center rounded-lg border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
           :class="
             set.phase === 'done'
               ? 'border-white/50 text-white focus-visible:outline-white'
