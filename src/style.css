@@ -56,6 +56,10 @@
      tap target the hand-rolled buttons use. */
   --vuiii-field-height: 3rem;
 
+  /* The active tab's underline at 3px: at 2px it was the thinnest line on a
+     screen read at arm's length, and the only mark of which lift is open. */
+  --vuiii-tabs-indicator-size: 3px;
+
   /* vuiii buttons take the shape of the hand-rolled ones ("Start session",
      "Claim today"): rounded-xl, semibold, text-base / text-lg when large. */
   --vuiii-button-fontWeight: 600;
