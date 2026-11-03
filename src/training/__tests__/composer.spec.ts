@@ -558,7 +558,10 @@ describe('replacementOptions / replaceToday', () => {
   it('offers the due strength day and every later cardio session, never today itself', () => {
     const options = replacementOptions(week, TUE, base)
 
+    // Monday's lift was missed, so A1 stands twice: owed by the week, and held
+    // by Wednesday.
     expect(options).toEqual([
+      { item: { kind: 'strength', programDay: 'A1' }, from: null },
       { item: { kind: 'strength', programDay: 'A1' }, from: WED },
       { item: { kind: 'cardio', prescription: long(60) }, from: SAT },
     ])
@@ -567,8 +570,31 @@ describe('replacementOptions / replaceToday', () => {
   it('never offers a strength day past the one the rotation is on', () => {
     // B1 on Friday would skip A1, and the cursor would never come back for it.
     const options = replacementOptions(week, TUE, base)
+    const strength = options.filter((option) => option.item.kind === 'strength')
 
-    expect(options.filter((option) => option.item.kind === 'strength')).toHaveLength(1)
+    expect(strength.length).toBeGreaterThan(0)
+    expect(strength.every((option) => option.item.kind === 'strength' && option.item.programDay === 'A1')).toBe(true)
+  })
+
+  it("catches up the week's missed lift on a cardio day, and the rotation moves on", () => {
+    const replaced = replaceToday(week, TUE, base, optionFrom(replacementOptions(week, TUE, base), null, 'strength'))
+
+    // Moving Wednesday's A1 would leave the week at two lifts; the owed one
+    // brings back the third, and the cardio it displaced is not dropped.
+    expect(itemAt(replaced, TUE)).toEqual({ kind: 'strength', programDay: 'A1' })
+    expect(strengthDays(replaced)).toEqual(['A1', 'B1', 'A2'])
+    expect(replaced.explanations[0]).toContain('owed this week')
+    expect(replaced.explanations[0]).toContain('nothing is dropped')
+  })
+
+  it('offers no owed lift on a cardio day once the week is not behind', () => {
+    const onTrack = input()
+    const onTrackWeek = composeWeek(onTrack)
+    const options = replacementOptions(onTrackWeek, TUE, onTrack)
+
+    expect(itemAt(onTrackWeek, TUE)?.kind).toBe('cardio')
+
+    expect(options.filter((option) => option.from === null && option.item.kind === 'strength')).toEqual([])
   })
 
   it('swaps cardio for strength by trading the two days, so nothing is doubled', () => {

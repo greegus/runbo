@@ -755,8 +755,8 @@ function describeItem(item: PlannedItem): string {
  * days in calendar order. Offering Friday's A2 on a Monday that owes A1 would
  * let one tap skip two program days, and the cursor — which follows the program
  * day actually logged — would never come back for them. That one workout can
- * stand twice on a rest day the week is behind on: added as owed work, or
- * moved from the later day that holds it.
+ * stand twice on a day the week is behind on: added as owed work, or moved
+ * from the later day that holds it.
  *
  * Cardio is offered per prescription: every session still planned later in the
  * week, plus the ones no day holds any more. Identical prescriptions collapse
@@ -781,12 +781,15 @@ export function replacementOptions(week: ComposedWeek, dateIso: string, input: C
     // The week still owes a strength day: one was missed earlier, or none is
     // left to hold it. `replaceToday` releases every earlier unlogged day, so
     // this day becomes the first free strength day and the cursor hands it
-    // exactly the day it points at. A rest day is offered it even when a later
-    // day holds the same workout: taking the owed day ADDS a training day and
-    // catches the week up, where moving the later one only reorders it. When
+    // exactly the day it points at. It is offered even when a later day holds
+    // the same workout: taking the owed day catches the week up — the later
+    // day moves on to the next program day — where moving the later one only
+    // reorders the week and leaves it a lift short. That holds on a cardio day
+    // too: yesterday's missed lift is exactly what an athlete looks for there,
+    // and today's cardio goes back to the pool rather than being dropped. When
     // the week's lifting is covered nothing is added: that would be a bonus
     // session, not outstanding work.
-    if (countKind(week, 'strength') < budget.strengthDays && (day.planned === null || !due)) {
+    if (countKind(week, 'strength') < budget.strengthDays) {
       const programDay = input.programDays[input.rotationCursor % input.programDays.length]
       options.push({ item: { kind: 'strength', programDay }, from: null })
     }
