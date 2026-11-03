@@ -259,7 +259,9 @@ watch(
         </template>
       </FormGroup>
 
-      <div v-if="hrPreview" class="rounded-lg border border-ink-200 p-4">
+      <!-- Read-only previews: a grey panel, so they do not pass for one more
+           field to fill in. -->
+      <div v-if="hrPreview" class="rounded-lg border border-ink-200 bg-ink-50 p-4">
         <h3 class="text-sm font-semibold text-ink-900">Your heart-rate zones</h3>
         <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <template v-for="zone in hrPreview" :key="zone.zone">
@@ -416,7 +418,7 @@ watch(
         </FormGroup>
       </div>
 
-      <div v-if="pacePreview(modality)" class="rounded-lg border border-ink-200 p-4">
+      <div v-if="pacePreview(modality)" class="rounded-lg border border-ink-200 bg-ink-50 p-4">
         <h3 class="text-sm font-semibold text-ink-900">Your {{ PACE_COPY[modality].title.toLowerCase() }} zones</h3>
         <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <template v-for="zone in pacePreview(modality)" :key="zone.zone">
@@ -432,7 +434,7 @@ watch(
 
     <!-- The honest fallback: the domain always has an RPE cue, so a skipped
          step is a complete configuration rather than a missing one. -->
-    <section v-if="!hasAnyZone" class="rounded-lg border border-ink-200 bg-ink-50 p-4">
+    <section v-if="!hasAnyZone" class="rounded-lg bg-ink-50 p-4">
       <h2 class="text-sm font-semibold text-ink-900">Without zones, sessions look like this</h2>
       <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
         <template v-for="zone in ZONES" :key="zone">
