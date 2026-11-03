@@ -192,6 +192,15 @@ function showProjection(): void {
   }
 }
 
+/**
+ * Every set of the lift on screen is logged (or skipped). Until then "Next" is
+ * outlined — moving on is allowed, just not the obvious thing to do yet.
+ */
+const activeLiftDone = computed(() => {
+  const sets = logged.value[activeIndex.value] ?? []
+  return sets.length > 0 && loggedCount(sets) === sets.length
+})
+
 function goToNext(): void {
   const next = nextExercise.value
   if (next) activeKey.value = next.key
@@ -684,18 +693,6 @@ onBeforeRouteLeave(() => {
             @show-projection="showProjection()"
           />
 
-          <!-- The obvious next move once a lift is done, so finishing one does
-               not send the athlete back to the strip to hunt for the next. -->
-          <Button
-            color="primary"
-            v-if="nextExercise"
-            class="mt-4 min-h-[48px]"
-            variant="outlined"
-            block
-            :label="`Next: ${nextExercise.tier ? `T${nextExercise.tier} ` : ''}${nextExercise.name}`"
-            @click="goToNext()"
-          />
-
           <div class="mt-6 flex justify-center">
             <Button
               label="Abandon session"
@@ -744,6 +741,21 @@ onBeforeRouteLeave(() => {
             @click="router.replace({ name: 'today' })"
           />
         </template>
+
+        <!-- The bar carries the obvious next move: the next lift until the last
+             one is on screen, and only then "Finish session". Offered on every
+             lift, finishing was a tap away from ending a session two lifts
+             early; and the next lift no longer needs a hunt through the strip. -->
+        <Button
+          v-else-if="plan && plan.diagnostics.length === 0 && nextExercise"
+          color="primary"
+          size="large"
+          block
+          class="min-h-[56px]"
+          :variant="activeLiftDone ? 'filled' : 'outlined'"
+          :label="`Next: ${nextExercise.name}`"
+          @click="goToNext()"
+        />
 
         <template v-else-if="plan && plan.diagnostics.length === 0">
           <p
