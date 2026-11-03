@@ -3,6 +3,8 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { Button, FormGroup, Icon, Input, RadioButtonGroup } from 'vuiii'
 
 import CountStepper from '@/components/CountStepper.vue'
+import InputUnit from '@/components/InputUnit.vue'
+import { PLATE_PAINT } from '@/components/strength/platePaint'
 import PlateStack from '@/components/strength/PlateStack.vue'
 import { smallestStep } from '@/liftoscript/weight'
 import {
@@ -42,20 +44,9 @@ const COLOR_NAMES: Record<PlateColor, string> = {
   black: 'Black',
 }
 
-/** A colour swatch, in the button and in the picker: the paint, outlined where it is pale. */
-const SWATCH_CLASSES: Record<PlateColor, string> = {
-  red: 'bg-red-600',
-  blue: 'bg-blue-600',
-  yellow: 'bg-yellow-400',
-  green: 'bg-green-700',
-  grey: 'bg-ink-500',
-  'pale-red': 'bg-red-200 ring-1 ring-red-300 ring-inset',
-  'pale-blue': 'bg-blue-200 ring-1 ring-blue-300 ring-inset',
-  'pale-yellow': 'bg-yellow-100 ring-1 ring-yellow-300 ring-inset',
-  'pale-green': 'bg-green-200 ring-1 ring-green-300 ring-inset',
-  'pale-grey': 'bg-ink-100 ring-1 ring-ink-300 ring-inset',
-  silver: 'bg-ink-300 ring-1 ring-ink-400 ring-inset',
-  black: 'bg-ink-800',
+/** A swatch of a plate colour, in the button and in the picker: the disc's own paint and rim. */
+function swatchClass(color: PlateColor): string {
+  return `${PLATE_PAINT[color].fill} ${PLATE_PAINT[color].rim} ring-1 ring-inset`
 }
 
 /** A weight that needs most of the inventory, so the check panel is informative. */
@@ -236,11 +227,7 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
       </div>
     </div>
 
-    <FormGroup
-      label="Barbell weight"
-      :error="barbellError ?? false"
-      hint="Most Olympic bars are 20 kg / 45 lb."
-    >
+    <FormGroup label="Barbell weight" :error="barbellError ?? false" hint="Most Olympic bars are 20 kg / 45 lb.">
       <template #default="{ id }">
         <Input
           :id="id"
@@ -257,9 +244,7 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
           @update:model-value="update({ barbellWeight: toNumber($event) })"
         >
           <template #suffix>
-            <span class="flex shrink-0 items-center pr-4 text-base text-ink-500" aria-hidden="true">
-              {{ modelValue.units }}
-            </span>
+            <InputUnit :unit="modelValue.units" />
           </template>
         </Input>
       </template>
@@ -283,7 +268,6 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
                count is one framed stepper, and the remove button is 28px — rarely used, and a mis-tap there is undone by "Add a
                plate size". -->
           <div class="flex items-center gap-1">
-
             <Input
               :model-value="plate.weight"
               type="number"
@@ -302,9 +286,7 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
               @update:model-value="setPlateWeight(index, $event)"
             >
               <template #suffix>
-                <span class="flex shrink-0 items-center pr-3 text-base text-ink-500" aria-hidden="true">
-                  {{ modelValue.units }}
-                </span>
+                <InputUnit :unit="modelValue.units" compact />
               </template>
             </Input>
 
@@ -320,11 +302,7 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
               :aria-label="`Colour of the ${plate.weight} ${modelValue.units} plates: ${COLOR_NAMES[rowColor(plate)]}`"
               @click="toggleColorRow(index)"
             >
-              <span
-                class="size-6 shrink-0 rounded-md"
-                :class="SWATCH_CLASSES[rowColor(plate)]"
-                aria-hidden="true"
-              />
+              <span class="size-6 shrink-0 rounded-md" :class="swatchClass(rowColor(plate))" aria-hidden="true" />
             </button>
 
             <CountStepper
@@ -369,7 +347,7 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
               :class="rowColor(plate) === color ? 'ring-2 ring-accent-600' : ''"
               @click="setPlateColor(index, color)"
             >
-              <span class="size-7 rounded-md" :class="SWATCH_CLASSES[color]" aria-hidden="true" />
+              <span class="size-7 rounded-md" :class="swatchClass(color)" aria-hidden="true" />
             </button>
           </div>
 

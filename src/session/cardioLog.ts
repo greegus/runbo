@@ -87,7 +87,7 @@ export function cardioLogWarnings(draft: CardioLogDraft): string[] {
       warnings.push(`${avgHr} bpm is outside ${MIN_HR}-${MAX_HR} bpm — is that right?`)
     }
   }
-  if (rpe !== null && Number.isFinite(rpe) && (rpe < 1 || rpe > 10)) {
+  if (Number.isFinite(rpe) && (rpe < 1 || rpe > 10)) {
     warnings.push('RPE runs from 1 to 10.')
   }
 

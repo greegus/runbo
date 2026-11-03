@@ -140,10 +140,6 @@ export function skipSet(set: LoggedSet): LoggedSet {
   return { ...set, phase: 'skipped', completedReps: null }
 }
 
-export function resetSet(set: LoggedSet): LoggedSet {
-  return { ...set, phase: 'untouched', completedReps: null }
-}
-
 /**
  * The ONLY rest-timer trigger: the first transition out of `untouched`.
  * Corrections of an already-finished set must never restart the clock.

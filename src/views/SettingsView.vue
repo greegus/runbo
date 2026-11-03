@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, Card, FormGroup, Icon, Input, TabsNav, useSubmitAction } from 'vuiii'
+import { Button, Card, FormGroup, Input, TabsNav, useSubmitAction } from 'vuiii'
 
 import AvailabilityForm from '@/components/settings/AvailabilityForm.vue'
 import CardioForm from '@/components/settings/CardioForm.vue'
 import ExportDataCard from '@/components/settings/ExportDataCard.vue'
 import GymForm from '@/components/settings/GymForm.vue'
+import SectionSaveFooter from '@/components/settings/SectionSaveFooter.vue'
 import ZonesForm from '@/components/settings/ZonesForm.vue'
 import type { Availability, CardioTrack, CardioZones, GymSettings, ZonesDraft } from '@/onboarding/types'
 import { emptyZonesDraft, zonesDraftFrom } from '@/onboarding/zonesDraft'
@@ -428,27 +429,13 @@ function setComebackGap(value: unknown): void {
           <div class="flex flex-col gap-6">
             <GymForm v-if="gymDraft" v-model="gymDraft" v-model:valid="gymValid" />
 
-            <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-              <p class="text-sm" role="status">
-                <span v-if="gymDirty" class="inline-flex items-center gap-1 text-accent-600">
-                  <Icon name="alert" />
-                  Unsaved changes
-                </span>
-                <span v-else-if="gymSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
-                  <Icon name="check" />
-                  Saved
-                </span>
-              </p>
-              <Button
-                color="primary"
-                label="Save"
-                size="large"
-                class="min-h-[48px]"
-                :disabled="!gymDirty || !gymValid"
-                :loading="gymSave.isSubmitting.value"
-                @click="gymSave.submit()"
-              />
-            </div>
+            <SectionSaveFooter
+              :dirty="gymDirty"
+              :just-saved="gymSave.justSaved.value"
+              :saving="gymSave.isSubmitting.value"
+              :invalid="!gymValid"
+              @save="gymSave.submit()"
+            />
           </div>
         </Card>
 
@@ -554,27 +541,13 @@ function setComebackGap(value: unknown): void {
               </template>
             </FormGroup>
 
-            <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-              <p class="text-sm" role="status">
-                <span v-if="timersDirty" class="inline-flex items-center gap-1 text-accent-600">
-                  <Icon name="alert" />
-                  Unsaved changes
-                </span>
-                <span v-else-if="timersSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
-                  <Icon name="check" />
-                  Saved
-                </span>
-              </p>
-              <Button
-                color="primary"
-                label="Save"
-                size="large"
-                class="min-h-[48px]"
-                :disabled="!timersDirty || !timersValid"
-                :loading="timersSave.isSubmitting.value"
-                @click="timersSave.submit()"
-              />
-            </div>
+            <SectionSaveFooter
+              :dirty="timersDirty"
+              :just-saved="timersSave.justSaved.value"
+              :saving="timersSave.isSubmitting.value"
+              :invalid="!timersValid"
+              @save="timersSave.submit()"
+            />
           </div>
         </Card>
       </div>
@@ -590,27 +563,13 @@ function setComebackGap(value: unknown): void {
           <div class="flex flex-col gap-6">
             <CardioForm v-if="cardioDraft" v-model="cardioDraft" v-model:valid="cardioValid" />
 
-            <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-              <p class="text-sm" role="status">
-                <span v-if="cardioDirty" class="inline-flex items-center gap-1 text-accent-600">
-                  <Icon name="alert" />
-                  Unsaved changes
-                </span>
-                <span v-else-if="cardioSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
-                  <Icon name="check" />
-                  Saved
-                </span>
-              </p>
-              <Button
-                color="primary"
-                label="Save"
-                size="large"
-                class="min-h-[48px]"
-                :disabled="!cardioDirty || !cardioValid"
-                :loading="cardioSave.isSubmitting.value"
-                @click="cardioSave.submit()"
-              />
-            </div>
+            <SectionSaveFooter
+              :dirty="cardioDirty"
+              :just-saved="cardioSave.justSaved.value"
+              :saving="cardioSave.isSubmitting.value"
+              :invalid="!cardioValid"
+              @save="cardioSave.submit()"
+            />
           </div>
         </Card>
 
@@ -626,27 +585,12 @@ function setComebackGap(value: unknown): void {
               :modalities="cardioDraft.modalities"
             />
 
-            <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-              <p class="text-sm" role="status">
-                <span v-if="zonesDirty" class="inline-flex items-center gap-1 text-accent-600">
-                  <Icon name="alert" />
-                  Unsaved changes
-                </span>
-                <span v-else-if="zonesSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
-                  <Icon name="check" />
-                  Saved
-                </span>
-              </p>
-              <Button
-                color="primary"
-                label="Save"
-                size="large"
-                class="min-h-[48px]"
-                :disabled="!zonesDirty"
-                :loading="zonesSave.isSubmitting.value"
-                @click="zonesSave.submit()"
-              />
-            </div>
+            <SectionSaveFooter
+              :dirty="zonesDirty"
+              :just-saved="zonesSave.justSaved.value"
+              :saving="zonesSave.isSubmitting.value"
+              @save="zonesSave.submit()"
+            />
           </div>
         </Card>
       </div>
@@ -662,27 +606,13 @@ function setComebackGap(value: unknown): void {
           <div class="flex flex-col gap-6">
             <AvailabilityForm v-if="availabilityDraft" v-model="availabilityDraft" v-model:valid="availabilityValid" />
 
-            <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-              <p class="text-sm" role="status">
-                <span v-if="availabilityDirty" class="inline-flex items-center gap-1 text-accent-600">
-                  <Icon name="alert" />
-                  Unsaved changes
-                </span>
-                <span v-else-if="availabilitySave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
-                  <Icon name="check" />
-                  Saved
-                </span>
-              </p>
-              <Button
-                color="primary"
-                label="Save"
-                size="large"
-                class="min-h-[48px]"
-                :disabled="!availabilityDirty || !availabilityValid"
-                :loading="availabilitySave.isSubmitting.value"
-                @click="availabilitySave.submit()"
-              />
-            </div>
+            <SectionSaveFooter
+              :dirty="availabilityDirty"
+              :just-saved="availabilitySave.justSaved.value"
+              :saving="availabilitySave.isSubmitting.value"
+              :invalid="!availabilityValid"
+              @save="availabilitySave.submit()"
+            />
           </div>
         </Card>
       </div>

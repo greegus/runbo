@@ -4,6 +4,8 @@ import { computed } from 'vue'
 import { formatPlateWeight, type PlateColor, plateColor } from '@/training/plates'
 import type { Profile } from '@/types'
 
+import { PLATE_PAINT } from './platePaint'
+
 /**
  * One plate, drawn as a disc in its rack colour with the weight inside. The
  * colour is what a lifter finds on the rack from across the room; the number is
@@ -21,28 +23,10 @@ const props = withDefaults(
   { compact: false, color: undefined },
 )
 
-// Every disc gets an inset edge just a shade darker than its paint — the rim a
-// real plate has — rather than a white ring around it. It keeps a pale disc
-// a disc on a white screen and a red one a disc on a logged set's orange row.
-// The painted plates get white digits; the pastel change plates and chrome get
-// dark ink, since white on a pastel fails contrast under gym lighting. Green
-// is the 700 because white on green-600 is about 3:1.
-const COLOR_CLASSES: Record<PlateColor, string> = {
-  red: 'bg-red-600 text-white ring-2 ring-red-700 ring-inset',
-  blue: 'bg-blue-600 text-white ring-2 ring-blue-700 ring-inset',
-  yellow: 'bg-yellow-400 text-ink-900 ring-2 ring-yellow-500 ring-inset',
-  green: 'bg-green-700 text-white ring-2 ring-green-800 ring-inset',
-  grey: 'bg-ink-500 text-white ring-2 ring-ink-600 ring-inset',
-  'pale-red': 'bg-red-200 text-red-900 ring-2 ring-red-300 ring-inset',
-  'pale-blue': 'bg-blue-200 text-blue-900 ring-2 ring-blue-300 ring-inset',
-  'pale-yellow': 'bg-yellow-100 text-yellow-900 ring-2 ring-yellow-300 ring-inset',
-  'pale-green': 'bg-green-200 text-green-900 ring-2 ring-green-300 ring-inset',
-  'pale-grey': 'bg-ink-100 text-ink-800 ring-2 ring-ink-300 ring-inset',
-  silver: 'bg-ink-300 text-ink-900 ring-2 ring-ink-400 ring-inset',
-  black: 'bg-ink-800 text-white ring-2 ring-ink-900 ring-inset',
-}
-
-const colorClass = computed(() => COLOR_CLASSES[props.color ?? plateColor(props.weight, props.units)])
+const colorClass = computed(() => {
+  const paint = PLATE_PAINT[props.color ?? plateColor(props.weight, props.units)]
+  return `${paint.fill} ${paint.ink} ${paint.rim} ring-2 ring-inset`
+})
 </script>
 
 <template>

@@ -58,7 +58,7 @@ describe('cardioLogBlockedReason', () => {
   })
 
   it('blocks on nothing else — a watchless run is still a session', () => {
-    expect(cardioLogBlockedReason({ minutes: 40, distanceKm: null, avgHr: null, rpe: null, notes: '' })).toBeNull()
+    expect(cardioLogBlockedReason({ minutes: 40, distanceKm: null, avgHr: null, rpe: 3, notes: '' })).toBeNull()
   })
 })
 
@@ -77,16 +77,17 @@ describe('cardioLogWarnings', () => {
 
 describe('cardioLogPatch', () => {
   it('always carries whole, non-negative minutes', () => {
-    expect(cardioLogPatch({ minutes: 41.6, distanceKm: null, avgHr: null, rpe: null, notes: '' })).toEqual({
+    expect(cardioLogPatch({ minutes: 41.6, distanceKm: null, avgHr: null, rpe: 3, notes: '' })).toEqual({
       minutes: 42,
+      rpe: 3,
     })
-    expect(cardioLogPatch({ minutes: -9, distanceKm: null, avgHr: null, rpe: null, notes: '' }).minutes).toBe(0)
+    expect(cardioLogPatch({ minutes: -9, distanceKm: null, avgHr: null, rpe: 3, notes: '' }).minutes).toBe(0)
   })
 
   it('omits absent keys rather than setting them undefined — Firestore rejects undefined', () => {
-    const patch = cardioLogPatch({ minutes: 40, distanceKm: 0, avgHr: null, rpe: null, notes: '   ' })
+    const patch = cardioLogPatch({ minutes: 40, distanceKm: 0, avgHr: null, rpe: 3, notes: '   ' })
 
-    expect(Object.keys(patch)).toEqual(['minutes'])
+    expect(Object.keys(patch)).toEqual(['minutes', 'rpe'])
     expect('distanceKm' in patch).toBe(false)
     expect('notes' in patch).toBe(false)
   })

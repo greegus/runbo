@@ -2,6 +2,7 @@
 import { computed, watch } from 'vue'
 import { FormGroup, Input } from 'vuiii'
 
+import InputUnit from '@/components/InputUnit.vue'
 import RangeSlider from '@/components/RangeSlider.vue'
 import { cardioLogBlockedReason, cardioLogWarnings } from '@/session/cardioLog'
 import type { CardioLogDraft } from '@/session/types'
@@ -86,9 +87,7 @@ watch(
           @update:model-value="patch({ minutes: toOptionalNumber($event) })"
         >
           <template #suffix>
-            <span class="flex shrink-0 items-center pr-4 text-base font-normal text-ink-500" aria-hidden="true"
-              >min</span
-            >
+            <InputUnit unit="min" />
           </template>
         </Input>
       </template>
@@ -117,9 +116,7 @@ watch(
           @update:model-value="patch({ distanceKm: toOptionalNumber($event) })"
         >
           <template #suffix>
-            <span class="flex shrink-0 items-center pr-4 text-base font-normal text-ink-500" aria-hidden="true"
-              >km</span
-            >
+            <InputUnit unit="km" />
           </template>
         </Input>
       </template>
@@ -142,9 +139,7 @@ watch(
           @update:model-value="patch({ avgHr: toOptionalNumber($event) })"
         >
           <template #suffix>
-            <span class="flex shrink-0 items-center pr-4 text-base font-normal text-ink-500" aria-hidden="true"
-              >bpm</span
-            >
+            <InputUnit unit="bpm" />
           </template>
         </Input>
       </template>

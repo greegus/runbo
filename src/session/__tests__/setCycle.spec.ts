@@ -7,7 +7,6 @@ import {
   fromSetLog,
   isLogged,
   loggedCount,
-  resetSet,
   setAmrapReps,
   skipSet,
   startsRest,
@@ -157,18 +156,16 @@ describe('AMRAP sets', () => {
   })
 })
 
-describe('skip / reset', () => {
-  it('skips and clears without touching the prescription', () => {
+describe('skipSet', () => {
+  it('skips without touching the prescription', () => {
     const set = tapSet(logged())
 
     expect(skipSet(set)).toMatchObject({ phase: 'skipped', completedReps: null, prescribedReps: 5 })
-    expect(resetSet(set)).toMatchObject({ phase: 'untouched', completedReps: null, prescribedReps: 5 })
   })
 
   it('never starts rest', () => {
     const set = logged()
     expect(startsRest(set, skipSet(set))).toBe(false)
-    expect(startsRest(set, resetSet(set))).toBe(false)
   })
 })
 

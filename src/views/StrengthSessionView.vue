@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
-import { Button, Icon, IconButton, TabsNav, useDialogStack } from 'vuiii'
+import { Button, Icon, TabsNav, useDialogStack } from 'vuiii'
 
 import DiagnosticsList from '@/components/DiagnosticsList.vue'
 import ReadinessSheet from '@/components/ReadinessSheet.vue'
 import RestTimer from '@/components/RestTimer.vue'
+import SessionHeader from '@/components/SessionHeader.vue'
 import ProjectionSheet from '@/components/strength/ProjectionSheet.vue'
 import TierBlock from '@/components/strength/TierBlock.vue'
 import { deleteSession, loadSession, saveSession } from '@/services/sessionsService'
@@ -565,39 +566,13 @@ onBeforeRouteLeave(() => {
     </div>
 
     <template v-else-if="session">
-      <!-- Laid out like the Today card, so the workout reads the same on the
-           way in as it did on Today: the dumbbell, "Strength · # DAY 4", and
-           the day's main lifts on the line under it. -->
-      <header class="flex items-start gap-3 px-4 pt-4">
-        <Icon
-          name="dumbbell"
-          size="large"
-          class="shrink-0 text-accent-600 [--vuiii-icon-size--large:1.9375rem]"
-          aria-hidden="true"
-        />
-        <div class="min-w-0 flex-1">
-          <h1 class="text-2xl font-bold text-ink-900">
-            {{ session.programDay ? `Strength · ${session.programDay}` : 'Strength session' }}
-          </h1>
-          <p v-if="headline" class="text-lg leading-snug font-semibold tabular-nums text-ink-700">
-            {{ headline }}
-          </p>
-        </div>
-        <span v-if="isDone" class="flex shrink-0 items-center gap-1 pt-1.5 text-sm font-semibold text-accent-700">
-          <Icon name="check" aria-hidden="true" />
-          Logged
-        </span>
-        <!-- `self-start` because vuiii centres its buttons with align-self,
-             which beats the header's items-start. -->
-        <IconButton
-          icon="close"
-          variant="text"
-          size="large"
-          class="-mt-2 -mr-2 min-h-[48px] min-w-[48px] shrink-0 self-start"
-          aria-label="Back to Today"
-          @click="leave()"
-        />
-      </header>
+      <SessionHeader
+        icon="dumbbell"
+        :title="session.programDay ? `Strength · ${session.programDay}` : 'Strength session'"
+        :subtitle="headline"
+        :done="isDone"
+        @close="leave()"
+      />
 
       <!-- A broken program prescribes nothing sane, so nothing is offered to
            log against it. -->

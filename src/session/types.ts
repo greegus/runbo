@@ -30,6 +30,7 @@ export interface CardioLogDraft {
   minutes: number | null
   distanceKm: number | null
   avgHr: number | null
-  rpe: number | null
+  /** Always set: the log starts at `DEFAULT_RPE`. */
+  rpe: number
   notes: string
 }

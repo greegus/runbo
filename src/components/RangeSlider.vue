@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
-/**
- * A whole number on a track, with the value beside it. `null` is "not
- * answered yet": the track is empty, the number reads "–", and the first
- * touch anywhere on the track — a tap on the thumb included — answers it.
- */
+/** A whole number on a track, with the value beside it. */
 const props = withDefaults(
   defineProps<{
-    modelValue: number | null
+    modelValue: number
     min: number
     max: number
     id?: string
@@ -33,35 +29,13 @@ const emit = defineEmits<{
  * The input's `:value` follows it too. Every step repaints the fill, and on a
  * re-render Vue writes `:value` back into the DOM whenever the two differ —
  * bound to `modelValue`, a tap on the track snapped the thumb back to the old
- * value while the fill and the number showed the new one.
+ * value while the fill and the number showed the new one. A parent that
+ * rejects or clamps the release re-renders with its own value, and the thumb
+ * follows it there.
  */
 const dragging = ref<number | null>(null)
 
-/**
- * The value just released, until the parent hands it back. A parent may take a
- * moment — the cardio form's draft does — and without this the thumb fell back
- * to the old value in between, and an unanswered slider read the tap that
- * followed as answering with the resting middle. A parent that rejects or
- * clamps the value never hands it back, so it lapses after a moment and the
- * slider shows what the parent kept.
- */
-const pending = ref<number | null>(null)
-const PENDING_LAPSE_MS = 600
-let pendingTimer: ReturnType<typeof setTimeout> | undefined
-
-function clearPending(): void {
-  pending.value = null
-  if (pendingTimer !== undefined) clearTimeout(pendingTimer)
-  pendingTimer = undefined
-}
-
-watch(() => props.modelValue, clearPending)
-onBeforeUnmount(clearPending)
-
-const shown = computed(() => dragging.value ?? pending.value ?? props.modelValue)
-
-/** Where the thumb rests while nothing is answered: the middle of the track. */
-const resting = computed(() => Math.round((props.min + props.max) / 2))
+const shown = computed(() => dragging.value ?? props.modelValue)
 
 /**
  * How much of the track is filled. Native range inputs only paint a filled
@@ -70,40 +44,18 @@ const resting = computed(() => Math.round((props.min + props.max) / 2))
  */
 const fill = computed(() => {
   const span = props.max - props.min
-  if (shown.value === null) return 0
   if (span <= 0) return 100
 
   return Math.min(Math.max(((shown.value - props.min) / span) * 100, 0), 100)
 })
 
-const ariaValueText = computed(() => (shown.value === null ? 'Not set' : props.valueText(shown.value)))
-
 function onInput(event: Event): void {
   dragging.value = Number((event.target as HTMLInputElement).value)
 }
 
-function commit(value: number): void {
-  clearPending()
-  pending.value = value
-  pendingTimer = setTimeout(clearPending, PENDING_LAPSE_MS)
-  dragging.value = null
-  emit('update:modelValue', value)
-}
-
 function onChange(event: Event): void {
-  commit(Number((event.target as HTMLInputElement).value))
-}
-
-/**
- * A tap on the thumb where it already rests moves nothing, so no `change`
- * fires — and an unanswered slider would ignore the athlete picking the very
- * value it shows. The click answers it.
- */
-function onClick(event: Event): void {
-  // Answered, or answered by this very tap's `change` a moment ago.
-  if (shown.value !== null) return
-
-  commit(Number((event.target as HTMLInputElement).value))
+  dragging.value = null
+  emit('update:modelValue', Number((event.target as HTMLInputElement).value))
 }
 </script>
 
@@ -116,20 +68,18 @@ function onClick(event: Event): void {
       :id="id"
       type="range"
       class="range-slider h-12 min-w-0 flex-1"
-      :class="{ 'range-slider--unset': shown === null }"
       :style="{ '--fill': `${fill}%` }"
       :min="min"
       :max="max"
       step="1"
-      :value="shown ?? resting"
+      :value="shown"
       :aria-label="label"
-      :aria-valuetext="ariaValueText"
+      :aria-valuetext="valueText(shown)"
       @input="onInput"
       @change="onChange"
-      @click="onClick"
     />
     <output :for="id" class="w-8 text-right text-2xl font-semibold tabular-nums text-ink-900" aria-hidden="true">
-      {{ shown ?? '–' }}
+      {{ shown }}
     </output>
   </div>
 </template>
@@ -178,16 +128,5 @@ function onClick(event: Event): void {
   border-radius: 9999px;
   background: white;
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
-}
-
-/* Unanswered: a quiet grey thumb, so it does not read as a value already picked. */
-.range-slider--unset::-webkit-slider-thumb {
-  border-color: var(--color-ink-300);
-  box-shadow: none;
-}
-
-.range-slider--unset::-moz-range-thumb {
-  border-color: var(--color-ink-300);
-  box-shadow: none;
 }
 </style>
