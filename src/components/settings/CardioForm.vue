@@ -167,7 +167,6 @@ watch(isValid, (valid) => emit('update:valid', valid), { immediate: true })
          its own rest day (see saunaDate). Claiming a sauna from "Train
          something else today" works either way. -->
     <Checkbox
-      switch
       label="Suggest sauna on rest days"
       description="One rest day a week, the day after training when there is one. A suggestion only — never a training day."
       :model-value="props.modelValue.saunaOnRestDays === true"
