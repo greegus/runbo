@@ -104,7 +104,7 @@ describe('plateColor', () => {
       'blue',
       'yellow',
       'green',
-      'grey',
+      'silver',
     ])
     expect([2.5, 2, 1.5, 1, 0.5].map((weight) => plateColor(weight, 'kg'))).toEqual([
       'pale-red',
@@ -113,7 +113,7 @@ describe('plateColor', () => {
       'pale-green',
       'pale-grey',
     ])
-    expect(plateColor(1.25, 'kg')).toBe('silver')
+    expect(plateColor(1.25, 'kg')).toBe('pale-grey')
   })
 
   it('gives an lb plate the colour of the kg plate it stands in for', () => {
@@ -128,7 +128,7 @@ describe('plateColor', () => {
 
   it('finds the colour of a weight that drifted in floating point', () => {
     expect(plateColor(2.4999999, 'kg')).toBe('pale-red')
-    expect(plateColor(1.2500001, 'kg')).toBe('silver')
+    expect(plateColor(1.2500001, 'kg')).toBe('pale-grey')
   })
 
   it('falls back to black iron for a size with no convention', () => {

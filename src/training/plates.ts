@@ -79,11 +79,11 @@ export const PLATE_COLORS_ALL: PlateColor[] = [
 ]
 
 // DECISION: kg follows the IWF competition hues (25 red, 20 blue, 15 yellow,
-// 10 green), with grey for the 5 rather than IWF white — a white disc on a white
-// screen reads as a hole. The change plates a tenth of those sizes (2.5–0.5)
-// take the same hue in a pastel, so a 2.5 is never mistaken for a 25 at a
-// glance. 1.25 is not an IWF size, and the gyms that have one have it in
-// chrome. lb has no standard, so it takes the colour of the kg plate it stands
+// 10 green), with a light chrome grey for the 5 rather than IWF white — a white
+// disc on a white screen reads as a hole. The change plates a tenth of those
+// sizes (2.5–0.5) take the same hue in a pastel, so a 2.5 is never mistaken for
+// a 25 at a glance; 1.25 is not an IWF size and gets the faintest grey, as the
+// 0.5 does. lb has no standard, so it takes the colour of the kg plate it stands
 // in for on the rack — 45 lb is the "20", 55 lb the "25". Anything else is a
 // black iron plate, which is what an unusual size almost always is.
 const PLATE_COLORS: Record<GymSettings['units'], Record<number, PlateColor>> = {
@@ -92,11 +92,11 @@ const PLATE_COLORS: Record<GymSettings['units'], Record<number, PlateColor>> = {
     20: 'blue',
     15: 'yellow',
     10: 'green',
-    5: 'grey',
+    5: 'silver',
     2.5: 'pale-red',
     2: 'pale-blue',
     1.5: 'pale-yellow',
-    1.25: 'silver',
+    1.25: 'pale-grey',
     1: 'pale-green',
     0.5: 'pale-grey',
   },
@@ -105,9 +105,9 @@ const PLATE_COLORS: Record<GymSettings['units'], Record<number, PlateColor>> = {
     45: 'blue',
     35: 'yellow',
     25: 'green',
-    10: 'grey',
+    10: 'silver',
     5: 'pale-red',
-    2.5: 'silver',
+    2.5: 'pale-grey',
   },
 }
 
