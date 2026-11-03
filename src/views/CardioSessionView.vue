@@ -2,7 +2,7 @@
 import { deleteField } from 'firebase/firestore'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
-import { Button, useDialogStack } from 'vuiii'
+import { Button, Icon, useDialogStack } from 'vuiii'
 
 import CardioLogForm from '@/components/cardio/CardioLogForm.vue'
 import PrescriptionCard from '@/components/cardio/PrescriptionCard.vue'
@@ -14,6 +14,7 @@ import { useProfileStore } from '@/stores/profile'
 import { useSessionsStore } from '@/stores/sessions'
 import { growLongestSession } from '@/training/cardioPlan'
 import type { ReadinessInput } from '@/training/readiness'
+import { describePrescription, MODALITY_LABELS } from '@/training/zones'
 import type { Session } from '@/types'
 
 /**
@@ -369,14 +370,34 @@ onBeforeUnmount(() => {
     </div>
 
     <template v-else-if="session">
-      <header class="px-4 pt-4">
-        <h1 class="text-2xl font-bold text-ink-900">{{ isDone ? 'Session done' : 'Cardio session' }}</h1>
-        <p class="text-sm text-ink-500 tabular-nums">{{ session.date }}</p>
+      <!-- Laid out like the Today card, so the workout reads the same on the
+           way in as it did on Today: the sport's icon, "Run · easy", and the
+           whole prescription on one line under it. -->
+      <header class="flex items-start gap-3 px-4 pt-4">
+        <Icon
+          :name="prescription?.modality ?? 'run'"
+          size="large"
+          class="shrink-0 text-accent-600 [--vuiii-icon-size--large:1.9375rem]"
+          aria-hidden="true"
+        />
+        <div class="min-w-0 flex-1">
+          <h1 class="text-2xl font-bold text-ink-900">
+            {{ prescription ? `${MODALITY_LABELS[prescription.modality]} · ${prescription.kind}` : 'Cardio session' }}
+          </h1>
+          <p v-if="prescription" class="text-lg leading-snug font-semibold tabular-nums text-ink-700">
+            {{ describePrescription(prescription, profile.cardioTrack.zones) }}
+          </p>
+        </div>
+        <span v-if="isDone" class="flex shrink-0 items-center gap-1 pt-1.5 text-sm font-semibold text-accent-700">
+          <Icon name="check" aria-hidden="true" />
+          Logged
+        </span>
       </header>
 
       <div class="flex flex-1 flex-col gap-6 px-4 py-6">
         <PrescriptionCard
-          v-if="prescription"
+          v-if="prescription && (prescription.structure || isDone || isImported)"
+          bare
           :prescription="prescription"
           :zones="profile.cardioTrack.zones"
           :completed="isDone || isImported"
@@ -385,7 +406,7 @@ onBeforeUnmount(() => {
 
         <!-- An unplanned session: the athlete simply went out. There is nothing
              to prescribe, only something to record. -->
-        <p v-else class="rounded-lg border border-ink-200 bg-ink-50 p-4 text-ink-700">
+        <p v-else-if="!prescription" class="rounded-lg border border-ink-200 bg-ink-50 p-4 text-ink-700">
           Unplanned session — no target for this one. Log what you did.
         </p>
 

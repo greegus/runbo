@@ -11,8 +11,14 @@ const props = withDefaults(
     zones?: Profile['cardioTrack']['zones']
     completed?: boolean
     session?: Session | null
+    /**
+     * Only the details — intervals and logged numbers — with no frame, header
+     * or headline: the session screen names the workout in its own page
+     * header, laid out like the Today card.
+     */
+    bare?: boolean
   }>(),
-  { zones: undefined, completed: false, session: null },
+  { zones: undefined, completed: false, session: null, bare: false },
 )
 
 const MODALITY_ICONS: Record<Modality, string> = { run: 'run', bike: 'bike', swim: 'swim' }
@@ -40,8 +46,8 @@ const stats = computed(() => {
 </script>
 
 <template>
-  <section class="flex flex-col gap-3 rounded-lg border border-ink-200 bg-white p-4">
-    <header class="flex items-center gap-3">
+  <section class="flex flex-col gap-3" :class="{ 'rounded-lg border border-ink-200 bg-white p-4': !bare }">
+    <header v-if="!bare" class="flex items-center gap-3">
       <Icon :name="MODALITY_ICONS[prescription.modality]" size="large" class="shrink-0 text-accent-600" />
       <div class="min-w-0">
         <p class="text-sm text-ink-500">
@@ -56,7 +62,7 @@ const stats = computed(() => {
 
     <!-- Read at arm's length mid-session: the whole prescription on one line,
          large, with the numerals aligned. -->
-    <p class="text-xl leading-snug font-semibold tabular-nums text-ink-900">{{ headline }}</p>
+    <p v-if="!bare" class="text-xl leading-snug font-semibold tabular-nums text-ink-900">{{ headline }}</p>
 
     <!-- Intervals get their own line as well as their place inside the
          headline: mid-run the three numbers are the only thing being checked. -->
