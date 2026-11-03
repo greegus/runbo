@@ -26,6 +26,8 @@ const props = withDefaults(
     /** Today's finished session: the day is logged and must not be started again. */
     doneSession?: Session | null
     explanation?: string | null
+    /** Today is a rest day that carries a sauna suggestion. */
+    sauna?: boolean
     busy?: boolean
     error?: string | null
   }>(),
@@ -36,6 +38,7 @@ const props = withDefaults(
     activeSession: null,
     doneSession: null,
     explanation: null,
+    sauna: false,
     busy: false,
     error: null,
   },
@@ -125,6 +128,13 @@ function primary(): void {
         <p class="text-sm text-ink-500">Nothing is planned. Recovery is part of the week.</p>
       </div>
     </div>
+
+    <!-- A suggestion under the rest day, not a workout: nothing to start and
+         nothing to log, so it carries no button. -->
+    <p v-if="props.sauna && !props.item" class="flex items-start gap-2 rounded-lg bg-ink-50 p-3 text-sm text-ink-700">
+      <Icon name="sauna" class="mt-px shrink-0 text-accent-600" aria-hidden="true" />
+      <span><span class="font-semibold text-ink-900">Sauna suggested.</span> 15–20 min, easy heat, drink water.</span>
+    </p>
 
     <p v-if="props.explanation" class="text-sm text-ink-500">{{ props.explanation }}</p>
 

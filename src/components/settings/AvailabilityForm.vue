@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { FormGroup } from 'vuiii'
+import { Checkbox, FormGroup } from 'vuiii'
 
 import RangeSlider from '@/components/RangeSlider.vue'
 import WeekdayPicker from '@/components/settings/WeekdayPicker.vue'
@@ -206,5 +206,15 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
         so both tracks keep moving.
       </template>
     </div>
+
+    <!-- A switch, not a day count: the suggestion picks its own rest days
+         (see saunaDates). Absent on an older profile reads as on. -->
+    <Checkbox
+      switch
+      label="Suggest sauna on rest days"
+      description="Up to two rest days a week, never back to back. A suggestion only — it is not a training day."
+      :model-value="modelValue.saunaOnRestDays !== false"
+      @update:model-value="patch({ saunaOnRestDays: $event === true })"
+    />
   </div>
 </template>

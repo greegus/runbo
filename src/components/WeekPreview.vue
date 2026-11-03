@@ -111,6 +111,12 @@ const rows = computed(() => model.value.days.map((day) => ({ ...day, to: linkFor
             <span v-if="props.showStatus && day.detail" class="pl-7 text-xs text-ink-500">{{ day.detail }}</span>
           </span>
 
+          <!-- A sauna day is still a rest day: the word stays, the suggestion
+               rides beside it. -->
+          <span v-else-if="day.sauna" class="flex min-w-0 items-center gap-2 text-sm text-ink-500">
+            <Icon name="sauna" class="shrink-0 text-accent-600" aria-hidden="true" />
+            <span>Rest · sauna</span>
+          </span>
           <span v-else class="text-sm text-ink-500">Rest</span>
 
           <!-- Status is a word and a shape, never colour alone: the app is used

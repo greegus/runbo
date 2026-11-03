@@ -368,6 +368,7 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
         :active-session="model.activeSession"
         :done-session="model.doneSession"
         :explanation="explanation"
+        :sauna="model.saunaToday && override === null"
         :busy="busy"
         :error="startError"
         @start="onStart()"
