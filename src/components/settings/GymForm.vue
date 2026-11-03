@@ -239,7 +239,7 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
     <FormGroup
       label="Barbell weight"
       :error="barbellError ?? false"
-      :hint="`In ${modelValue.units}. Most Olympic bars are 20 kg / 45 lb.`"
+      hint="Most Olympic bars are 20 kg / 45 lb."
     >
       <template #default="{ id }">
         <Input
@@ -255,7 +255,13 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
           :invalid="barbellError !== null"
           @focus="selectAll"
           @update:model-value="update({ barbellWeight: toNumber($event) })"
-        />
+        >
+          <template #suffix>
+            <span class="flex shrink-0 items-center pr-4 text-base text-ink-500" aria-hidden="true">
+              {{ modelValue.units }}
+            </span>
+          </template>
+        </Input>
       </template>
     </FormGroup>
 
