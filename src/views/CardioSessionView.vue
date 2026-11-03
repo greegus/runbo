@@ -2,7 +2,7 @@
 import { deleteField } from 'firebase/firestore'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
-import { Button, Icon, useDialogStack } from 'vuiii'
+import { Button, Icon, IconButton, useDialogStack } from 'vuiii'
 
 import CardioLogForm from '@/components/cardio/CardioLogForm.vue'
 import PrescriptionCard from '@/components/cardio/PrescriptionCard.vue'
@@ -392,6 +392,18 @@ onBeforeUnmount(() => {
           <Icon name="check" aria-hidden="true" />
           Logged
         </span>
+        <!-- The way out mid-session, as on the strength session: the bottom
+             nav is hidden here, and the route-leave guard flushes the draft.
+             `self-start` because vuiii centres its buttons with align-self,
+             which beats the header's items-start. -->
+        <IconButton
+          icon="close"
+          variant="text"
+          size="large"
+          class="-mt-2 -mr-2 min-h-[48px] min-w-[48px] shrink-0 self-start"
+          aria-label="Back to Today"
+          @click="router.push({ name: 'today' })"
+        />
       </header>
 
       <div class="flex flex-1 flex-col gap-6 px-4 py-6">
