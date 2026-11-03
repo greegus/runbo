@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { FormGroup, Input, RadioButtonGroup, Textarea } from 'vuiii'
+import { FormGroup, Input, Textarea } from 'vuiii'
 
+import RangeSlider from '@/components/RangeSlider.vue'
 import { cardioLogBlockedReason, cardioLogWarnings } from '@/session/cardioLog'
 import type { CardioLogDraft } from '@/session/types'
 
@@ -20,7 +21,6 @@ const emit = defineEmits<{
   'update:blockedReason': [reason: string | null]
 }>()
 
-const RPE_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => ({ value, label: String(value) }))
 
 /**
  * Coerced on the way in, not validated on the way out. An empty numeric input
@@ -136,19 +136,29 @@ watch(
     <fieldset class="flex flex-col gap-2">
       <legend class="text-sm font-medium text-ink-900">How hard did it feel?</legend>
       <p class="text-sm text-ink-500">1 = barely moving, 10 = all out. Optional.</p>
-      <!-- Named with `aria-label`: FormGroup's `<label for>` cannot name the
-           `role="radiogroup"` this renders. -->
-      <RadioButtonGroup
-        aria-label="RPE, 1 to 10"
-        :model-value="modelValue.rpe"
-        :options="RPE_OPTIONS"
-        option-label="label"
-        option-value="value"
-        size="large"
-        :disabled="busy"
-        class="min-h-[48px]"
-        @update:model-value="patch({ rpe: toOptionalNumber($event) })"
-      />
+      <!-- A slider, not ten buttons: an effort is a position on a scale, and
+           ten 48px targets did not fit a phone's width on one row. It starts
+           unanswered, since RPE is optional, and "Clear" takes it back. -->
+      <div class="flex items-center gap-2" :class="{ 'pointer-events-none opacity-60': busy }">
+        <RangeSlider
+          id="cardio-rpe"
+          class="min-w-0 flex-1"
+          label="RPE, 1 to 10"
+          :model-value="modelValue.rpe"
+          :min="1"
+          :max="10"
+          :value-text="(value: number) => `RPE ${value}`"
+          @update:model-value="patch({ rpe: $event })"
+        />
+        <button
+          v-if="modelValue.rpe !== null"
+          type="button"
+          class="min-h-[48px] shrink-0 rounded-lg px-2 text-sm font-medium text-ink-500 focus-visible:outline-2 focus-visible:outline-accent-600"
+          @click="patch({ rpe: null })"
+        >
+          Clear
+        </button>
+      </div>
     </fieldset>
 
     <FormGroup label="Notes" hint="Weather, route, how it went. Optional.">

@@ -2,7 +2,7 @@
 import { computed, watch } from 'vue'
 import { FormGroup, Select } from 'vuiii'
 
-import DayCountSlider from '@/components/settings/DayCountSlider.vue'
+import RangeSlider from '@/components/RangeSlider.vue'
 import type { Availability } from '@/onboarding/types'
 import { DEFAULT_STRENGTH_DAYS_PER_WEEK, trainingWeekdays, weeklyTrackBudget } from '@/training/composer'
 import { WEEKDAY_LABELS } from '@/utils/date'
@@ -114,6 +114,10 @@ function toggleDay(day: number): void {
   patch({ preferredDays: next.sort((a, b) => a - b) })
 }
 
+function dayCountText(value: number): string {
+  return `${value} ${value === 1 ? 'day' : 'days'}`
+}
+
 function labelsOf(days: number[]): string {
   return days.map((day) => WEEKDAY_LABELS[day]).join(', ')
 }
@@ -129,9 +133,10 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
       hint="A budget for how many sessions we plan — it does not have to match the days you tick below."
     >
       <template #default="{ id }">
-        <DayCountSlider
+        <RangeSlider
           :id="id"
           :model-value="modelValue.daysPerWeek"
+          :value-text="dayCountText"
           :min="1"
           :max="7"
           @update:model-value="(value: number) => patch({ daysPerWeek: value })"
@@ -141,9 +146,10 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
 
     <FormGroup label="Lifting days" hint="How many of those days go to the barbell. The rest carry cardio.">
       <template #default="{ id }">
-        <DayCountSlider
+        <RangeSlider
           :id="id"
           :model-value="strengthDays"
+          :value-text="dayCountText"
           :min="0"
           :max="strengthDaysCeiling"
           @update:model-value="(value: number) => patch({ strengthDaysPerWeek: value })"
