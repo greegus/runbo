@@ -57,7 +57,10 @@ const rows = computed(() => {
         ? `Moves here from ${WEEKDAY_LABELS[weekdayIndexMondayFirst(option.from)]}`
         : option.item.kind === 'cardio'
           ? 'Missed earlier this week'
-          : 'Still owed this week',
+          : // Beside "Moves here from Wed" for the same program day, "owed"
+            // did not say what the pick does differently: this one adds the
+            // missed lift back, the other only moves Wednesday's.
+            'Catch up — missed earlier this week',
     choose: () => emit('pick', option),
   }))
 

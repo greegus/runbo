@@ -171,6 +171,14 @@ function detailOf(session: Session | null): string | null {
  * past or future week — a frontier of today would free a whole past week and
  * show an athlete an empty version of a week they trained.
  *
+ * With a frontier the grid is stitched from two composes. Days before it come
+ * from the whole week, so a lift that never happened still stands there as
+ * missed. The frontier and after come from the trimmed week, which is the one
+ * Today acts on: the rotation follows what was logged, so a missed Monday's
+ * workout moves on to the next strength day. Showing the original plan there
+ * had the calendar say Wednesday holds DAY 1 while Today offered to move
+ * Wednesday's DAY 4 — and DAY 4 is what Wednesday would really bring.
+ *
  * The profile is coerced the way the onboarding preview coerces it: harmless
  * for a live profile, and required for a half-filled wizard draft, which is the
  * other caller of this model.
@@ -185,9 +193,10 @@ export function buildWeekGrid(
   const safeProfile = coerceProfileForPreview(profile)
   const fromDate = options?.fromDate ?? undefined
   const plan = planWeek(safeProfile, sessions, anchorIso, fromDate)
+  const wholeWeek = fromDate === undefined ? plan : planWeek(safeProfile, sessions, anchorIso)
 
-  const days = plan.week.days.map((day): WeekGridDay => {
-    const planned = day.planned
+  const days = plan.week.days.map((day, index): WeekGridDay => {
+    const planned = fromDate !== undefined && day.date < fromDate ? wholeWeek.week.days[index].planned : day.planned
     const onDay = sessions.filter((session) => session.date === day.date)
     // A done session on a day the planner still calls "strength" is the case
     // `planned === null` cannot see: composeWeek keeps the plan on a trained

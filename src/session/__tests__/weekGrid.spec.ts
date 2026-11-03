@@ -1,6 +1,7 @@
 import { GZCLP_PROGRAM_SOURCE, initialProgramState } from '@/training/gzclp'
 import type { Profile, Session } from '@/types'
 
+import { buildToday } from '../today'
 import { buildWeekGrid, liveWeekWindow, stepWeek, weekOffsetLabel, weekRangeLabel } from '../weekGrid'
 
 const MON = '2026-08-24'
@@ -161,17 +162,38 @@ describe('buildWeekGrid', () => {
     expect(model.days.some((day) => day.status === 'future')).toBe(true)
   })
 
-  it('frees untrained past days only when a frontier is passed', () => {
-    const untrimmed = buildWeekGrid(profile(), [], THU, THU)
-    const trimmed = buildWeekGrid(profile(), [], THU, THU, { fromDate: THU })
+  it('keeps past days whole with a frontier, and plans the rest the way Today does', () => {
+    const whole = buildWeekGrid(profile(), [], THU, THU)
+    const stitched = buildWeekGrid(profile(), [], THU, THU, { fromDate: THU })
+    const today = buildToday(profile(), [], THU)
 
-    const plannedBefore = (model: ReturnType<typeof buildWeekGrid>) =>
-      model.days.filter((day) => day.date < THU && day.kind !== null).length
+    for (const [index, day] of stitched.days.entries()) {
+      if (day.date < THU) {
+        // A day that never happened still stands as missed, not as rest.
+        expect(day.kind).toBe(whole.days[index].kind)
+        expect(day.status).toBe(whole.days[index].status)
+      } else {
+        const planned = today.plan.week.days[index].planned
+        expect(day.kind).toBe(planned?.kind ?? null)
+        if (planned?.kind === 'strength') expect(day.title).toBe(`Strength ${planned.programDay}`)
+      }
+    }
 
-    // The trimmed week is the one Today acts on: a day that cannot happen any
-    // more is not still asking to be trained.
-    expect(plannedBefore(trimmed)).toBeLessThan(plannedBefore(untrimmed))
-    expect(trimmed.days).toHaveLength(7)
+    expect(stitched.days.some((day) => day.status === 'missed')).toBe(true)
+    expect(stitched.days).toHaveLength(7)
+  })
+
+  it('moves the missed lift on to the next strength day, as Today does', () => {
+    // Nothing logged by Thursday: the rotation is still on the first program
+    // day, so the next strength day takes it rather than the day it was planned.
+    const whole = buildWeekGrid(profile(), [], THU, THU)
+    const stitched = buildWeekGrid(profile(), [], THU, THU, { fromDate: THU })
+
+    const firstPlanned = whole.days.find((day) => day.kind === 'strength')
+    const nextAhead = stitched.days.find((day) => day.date >= THU && day.kind === 'strength')
+
+    expect(firstPlanned).toBeDefined()
+    expect(nextAhead?.title).toBe(firstPlanned?.title)
   })
 
   it('phrases a cardio day exactly once, through describePrescription', () => {

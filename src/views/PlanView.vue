@@ -224,19 +224,19 @@ watch(
         <StatTile label="Streak" :value="String(streak)" hint="sessions in a row" icon="chart" emphasis />
       </div>
 
-      <!-- The grid is the CURRENT week trimmed to the frontier so it agrees with
-           NO frontier, on any week including this one. The frontier answers
-           "what do I do now" by dropping past days that never happened — and
-           this screen answers the other question: what the week asked for and
-           what came of it. Trimmed, a Sunday visit showed seven Rest days under
-           tiles reading "0/3 sessions" — the same screen contradicting itself.
-           A missed day belongs here, shown as planned and not done. -->
+      <!-- This week's grid keeps its past days whole — a missed day belongs
+           here, shown as planned and not done; trimmed, a Sunday visit showed
+           seven Rest days under tiles reading "0/3 sessions". From today on it
+           follows the frontier, so the days ahead are the ones Today acts on
+           and the replace picker's "moves here from Wed" names what the
+           calendar shows for Wednesday. Other weeks take no frontier: today's
+           would free a whole past week. -->
       <WeekPreview
         :profile="profile"
         :today-iso="todayIso"
         :sessions="sessionsStore.weekSessions"
         :anchor-iso="anchorIso"
-        :from-date="null"
+        :from-date="isCurrentWeek ? todayIso : null"
         show-status
         link-sessions
       />
