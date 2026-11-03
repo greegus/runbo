@@ -207,7 +207,7 @@ function selectAll(event: FocusEvent): void {
       <!-- Warmups are prescribed and shown, never logged: a warmup inside
            `exercises[].sets` would be fed to the progression script and counted
            as working volume by the stats. -->
-      <div v-if="exercise.warmup.length" class="rounded-xl border border-dashed border-ink-200 bg-ink-50">
+      <div v-if="exercise.warmup.length" class="rounded-xl border border-ink-200 bg-ink-50">
         <button
           type="button"
           class="flex w-full min-h-[48px] items-center justify-between gap-2 px-3 py-2 text-left"
