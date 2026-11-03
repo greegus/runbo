@@ -423,7 +423,10 @@ function setComebackGap(value: unknown): void {
 
             <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
               <p class="text-sm" role="status">
-                <span v-if="gymDirty" class="text-accent-600">Unsaved changes</span>
+                <span v-if="gymDirty" class="inline-flex items-center gap-1 text-accent-600">
+                  <Icon name="alert" />
+                  Unsaved changes
+                </span>
                 <span v-else-if="gymSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
                   <Icon name="check" />
                   Saved
@@ -546,7 +549,10 @@ function setComebackGap(value: unknown): void {
 
             <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
               <p class="text-sm" role="status">
-                <span v-if="timersDirty" class="text-accent-600">Unsaved changes</span>
+                <span v-if="timersDirty" class="inline-flex items-center gap-1 text-accent-600">
+                  <Icon name="alert" />
+                  Unsaved changes
+                </span>
                 <span v-else-if="timersSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
                   <Icon name="check" />
                   Saved
@@ -579,7 +585,10 @@ function setComebackGap(value: unknown): void {
 
             <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
               <p class="text-sm" role="status">
-                <span v-if="cardioDirty" class="text-accent-600">Unsaved changes</span>
+                <span v-if="cardioDirty" class="inline-flex items-center gap-1 text-accent-600">
+                  <Icon name="alert" />
+                  Unsaved changes
+                </span>
                 <span v-else-if="cardioSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
                   <Icon name="check" />
                   Saved
@@ -612,7 +621,10 @@ function setComebackGap(value: unknown): void {
 
             <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
               <p class="text-sm" role="status">
-                <span v-if="zonesDirty" class="text-accent-600">Unsaved changes</span>
+                <span v-if="zonesDirty" class="inline-flex items-center gap-1 text-accent-600">
+                  <Icon name="alert" />
+                  Unsaved changes
+                </span>
                 <span v-else-if="zonesSave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
                   <Icon name="check" />
                   Saved
@@ -645,7 +657,10 @@ function setComebackGap(value: unknown): void {
 
             <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
               <p class="text-sm" role="status">
-                <span v-if="availabilityDirty" class="text-accent-600">Unsaved changes</span>
+                <span v-if="availabilityDirty" class="inline-flex items-center gap-1 text-accent-600">
+                  <Icon name="alert" />
+                  Unsaved changes
+                </span>
                 <span v-else-if="availabilitySave.justSaved.value" class="inline-flex items-center gap-1 text-ink-500">
                   <Icon name="check" />
                   Saved
