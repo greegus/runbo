@@ -13,6 +13,7 @@
  */
 
 import { coerceProfileForPreview } from '@/onboarding/previewProfile'
+import { saunaDates } from '@/training/sauna'
 import { planWeek } from '@/training/schedule'
 import { describePrescription } from '@/training/zones'
 import type { Modality, PlannedItem, Profile, Session } from '@/types'
@@ -46,6 +47,8 @@ export interface WeekGridDay {
   status: DayStatus
   /** Set when a done or active session sits on that day, so the row can link to it. */
   sessionId: string | null
+  /** A rest day from today on that carries a sauna suggestion. Still a rest day. */
+  sauna: boolean
 }
 
 export interface WeekGridModel {
@@ -231,8 +234,25 @@ export function buildWeekGrid(
       detail: detailOf(session),
       status,
       sessionId: session?.id ?? null,
+      sauna: false,
     }
   })
+
+  // Read off the finished grid rather than planned alongside it: a suggestion
+  // must never reach the composer, where it would start counting as a day.
+  // A missed day is neither rest nor training — nothing happened on it.
+  const sauna =
+    safeProfile.availability.saunaOnRestDays === false
+      ? new Set<string>()
+      : saunaDates(
+          days.map((day) => ({
+            date: day.date,
+            isRest: day.status === 'rest',
+            trained: day.status === 'done' || day.status === 'planned' || day.status === 'future',
+          })),
+          todayIso,
+        )
+  for (const day of days) day.sauna = sauna.has(day.date)
 
   return {
     weekStart: plan.week.weekStart,

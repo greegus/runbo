@@ -11,6 +11,7 @@
 import { exerciseKey, prescribe } from '@/liftoscript/evaluator'
 import { parseProgram } from '@/liftoscript/parser'
 import { format } from '@/liftoscript/weight'
+import { buildWeekGrid } from '@/session/weekGrid'
 import { applyComeback, type ComebackProposal } from '@/training/comeback'
 import { type ReplacementOption, replacementOptions, replaceToday, swapToday } from '@/training/composer'
 import { evalContextFromSettings } from '@/training/plates'
@@ -51,6 +52,11 @@ export interface TodayModel {
   doneSession: Session | null
   streak: number
   rollup: WeeklyRollup
+  /**
+   * Today is a rest day that carries a sauna suggestion. Taken from the week
+   * grid itself, so the Today card and the calendar can never disagree on it.
+   */
+  saunaToday: boolean
 }
 
 /**
@@ -104,6 +110,12 @@ export function buildToday(profile: Profile, sessions: Session[], todayIso: stri
     doneSession,
     streak: currentStreak(profile, sessions, todayIso),
     rollup: weeklyRollup(profile, sessions, startOfWeekMonday(todayIso), wholeWeek),
+    saunaToday:
+      resolution.item === null &&
+      todaysSessions.length === 0 &&
+      (buildWeekGrid(profile, sessions, todayIso, todayIso, { fromDate: todayIso }).days.find((day) => day.isToday)
+        ?.sauna ??
+        false),
   }
 }
 

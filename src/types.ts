@@ -53,6 +53,10 @@ export interface Profile {
     // field existed must keep splitting its week exactly as it did, which is
     // what `DEFAULT_STRENGTH_DAYS_PER_WEEK` preserves.
     strengthDaysPerWeek?: number // default 3
+    // Whether rest days carry a sauna suggestion. Optional for the same
+    // reason: absent means ON, so a profile written before the field existed
+    // gets the suggestion without a save (see `saunaDates`).
+    saunaOnRestDays?: boolean // default true
   }
   strengthTrack: {
     goal: { type: GoalType } // MVP: { type: 'open' }

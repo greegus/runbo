@@ -200,6 +200,37 @@ describe('buildWeekGrid', () => {
     expect(missed.every((day) => day.title === 'Strength')).toBe(true)
   })
 
+  it('suggests a sauna on at most two rest days, never on a training day or a past day', () => {
+    const model = buildWeekGrid(profile(), [], MON, MON)
+    const sauna = model.days.filter((day) => day.sauna)
+
+    expect(sauna.length).toBeGreaterThan(0)
+    expect(sauna.length).toBeLessThanOrEqual(2)
+    expect(sauna.every((day) => day.status === 'rest')).toBe(true)
+
+    const later = buildWeekGrid(profile(), [], MON, SUN)
+    expect(later.days.filter((day) => day.sauna && day.date < SUN)).toEqual([])
+  })
+
+  it('suggests no sauna when the athlete turned it off', () => {
+    const off = profile()
+    off.availability = { ...off.availability, saunaOnRestDays: false }
+
+    expect(buildWeekGrid(off, [], MON, MON).days.some((day) => day.sauna)).toBe(false)
+  })
+
+  it('agrees with the Today card on whether today carries the sauna', () => {
+    const answers = [MON, TUE, WED, THU, '2026-08-28', '2026-08-29', SUN].map((date) => {
+      const today = buildWeekGrid(profile(), [], date, date, { fromDate: date }).days.find((day) => day.isToday)
+
+      expect(buildToday(profile(), [], date).saunaToday).toBe(today?.sauna ?? false)
+      return today?.sauna ?? false
+    })
+
+    // Not vacuous: some day of the week is a sauna day.
+    expect(answers).toContain(true)
+  })
+
   it('phrases a cardio day exactly once, through describePrescription', () => {
     const model = buildWeekGrid(profile(), [], WED, WED)
     const cardio = model.days.find((day) => day.kind === 'cardio')
