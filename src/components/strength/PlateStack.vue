@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatPlateWeight, type PlateLoad } from '@/training/plates'
+import { formatPlateWeight, type PlateLoad, plateColorIn } from '@/training/plates'
 import type { Profile } from '@/types'
 
 import PlateDisc from './PlateDisc.vue'
@@ -31,6 +31,7 @@ withDefaults(
         :key="index"
         :weight="plate"
         :units="settings.units"
+        :color="plateColorIn(plate, settings)"
         :compact="compact"
       />
     </template>

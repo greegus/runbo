@@ -12,7 +12,7 @@ import {
   validatePlates,
 } from '@/onboarding/plateInventory'
 import type { GymSettings } from '@/onboarding/types'
-import { formatPlateLoad, platesForWeight } from '@/training/plates'
+import { formatPlateLoad, PLATE_COLORS_ALL, type PlateColor, plateColor, platesForWeight } from '@/training/plates'
 
 const props = defineProps<{ modelValue: GymSettings }>()
 
@@ -25,6 +25,37 @@ const UNIT_OPTIONS = [
   { value: 'kg', label: 'kg' },
   { value: 'lb', label: 'lb' },
 ] as const
+
+const COLOR_NAMES: Record<PlateColor, string> = {
+  red: 'Red',
+  blue: 'Blue',
+  yellow: 'Yellow',
+  green: 'Green',
+  grey: 'Grey',
+  'pale-red': 'Pale red',
+  'pale-blue': 'Pale blue',
+  'pale-yellow': 'Pale yellow',
+  'pale-green': 'Pale green',
+  'pale-grey': 'Pale grey',
+  silver: 'Silver',
+  black: 'Black',
+}
+
+/** A colour swatch, in the button and in the picker: the paint, outlined where it is pale. */
+const SWATCH_CLASSES: Record<PlateColor, string> = {
+  red: 'bg-red-600',
+  blue: 'bg-blue-600',
+  yellow: 'bg-yellow-400',
+  green: 'bg-green-700',
+  grey: 'bg-ink-500',
+  'pale-red': 'bg-red-200 ring-1 ring-red-300 ring-inset',
+  'pale-blue': 'bg-blue-200 ring-1 ring-blue-300 ring-inset',
+  'pale-yellow': 'bg-yellow-100 ring-1 ring-yellow-300 ring-inset',
+  'pale-green': 'bg-green-200 ring-1 ring-green-300 ring-inset',
+  'pale-grey': 'bg-ink-100 ring-1 ring-ink-300 ring-inset',
+  silver: 'bg-linear-to-r from-white to-ink-300 ring-1 ring-ink-400 ring-inset',
+  black: 'bg-ink-800',
+}
 
 /** A weight that needs most of the inventory, so the check panel is informative. */
 const SAMPLE_WEIGHT: Record<'kg' | 'lb', number> = { kg: 102.5, lb: 225 }
@@ -112,7 +143,39 @@ function stepPlateCount(index: number, delta: number): void {
 // Re-sorting on every keystroke would drag the row out from under the thumb
 // while it is being typed into, so the order is only restored on blur.
 function sortRows(): void {
+  // The open picker is tied to a row index, which the sort is about to move.
+  colorRow.value = null
   setPlates(sortPlatesDesc(plates.value))
+}
+
+/** The row whose colour picker is open; one at a time keeps the list short. */
+const colorRow = ref<number | null>(null)
+
+function toggleColorRow(index: number): void {
+  colorRow.value = colorRow.value === index ? null : index
+}
+
+/** The colour a row shows: its own paint, or the competition colour for its size. */
+function rowColor(row: PlateRow): PlateColor {
+  return row.color ?? plateColor(row.weight, props.modelValue.units)
+}
+
+/**
+ * Picking the competition colour for the size stores nothing: an absent
+ * `color` is what "the usual colour" means, so there is no separate option to
+ * go back to it, and the plate keeps following the convention if its weight
+ * is retyped.
+ */
+function setPlateColor(index: number, color: PlateColor): void {
+  setPlates(
+    plates.value.map((row, i) => {
+      if (i !== index) return row
+      // Dropped rather than stored as undefined: Firestore rejects an undefined field.
+      const { color: _previous, ...rest } = row
+      return color === plateColor(row.weight, props.modelValue.units) ? rest : { ...rest, color }
+    }),
+  )
+  colorRow.value = null
 }
 
 function addPlate(): void {
@@ -120,6 +183,7 @@ function addPlate(): void {
 }
 
 function removePlate(index: number): void {
+  colorRow.value = null
   setPlates(plates.value.filter((_, i) => i !== index))
 }
 
@@ -198,12 +262,16 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
     <section class="flex flex-col gap-3">
       <header>
         <h2 class="font-semibold text-ink-900">Plates</h2>
-        <p class="text-sm text-ink-500">How many pairs of each size you have — one plate per side counts as a pair.</p>
+        <p class="text-sm text-ink-500">
+          How many pairs of each size you have — one plate per side counts as a pair. Tap a colour to match it to your
+          gym's.
+        </p>
       </header>
 
       <ul class="flex flex-col gap-3">
         <li v-for="(plate, index) in plates" :key="index" class="flex flex-col gap-1">
           <div class="flex items-center gap-2">
+
             <Input
               :model-value="plate.weight"
               type="number"
@@ -212,17 +280,46 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
               step="0.25"
               min="0"
               size="large"
-              class="min-h-[48px] w-28 text-lg"
+              class="min-h-[48px] w-[5.5rem] shrink-0 text-lg [--vuiii-input-padding--large:0.25rem]"
               :aria-label="`Plate weight in ${modelValue.units}`"
               :aria-describedby="rowError(index) ? `plate-error-${index}` : undefined"
               :invalid="rowError(index) !== null"
               @focus="selectAll"
               @blur="sortRows()"
               @update:model-value="setPlateWeight(index, $event)"
-            />
-            <span class="w-8 text-ink-500">{{ modelValue.units }}</span>
+            >
+              <!-- The unit rides inside the field: beside it, with the paint
+                   bucket, the row no longer fit a 375px phone. The padding is
+                   cut for the same reason — vuiii applies its 1.35em twice, on
+                   the wrapper and on the input inside, and at the default a
+                   suffixed field needs ~150px before "1.25" shows at all. -->
+              <template #suffix>
+                <span class="flex shrink-0 items-center pr-1.5 text-base text-ink-500" aria-hidden="true">
+                  {{ modelValue.units }}
+                </span>
+              </template>
+            </Input>
 
-            <div class="ml-auto flex items-center gap-1">
+            <!-- The colour the session will paint this plate in, as a swatch
+                 inside a square button like the count buttons beside it. After
+                 the weight: the size is what the row is about. -->
+            <button
+              type="button"
+              class="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-ink-300 bg-white focus-visible:outline-2 focus-visible:outline-accent-600"
+              :class="colorRow === index ? 'border-accent-600' : ''"
+              :aria-expanded="colorRow === index"
+              :aria-controls="`plate-colors-${index}`"
+              :aria-label="`Colour of the ${plate.weight} ${modelValue.units} plates: ${COLOR_NAMES[rowColor(plate)]}`"
+              @click="toggleColorRow(index)"
+            >
+              <span
+                class="size-6 shrink-0 rounded-md"
+                :class="SWATCH_CLASSES[rowColor(plate)]"
+                aria-hidden="true"
+              />
+            </button>
+
+            <div class="ml-auto flex items-center gap-0.5">
               <IconButton
                 icon="minus"
                 variant="outlined"
@@ -237,7 +334,7 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
                    invisible. It is 1-4 pairs with a button on either side —
                    nothing here needs a keyboard. -->
               <output
-                class="w-12 text-center text-lg font-semibold tabular-nums text-ink-900"
+                class="w-9 text-center text-lg font-semibold tabular-nums text-ink-900"
                 :aria-label="`Pairs of ${plate.weight} ${modelValue.units} plates`"
                 >{{ plate.count }}</output
               >
@@ -258,6 +355,29 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
                 @click="removePlate(index)"
               />
             </div>
+          </div>
+
+          <div
+            v-if="colorRow === index"
+            :id="`plate-colors-${index}`"
+            role="radiogroup"
+            :aria-label="`Colour of the ${plate.weight} ${modelValue.units} plates`"
+            class="flex flex-wrap items-center gap-1 rounded-lg border border-ink-200 bg-ink-50 p-2"
+          >
+            <button
+              v-for="color in PLATE_COLORS_ALL"
+              :key="color"
+              type="button"
+              role="radio"
+              :aria-checked="rowColor(plate) === color"
+              :aria-label="COLOR_NAMES[color]"
+              :title="COLOR_NAMES[color]"
+              class="flex size-10 cursor-pointer items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-accent-600"
+              :class="rowColor(plate) === color ? 'ring-2 ring-accent-600' : ''"
+              @click="setPlateColor(index, color)"
+            >
+              <span class="size-7 rounded-md" :class="SWATCH_CLASSES[color]" aria-hidden="true" />
+            </button>
           </div>
 
           <p v-if="rowError(index)" :id="`plate-error-${index}`" role="alert" class="text-sm text-accent-700">

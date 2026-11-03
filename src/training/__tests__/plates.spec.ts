@@ -8,6 +8,7 @@ import {
   nextLoadableDown,
   nextLoadableUp,
   plateColor,
+  plateColorIn,
   platesForWeight,
   roundToLoadable,
 } from '../plates'
@@ -133,5 +134,22 @@ describe('plateColor', () => {
   it('falls back to black iron for a size with no convention', () => {
     expect(plateColor(7.5, 'kg')).toBe('black')
     expect(plateColor(100, 'lb')).toBe('black')
+  })
+})
+
+describe('plateColorIn', () => {
+  const gym = (plates: Profile['settings']['plates']) => ({ units: 'kg' as const, plates })
+
+  it("uses the gym's own paint for a size it repainted", () => {
+    expect(plateColorIn(20, gym([{ weight: 20, count: 2, color: 'black' }]))).toBe('black')
+  })
+
+  it('falls back to the competition colour for a size left as it is', () => {
+    expect(plateColorIn(20, gym([{ weight: 20, count: 2 }]))).toBe('blue')
+    expect(plateColorIn(25, gym([{ weight: 20, count: 2, color: 'black' }]))).toBe('red')
+  })
+
+  it('finds the paint of a weight that drifted in floating point', () => {
+    expect(plateColorIn(2.4999999, gym([{ weight: 2.5, count: 2, color: 'green' }]))).toBe('green')
   })
 })

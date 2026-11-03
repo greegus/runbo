@@ -8,7 +8,7 @@
 
 import type { EvalContext } from '@/liftoscript/types'
 import { compare, decrement, increment, platesFor, roundWeight, type Weight } from '@/liftoscript/weight'
-import type { Profile, WeightValue } from '@/types'
+import type { PlateColor, Profile, WeightValue } from '@/types'
 
 /** The gym half of the profile — units, barbell and plate inventory. */
 export type GymSettings = Profile['settings']
@@ -60,20 +60,23 @@ export function nextLoadableDown(target: WeightValue, settings: GymSettings): We
   return decrement(target, evalContextFromSettings(settings))
 }
 
-/** The paint on a plate — what the lifter looks for on the rack. */
-export type PlateColor =
-  | 'red'
-  | 'blue'
-  | 'yellow'
-  | 'green'
-  | 'grey'
-  | 'pale-red'
-  | 'pale-blue'
-  | 'pale-yellow'
-  | 'pale-green'
-  | 'pale-grey'
-  | 'silver'
-  | 'black'
+export type { PlateColor }
+
+/** Every paint a plate can be given, in the order the colour picker offers them. */
+export const PLATE_COLORS_ALL: PlateColor[] = [
+  'red',
+  'blue',
+  'yellow',
+  'green',
+  'grey',
+  'pale-red',
+  'pale-blue',
+  'pale-yellow',
+  'pale-green',
+  'pale-grey',
+  'silver',
+  'black',
+]
 
 // DECISION: kg follows the IWF competition hues (25 red, 20 blue, 15 yellow,
 // 10 green), with grey for the 5 rather than IWF white — a white disc on a white
@@ -113,6 +116,19 @@ export function plateColor(weight: number, units: GymSettings['units']): PlateCo
   // Rounded like `formatPlateWeight`, so a weight that drifted to 2.4999999 in
   // arithmetic still finds its key — and gets the colour of the label it shows.
   return PLATE_COLORS[units][Math.round(weight * 100) / 100] ?? 'black'
+}
+
+/**
+ * Colour of one plate of `weight` in this gym: the athlete's own paint when they
+ * set one for that size, the competition convention otherwise. Gyms paint their
+ * plates as they please, and a disc that does not match the rack sends the
+ * lifter looking for the wrong plate.
+ */
+export function plateColorIn(weight: number, settings: Pick<GymSettings, 'units' | 'plates'>): PlateColor {
+  const rounded = Math.round(weight * 100) / 100
+  const own = settings.plates.find((plate) => Math.round(plate.weight * 100) / 100 === rounded)?.color
+
+  return own ?? plateColor(weight, settings.units)
 }
 
 // Trailing zeros read as noise on a plate hint: 2.50 is a plate nobody calls that.

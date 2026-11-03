@@ -15,8 +15,10 @@ const props = withDefaults(
     units: Profile['settings']['units']
     /** Smaller disc for a dense list such as the warmup ramp. */
     compact?: boolean
+    /** The gym's own paint for this size; the competition colour when absent. */
+    color?: PlateColor
   }>(),
-  { compact: false },
+  { compact: false, color: undefined },
 )
 
 // The painted plates get white digits and a white edge, so a red disc stays a
@@ -40,7 +42,7 @@ const COLOR_CLASSES: Record<PlateColor, string> = {
   black: 'bg-ink-800 text-white ring-2 ring-white',
 }
 
-const colorClass = computed(() => COLOR_CLASSES[plateColor(props.weight, props.units)])
+const colorClass = computed(() => COLOR_CLASSES[props.color ?? plateColor(props.weight, props.units)])
 </script>
 
 <template>

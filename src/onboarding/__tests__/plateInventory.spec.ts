@@ -23,6 +23,20 @@ describe('normalizePlates', () => {
     ])
   })
 
+  it("keeps a plate's own colour, and the first one set on a duplicate", () => {
+    expect(
+      normalizePlates([
+        { weight: 20, count: 2, color: 'black' },
+        { weight: 20, count: 3, color: 'red' },
+        { weight: 10, count: 1 },
+        { weight: 10, count: 2, color: 'green' },
+      ]),
+    ).toEqual([
+      { weight: 20, count: 3, color: 'black' },
+      { weight: 10, count: 2, color: 'green' },
+    ])
+  })
+
   it('drops non-finite, zero and negative weights and counts', () => {
     expect(
       normalizePlates([

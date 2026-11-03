@@ -8,9 +8,12 @@
  * prescribed weights and the plate hint start to disagree.
  */
 
+import type { PlateColor } from '@/types'
+
 export interface PlateRow {
   weight: number // in the profile's units
   count: number // pairs owned, i.e. how many are available PER SIDE
+  color?: PlateColor // the gym's own paint; absent means the competition colour
 }
 
 export interface PlateInventoryError {
@@ -62,17 +65,24 @@ export function sortPlatesDesc(rows: PlateRow[]): PlateRow[] {
  * the settings on, which is why validation and normalisation are separate.
  */
 export function normalizePlates(rows: PlateRow[]): PlateRow[] {
-  const byWeight = new Map<number, number>()
+  const byWeight = new Map<number, PlateRow>()
 
   for (const row of rows) {
     if (!Number.isFinite(row.weight) || row.weight <= 0) continue
     if (!Number.isFinite(row.count) || row.count <= 0) continue
 
     const count = Math.floor(row.count)
-    byWeight.set(row.weight, Math.max(byWeight.get(row.weight) ?? 0, count))
+    const kept = byWeight.get(row.weight)
+    // A duplicate keeps the first row's paint unless only the later one has any.
+    const color = kept?.color ?? row.color
+    byWeight.set(row.weight, {
+      weight: row.weight,
+      count: Math.max(kept?.count ?? 0, count),
+      ...(color ? { color } : {}),
+    })
   }
 
-  return [...byWeight.entries()].map(([weight, count]) => ({ weight, count })).sort((a, b) => b.weight - a.weight)
+  return [...byWeight.values()].sort((a, b) => b.weight - a.weight)
 }
 
 /**

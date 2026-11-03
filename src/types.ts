@@ -9,6 +9,21 @@ export type Modality = 'run' | 'bike' | 'swim'
 export type SessionKind = 'strength' | 'cardio'
 export type GoalType = 'open' | 'race' | 'numeric' // MVP uses only 'open'
 
+/** The paint on a plate — what the lifter looks for on the rack. */
+export type PlateColor =
+  | 'red'
+  | 'blue'
+  | 'yellow'
+  | 'green'
+  | 'grey'
+  | 'pale-red'
+  | 'pale-blue'
+  | 'pale-yellow'
+  | 'pale-green'
+  | 'pale-grey'
+  | 'silver'
+  | 'black'
+
 export interface WeightValue {
   value: number
   unit: 'kg' | 'lb'
@@ -21,7 +36,9 @@ export interface Profile {
   settings: {
     units: 'kg' | 'lb'
     barbellWeight: number // in units, default 20
-    plates: { weight: number; count: number }[] // per side
+    // per side; `color` only when the athlete repainted a plate their gym
+    // paints differently — absent means the competition colour for its size
+    plates: { weight: number; count: number; color?: PlateColor }[]
     restTimers: { t1: number; t2: number; t3: number } // seconds, defaults 180/120/60
     comebackGapDays: number // default 10
     notifications: { daily: boolean; gapNudge: boolean }
