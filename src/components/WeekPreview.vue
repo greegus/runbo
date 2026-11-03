@@ -94,6 +94,11 @@ const rows = computed(() => model.value.days.map((day) => ({ ...day, to: linkFor
               <span class="font-medium">{{ day.title }}</span>
             </span>
             <span v-if="props.showStatus && day.detail" class="pl-7 text-xs text-ink-500">{{ day.detail }}</span>
+            <!-- Without it a missed lift and its catch-up read as the same
+                 program day planned twice in a row. -->
+            <span v-if="props.showStatus && day.catchesUp" class="pl-7 text-xs text-ink-500">
+              Catches up {{ day.catchesUp }}
+            </span>
           </span>
 
           <span v-else-if="day.kind === 'cardio'" class="flex min-w-0 flex-col text-sm text-ink-900">

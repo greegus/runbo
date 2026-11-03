@@ -196,6 +196,26 @@ describe('buildWeekGrid', () => {
     expect(nextAhead?.title).toBe(firstPlanned?.title)
   })
 
+  it('marks the day that catches up a missed lift, and only that one', () => {
+    const stitched = buildWeekGrid(profile(), [], THU, THU, { fromDate: THU })
+    const missed = stitched.days.filter((day) => day.status === 'missed' && day.kind === 'strength')
+    const marked = stitched.days.filter((day) => day.catchesUp !== null)
+
+    expect(missed.length).toBeGreaterThan(0)
+    expect(marked.length).toBeGreaterThan(0)
+    expect(marked.length).toBeLessThanOrEqual(missed.length)
+    // The first catch-up takes the first missed lift: same program day, later date.
+    expect(marked[0].catchesUp).toBe(missed[0].label)
+    expect(marked[0].title).toBe(missed[0].title)
+    expect(marked[0].date > missed[0].date).toBe(true)
+  })
+
+  it('marks no catch-up without a frontier', () => {
+    const whole = buildWeekGrid(profile(), [], THU, THU)
+
+    expect(whole.days.every((day) => day.catchesUp === null)).toBe(true)
+  })
+
   it('phrases a cardio day exactly once, through describePrescription', () => {
     const model = buildWeekGrid(profile(), [], WED, WED)
     const cardio = model.days.find((day) => day.kind === 'cardio')
