@@ -85,8 +85,8 @@ function whole(value: unknown, fallback: number, min: number, max: number): numb
 
 // Every emit rebuilds the whole slice: `updateDoc` replaces nested objects
 // wholesale, so a patch carrying only the edited field would drop the others.
-function patch(changes: Partial<Availability>): void {
-  const next = { ...props.modelValue, ...changes }
+function patch(changes: Partial<Availability>, base: Availability = props.modelValue): void {
+  const next = { ...base, ...changes }
   const daysPerWeek = whole(next.daysPerWeek, 5, 1, 7)
 
   emit('update:modelValue', {
@@ -103,6 +103,17 @@ function patch(changes: Partial<Availability>): void {
     longSessionDay: whole(next.longSessionDay, 5, 0, 6),
     preferredDays: (next.preferredDays ?? []).map((day) => whole(day, 0, 0, 6)),
   })
+}
+
+/**
+ * Opt-in, and stored only while on: an absent field is what "off" means, so
+ * switching it off drops the field rather than writing `false`. Otherwise an
+ * off → on → off round trip left a draft that differed from the saved
+ * profile only in a key, and the section read "Unsaved changes".
+ */
+function setSauna(on: boolean): void {
+  const { saunaOnRestDays: _previous, ...rest } = props.modelValue
+  patch(on ? { saunaOnRestDays: true } : {}, rest)
 }
 
 function dayCountText(value: number): string {
@@ -207,14 +218,15 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
       </template>
     </div>
 
-    <!-- A switch, not a day count: the suggestion picks its own rest days
-         (see saunaDates). Absent on an older profile reads as on. -->
+    <!-- A switch, not a day count: the suggestion picks its own rest day
+         (see saunaDates). Off unless switched on. Claiming a sauna from "Train
+         something else today" works either way. -->
     <Checkbox
       switch
       label="Suggest sauna on rest days"
-      description="Up to two rest days a week, never back to back. A suggestion only — it is not a training day."
-      :model-value="modelValue.saunaOnRestDays !== false"
-      @update:model-value="patch({ saunaOnRestDays: $event === true })"
+      description="One rest day a week, the day after training when there is one. A suggestion only — never a training day."
+      :model-value="modelValue.saunaOnRestDays === true"
+      @update:model-value="setSauna($event === true)"
     />
   </div>
 </template>

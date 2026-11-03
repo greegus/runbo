@@ -72,7 +72,11 @@ function requestDelete(): void {
       :aria-expanded="expanded"
       @click="toggle"
     >
-      <Icon :name="session.kind === 'cardio' ? 'run' : 'dumbbell'" size="large" class="shrink-0 text-accent-600" />
+      <Icon
+        :name="session.kind === 'sauna' ? 'sauna' : session.kind === 'cardio' ? 'run' : 'dumbbell'"
+        size="large"
+        class="shrink-0 text-accent-600"
+      />
 
       <span class="min-w-0 flex-1">
         <span class="flex flex-wrap items-baseline gap-2">
@@ -102,6 +106,11 @@ function requestDelete(): void {
         completed
         :session="session"
       />
+
+      <!-- A claim carries nothing to expand into but what it is. -->
+      <p v-else-if="session.kind === 'sauna'" class="text-sm text-ink-500">
+        Claimed{{ typeof session.minutes === 'number' ? ` — ${session.minutes} min` : '' }}. Not counted as training.
+      </p>
 
       <p v-else-if="session.kind === 'cardio'" class="text-sm text-ink-500">
         Logged without a prescription{{ typeof session.minutes === 'number' ? ` — ${session.minutes} min` : '' }}.

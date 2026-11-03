@@ -296,6 +296,33 @@ async function startSession(readiness?: ReadinessInput): Promise<void> {
   }
 }
 
+/**
+ * One write, not awaited, for the same reason as `startSession`: offline the
+ * claim is durable in the cache and on screen through the live listener long
+ * before the server acknowledges it. Nothing about the plan changes — a sauna
+ * is a note on the day, not training.
+ */
+function claimSauna(): void {
+  if (busy.value) return
+  refreshToday()
+  startError.value = null
+
+  void sessionsStore.claimSauna(todayIso.value).catch((error: unknown) => {
+    console.error('[today] could not claim the sauna', error)
+    startError.value = 'Could not claim the sauna. Check your connection and try again.'
+  })
+}
+
+function unclaimSauna(session: Session): void {
+  if (busy.value) return
+  startError.value = null
+
+  void sessionsStore.unclaimSauna(session.id).catch((error: unknown) => {
+    console.error('[today] could not take the sauna claim back', error)
+    startError.value = 'Could not undo the sauna claim. Check your connection and try again.'
+  })
+}
+
 async function onComebackAccept(): Promise<void> {
   const profile = profileStore.profile
   const proposal = comebackProposal.value
@@ -368,11 +395,14 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
         :active-session="model.activeSession"
         :done-session="model.doneSession"
         :explanation="explanation"
-        :sauna="model.saunaToday && override === null"
+        :sauna-suggested="model.saunaSuggested && override === null"
+        :sauna-claimed="model.saunaClaimed"
         :busy="busy"
         :error="startError"
         @start="onStart()"
         @resume="onResume($event)"
+        @claim-sauna="claimSauna()"
+        @unclaim-sauna="unclaimSauna($event)"
       />
 
       <ReplacePicker
@@ -380,9 +410,11 @@ async function onBodyweight(payload: { date: string; weight: number }): Promise<
         :options="model.replacements"
         :swap="model.swap"
         :zones="profileStore.profile?.cardioTrack.zones"
+        :sauna="model.saunaClaimed === null"
         :busy="busy"
         @pick="onReplace($event)"
         @swap="onSwap()"
+        @sauna="claimSauna()"
       />
 
       <button

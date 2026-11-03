@@ -94,6 +94,12 @@ const rows = computed(() => model.value.days.map((day) => ({ ...day, to: linkFor
               <span class="font-medium">{{ day.title }}</span>
             </span>
             <span v-if="props.showStatus && day.detail" class="pl-7 text-xs text-ink-500">{{ day.detail }}</span>
+            <!-- A sauna claimed on a training day is a note under it; the plan
+                 and its status above are untouched. -->
+            <span v-if="day.sauna === 'claimed'" class="flex items-center gap-1 pl-7 text-xs text-ink-500">
+              <Icon name="sauna" class="shrink-0 text-accent-600 [--vuiii-icon-size:0.875rem]" aria-hidden="true" />
+              Sauna claimed
+            </span>
           </span>
 
           <span v-else-if="day.kind === 'cardio'" class="flex min-w-0 flex-col text-sm text-ink-900">
@@ -109,19 +115,28 @@ const rows = computed(() => model.value.days.map((day) => ({ ...day, to: linkFor
               </span>
             </span>
             <span v-if="props.showStatus && day.detail" class="pl-7 text-xs text-ink-500">{{ day.detail }}</span>
+            <!-- A sauna claimed on a training day is a note under it; the plan
+                 and its status above are untouched. -->
+            <span v-if="day.sauna === 'claimed'" class="flex items-center gap-1 pl-7 text-xs text-ink-500">
+              <Icon name="sauna" class="shrink-0 text-accent-600 [--vuiii-icon-size:0.875rem]" aria-hidden="true" />
+              Sauna claimed
+            </span>
           </span>
 
-          <!-- A sauna day is still a rest day: the word stays, the suggestion
-               rides beside it. -->
+          <!-- A sauna day is still a rest day: the word stays, the sauna rides
+               beside it — claimed, or the week's one suggestion. -->
           <span v-else-if="day.sauna" class="flex min-w-0 items-center gap-2 text-sm text-ink-500">
             <Icon name="sauna" class="shrink-0 text-accent-600" aria-hidden="true" />
-            <span>Rest · sauna</span>
+            <span>{{ day.sauna === 'claimed' ? 'Rest · sauna claimed' : 'Rest · sauna suggested' }}</span>
           </span>
           <span v-else class="text-sm text-ink-500">Rest</span>
 
           <!-- Status is a word and a shape, never colour alone: the app is used
                in a bright gym at arm's length, and "done" must survive that. -->
-          <span v-if="props.showStatus && day.status === 'done'" class="ml-auto flex shrink-0 items-center">
+          <span
+            v-if="props.showStatus && (day.status === 'done' || (day.status === 'rest' && day.sauna === 'claimed'))"
+            class="ml-auto flex shrink-0 items-center"
+          >
             <Icon name="check" class="text-accent-600" aria-hidden="true" />
             <span class="sr-only">done</span>
           </span>

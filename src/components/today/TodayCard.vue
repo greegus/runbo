@@ -26,8 +26,10 @@ const props = withDefaults(
     /** Today's finished session: the day is logged and must not be started again. */
     doneSession?: Session | null
     explanation?: string | null
-    /** Today is a rest day that carries a sauna suggestion. */
-    sauna?: boolean
+    /** Today is the week's suggested sauna day. */
+    saunaSuggested?: boolean
+    /** The sauna claimed today — a note on the day, whatever the day holds. */
+    saunaClaimed?: Session | null
     busy?: boolean
     error?: string | null
   }>(),
@@ -38,7 +40,8 @@ const props = withDefaults(
     activeSession: null,
     doneSession: null,
     explanation: null,
-    sauna: false,
+    saunaSuggested: false,
+    saunaClaimed: null,
     busy: false,
     error: null,
   },
@@ -47,6 +50,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   start: []
   resume: [session: Session]
+  'claim-sauna': []
+  'unclaim-sauna': [session: Session]
 }>()
 
 /**
@@ -129,12 +134,48 @@ function primary(): void {
       </div>
     </div>
 
-    <!-- A suggestion under the rest day, not a workout: nothing to start and
-         nothing to log, so it carries no button. -->
-    <p v-if="props.sauna && !props.item" class="flex items-start gap-2 rounded-lg bg-ink-50 p-3 text-sm text-ink-700">
-      <Icon name="sauna" class="mt-px shrink-0 text-accent-600" aria-hidden="true" />
-      <span><span class="font-semibold text-ink-900">Sauna suggested.</span> 15–20 min, easy heat, drink water.</span>
-    </p>
+    <!-- A note under the day, not a workout: claimed on a training day it
+         leaves the plan above exactly as it was. Undo is right here, because a
+         claim is one tap and a mis-tap should be one tap to take back. -->
+    <div
+      v-if="props.saunaClaimed"
+      class="flex min-h-[48px] items-center gap-2 rounded-lg bg-ink-50 py-1 pr-1 pl-3 text-sm text-ink-700"
+      role="status"
+    >
+      <Icon name="sauna" class="shrink-0 text-accent-600" aria-hidden="true" />
+      <span class="min-w-0 flex-1">
+        <span class="font-semibold text-ink-900">Sauna claimed</span>
+        <span v-if="props.saunaClaimed.minutes" class="tabular-nums"> · {{ props.saunaClaimed.minutes }} min</span>
+      </span>
+      <Icon name="check" class="shrink-0 text-accent-600" aria-hidden="true" />
+      <button
+        type="button"
+        class="min-h-[40px] shrink-0 rounded-lg px-2 font-medium text-ink-500 focus-visible:outline-2 focus-visible:outline-accent-600"
+        :disabled="props.busy"
+        @click="emit('unclaim-sauna', props.saunaClaimed)"
+      >
+        Undo
+      </button>
+    </div>
+
+    <!-- The week's one suggestion, on a rest day only. Claiming it is one tap. -->
+    <div
+      v-else-if="props.saunaSuggested && !props.item"
+      class="flex items-center gap-2 rounded-lg bg-ink-50 py-1 pr-1 pl-3 text-sm text-ink-700"
+    >
+      <Icon name="sauna" class="shrink-0 text-accent-600" aria-hidden="true" />
+      <span class="min-w-0 flex-1 py-2">
+        <span class="font-semibold text-ink-900">Sauna suggested.</span> 15–20 min, easy heat, drink water.
+      </span>
+      <button
+        type="button"
+        class="min-h-[40px] shrink-0 rounded-lg border border-accent-600 px-3 font-semibold text-accent-700 focus-visible:outline-2 focus-visible:outline-accent-600"
+        :disabled="props.busy"
+        @click="emit('claim-sauna')"
+      >
+        Claim
+      </button>
+    </div>
 
     <p v-if="props.explanation" class="text-sm text-ink-500">{{ props.explanation }}</p>
 

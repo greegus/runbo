@@ -24,14 +24,17 @@ const props = withDefaults(
     /** Today on the other track — offered only when no option already holds it. */
     swap?: PlannedItem | null
     zones?: Profile['cardioTrack']['zones']
+    /** Offer to claim a sauna today. Off once today already has one. */
+    sauna?: boolean
     busy?: boolean
   }>(),
-  { swap: null, zones: undefined, busy: false },
+  { swap: null, zones: undefined, sauna: false, busy: false },
 )
 
 const emit = defineEmits<{
   pick: [option: ReplacementOption]
   swap: []
+  sauna: []
 }>()
 
 const open = ref(false)
@@ -61,17 +64,33 @@ const rows = computed(() => {
     choose: () => emit('pick', option),
   }))
 
-  if (!props.swap) return picks
+  const swap = props.swap
+    ? [
+        {
+          ...describeItem(props.swap),
+          key: 'swap',
+          origin: "Swaps tracks — today's session moves later in the week",
+          choose: () => emit('swap'),
+        },
+      ]
+    : []
 
-  return [
-    ...picks,
-    {
-      ...describeItem(props.swap),
-      key: 'swap',
-      origin: "Swaps tracks — today's session moves later in the week",
-      choose: () => emit('swap'),
-    },
-  ]
+  // Always on offer, every day: a sauna is not training, so it replaces
+  // nothing — today's plan stays exactly as it is, and the claim sits beside it.
+  const sauna = props.sauna
+    ? [
+        {
+          icon: 'sauna',
+          title: 'Sauna',
+          detail: null,
+          key: 'sauna',
+          origin: "Claim it for today — in addition, today's plan stays",
+          choose: () => emit('sauna'),
+        },
+      ]
+    : []
+
+  return [...picks, ...swap, ...sauna]
 })
 
 function choose(row: { choose: () => void }): void {
