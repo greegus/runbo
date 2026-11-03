@@ -223,7 +223,11 @@ export function buildWeekGrid(
       isToday: day.date === todayIso,
       kind: session?.kind ?? planned?.kind ?? null,
       modality: modalityOf(planned, session),
-      title: titleOf(planned, session, safeProfile),
+      // A missed lift names no program day. Which one it would have been is
+      // not stored anywhere: it is recomposed from the CURRENT rotation
+      // cursor, so as soon as a later lift is logged a missed Monday's DAY 4
+      // reads DAY 1. "Strength" is all that is known for certain.
+      title: status === 'missed' && planned?.kind === 'strength' ? 'Strength' : titleOf(planned, session, safeProfile),
       detail: detailOf(session),
       status,
       sessionId: session?.id ?? null,

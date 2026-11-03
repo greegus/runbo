@@ -184,16 +184,20 @@ describe('buildWeekGrid', () => {
   })
 
   it('moves the missed lift on to the next strength day, as Today does', () => {
-    // Nothing logged by Thursday: the rotation is still on the first program
-    // day, so the next strength day takes it rather than the day it was planned.
-    const whole = buildWeekGrid(profile(), [], THU, THU)
+    // Nothing logged by Thursday: the rotation is still on A1, so the next
+    // strength day takes it rather than the day it was planned.
     const stitched = buildWeekGrid(profile(), [], THU, THU, { fromDate: THU })
-
-    const firstPlanned = whole.days.find((day) => day.kind === 'strength')
     const nextAhead = stitched.days.find((day) => day.date >= THU && day.kind === 'strength')
 
-    expect(firstPlanned).toBeDefined()
-    expect(nextAhead?.title).toBe(firstPlanned?.title)
+    expect(nextAhead?.title).toBe('Strength A1')
+  })
+
+  it('names no program day on a missed lift, which is only a guess from the current cursor', () => {
+    const model = buildWeekGrid(profile(), [], THU, THU, { fromDate: THU })
+    const missed = model.days.filter((day) => day.status === 'missed' && day.kind === 'strength')
+
+    expect(missed.length).toBeGreaterThan(0)
+    expect(missed.every((day) => day.title === 'Strength')).toBe(true)
   })
 
   it('phrases a cardio day exactly once, through describePrescription', () => {
