@@ -124,6 +124,23 @@ function toggle(entry: HistoryEntry, expanded: boolean): void {
  * activation across it would queue a second batch against a list that has
  * already moved.
  */
+async function setMultisport(entry: HistoryEntry, counted: boolean): Promise<void> {
+  if (busyId.value !== null) return
+
+  busyId.value = entry.session.id
+  rowError.value = null
+
+  try {
+    // Durable in the local cache at once; offline the ack waits for reconnect.
+    await settleOrQueued(sessionsStore.setMultisportEntry(entry.session, counted))
+  } catch (error) {
+    console.error('[history] multisport flag failed', error)
+    rowError.value = { id: entry.session.id, message: 'That change could not be saved. Try again.' }
+  } finally {
+    busyId.value = null
+  }
+}
+
 async function remove(entry: HistoryEntry): Promise<void> {
   if (!deletable(entry) || busyId.value !== null) return
 
@@ -236,6 +253,7 @@ async function remove(entry: HistoryEntry): Promise<void> {
               :error="rowError?.id === entry.session.id ? rowError.message : null"
               @update:expanded="toggle(entry, $event)"
               @delete="remove(entry)"
+              @multisport="setMultisport(entry, $event)"
             />
           </ul>
         </section>

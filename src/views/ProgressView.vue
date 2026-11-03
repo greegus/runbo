@@ -7,6 +7,7 @@ import { buildBarChart } from '@/charts/barChart'
 import { buildLineChart } from '@/charts/lineChart'
 import BarChart from '@/components/charts/BarChart.vue'
 import LineChart from '@/components/charts/LineChart.vue'
+import MultisportUsage from '@/components/MultisportUsage.vue'
 import StatTile from '@/components/StatTile.vue'
 import { useBodyweightStore } from '@/stores/bodyweight'
 import { useProfileStore } from '@/stores/profile'
@@ -236,6 +237,14 @@ function tonnageValue(value: { value: number } | null): string {
          above has already said what happened, and "nothing to chart yet" would
          be a claim about data we never read. -->
     <template v-else-if="hasSessions">
+      <!-- Only with a card set in Settings: without one there is nothing to count. -->
+      <MultisportUsage
+        v-if="profile?.settings.multisport"
+        :sessions="sessions"
+        :card="profile.settings.multisport"
+        :today-iso="todayIso"
+      />
+
       <!-- Per-lift ---------------------------------------------------------->
       <section class="flex flex-col gap-3">
         <h2 class="text-lg font-semibold">Lifts</h2>

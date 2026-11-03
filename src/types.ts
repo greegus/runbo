@@ -50,6 +50,9 @@ export interface Profile {
     comebackGapDays: number // default 10
     notifications: { daily: boolean; gapNudge: boolean }
     fcmTokens: string[]
+    // The athlete's Multisport card, in their own currency per month and per
+    // entry. Absent means no card: nothing is counted and nothing is shown.
+    multisport?: { monthlyPrice: number; entryPrice: number }
   }
   availability: {
     daysPerWeek: number // default 5
@@ -141,6 +144,10 @@ export interface Session {
   avgHr?: number
   rpe?: number
   notes?: string
+
+  // Multisport: `false` when this gym, pool or sauna visit was NOT paid with
+  // the card (a home workout, a pool outside the scheme). Absent counts.
+  multisport?: boolean
 
   createdAt?: Date
   updatedAt?: Date

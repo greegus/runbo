@@ -366,6 +366,27 @@ export const useSessionsStore = defineStore('sessions', () => {
     return session
   }
 
+  /**
+   * Marks whether a visit was paid with the Multisport card. Only the flag is
+   * written (a merge), so a finished session's sets and state stay untouched.
+   */
+  async function setMultisportEntry(session: Session, counted: boolean): Promise<void> {
+    // The loaded History page shows the change at once — before the write,
+    // which offline does not resolve until reconnect. The full history behind
+    // Progress is read again on its next visit.
+    history.value = history.value.map((item) => (item.id === session.id ? { ...item, multisport: counted } : item))
+    invalidateAllHistory()
+
+    await saveSession({
+      id: session.id,
+      uid: session.uid,
+      date: session.date,
+      kind: session.kind,
+      status: session.status,
+      multisport: counted,
+    })
+  }
+
   /** Takes a claim back. A sauna carries no program state, so nothing is restored. */
   async function unclaimSauna(id: string): Promise<void> {
     await deleteSession(id)
@@ -481,5 +502,6 @@ export const useSessionsStore = defineStore('sessions', () => {
     deleteLastSession,
     claimSauna,
     unclaimSauna,
+    setMultisportEntry,
   }
 })

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, Card, FormGroup, Input, TabsNav, useSubmitAction } from 'vuiii'
+import { Button, Card, Checkbox, FormGroup, Input, TabsNav, useSubmitAction } from 'vuiii'
 
+import InputUnit from '@/components/InputUnit.vue'
 import AvailabilityForm from '@/components/settings/AvailabilityForm.vue'
 import CardioForm from '@/components/settings/CardioForm.vue'
 import ExportDataCard from '@/components/settings/ExportDataCard.vue'
@@ -13,6 +14,7 @@ import type { Availability, CardioTrack, CardioZones, GymSettings, ZonesDraft } 
 import { emptyZonesDraft, zonesDraftFrom } from '@/onboarding/zonesDraft'
 import { useAuthStore } from '@/stores/auth'
 import { useProfileStore } from '@/stores/profile'
+import { DEFAULT_MULTISPORT, type MultisportCard } from '@/training/multisport'
 import type { Modality } from '@/types'
 
 const authStore = useAuthStore()
@@ -32,6 +34,15 @@ const gymDraft = ref<GymSettings | null>(null)
 const gymValid = ref(true)
 
 const timersDraft = ref<TimersDraft | null>(null)
+
+/** The card as the form edits it: off keeps the prices, so switching back on restores them. */
+interface MultisportDraft {
+  enabled: boolean
+  monthlyPrice: number
+  entryPrice: number
+}
+
+const multisportDraft = ref<MultisportDraft | null>(null)
 
 const cardioDraft = ref<CardioTrack | null>(null)
 const cardioValid = ref(true)
@@ -96,6 +107,28 @@ const timersDirty = computed(() => {
   if (!live || !draft) return false
 
   return differs(draft, { restTimers: live.restTimers, comebackGapDays: live.comebackGapDays })
+})
+
+function multisportDraftFrom(card: MultisportCard | undefined): MultisportDraft {
+  return { enabled: card !== undefined, ...(card ?? DEFAULT_MULTISPORT) }
+}
+
+/** What the draft would store: the prices while on, nothing while off. */
+function multisportFromDraft(draft: MultisportDraft): MultisportCard | null {
+  return draft.enabled ? { monthlyPrice: draft.monthlyPrice, entryPrice: draft.entryPrice } : null
+}
+
+const multisportDirty = computed(() => {
+  const live = profile.value?.settings
+  const draft = multisportDraft.value
+  if (!live || !draft) return false
+
+  return differs(multisportFromDraft(draft), live.multisport ?? null)
+})
+
+const multisportValid = computed(() => {
+  const draft = multisportDraft.value
+  return !draft?.enabled || (draft.monthlyPrice > 0 && draft.entryPrice > 0)
 })
 
 const cardioDirty = computed(() => {
@@ -193,6 +226,7 @@ watch(
         comebackGapDays: next.settings.comebackGapDays,
       })
     }
+    if (!multisportDirty.value) multisportDraft.value = multisportDraftFrom(next.settings.multisport)
     if (!cardioDirty.value) cardioDraft.value = structuredClone(next.cardioTrack)
     if (!zonesSeeded.value || (!zonesDirty.value && !zonesDraftUnrecoverable.value)) {
       zonesValue.value = next.cardioTrack.zones ? structuredClone(next.cardioTrack.zones) : undefined
@@ -234,6 +268,19 @@ async function saveTimers(): Promise<void> {
   await profileStore.save({
     settings: { ...live.settings, restTimers: draft.restTimers, comebackGapDays: draft.comebackGapDays },
   })
+}
+
+async function saveMultisport(): Promise<void> {
+  const live = profile.value
+  const draft = multisportDraft.value
+  if (!live || !draft) return
+
+  // No card is an absent key, never `null`: the whole settings object is
+  // republished, so leaving it out is what removes it.
+  const { multisport: _stored, ...settings } = live.settings
+  const card = multisportFromDraft(draft)
+
+  await profileStore.save({ settings: card ? { ...settings, multisport: card } : settings })
 }
 
 async function saveCardio(): Promise<void> {
@@ -305,6 +352,7 @@ const timersSave = useSectionSave(saveTimers, 'Rest timers')
 const cardioSave = useSectionSave(saveCardio, 'Cardio')
 const zonesSave = useSectionSave(saveZones, 'Zones')
 const availabilitySave = useSectionSave(saveAvailability, 'Availability')
+const multisportSave = useSectionSave(saveMultisport, 'Multisport')
 
 const { submit: signOut, isSubmitting: isSigningOut } = useSubmitAction(() => authStore.signOut(), {
   errorMessage: 'Sign-out did not complete. Please try again.',
@@ -352,7 +400,7 @@ const tabDirty = computed<Record<SettingsTab, boolean>>(() => ({
   strength: gymDirty.value || timersDirty.value,
   cardio: cardioDirty.value || zonesDirty.value,
   schedule: availabilityDirty.value,
-  account: false,
+  account: multisportDirty.value,
 }))
 
 // A hidden tab hides its "Unsaved changes" line too, so the strip carries the
@@ -379,6 +427,16 @@ function setTimer(tier: 't1' | 't2' | 't3', value: unknown): void {
   const seconds = typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : 0
 
   timersDraft.value = { ...timersDraft.value, restTimers: { ...timersDraft.value.restTimers, [tier]: seconds } }
+}
+
+function setMultisport(patch: Partial<MultisportDraft>): void {
+  if (!multisportDraft.value) return
+  multisportDraft.value = { ...multisportDraft.value, ...patch }
+}
+
+/** An empty or half-typed price reads as 0, which the section then refuses to save. */
+function setMultisportPrice(field: 'monthlyPrice' | 'entryPrice', value: unknown): void {
+  setMultisport({ [field]: typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0 })
 }
 
 function setComebackGap(value: unknown): void {
@@ -624,6 +682,64 @@ function setComebackGap(value: unknown): void {
         aria-labelledby="settings-tab-account"
         class="flex flex-col gap-4"
       >
+        <Card title="Multisport">
+          <div v-if="multisportDraft" class="flex flex-col gap-6">
+            <Checkbox
+              label="I have a Multisport card"
+              description="Gym sessions, swims and saunas count as entries — one a day. Progress shows when the card pays for itself."
+              :model-value="multisportDraft.enabled"
+              @update:model-value="setMultisport({ enabled: $event === true })"
+            />
+
+            <div v-if="multisportDraft.enabled" class="grid grid-cols-2 gap-3">
+              <FormGroup label="Card per month">
+                <template #default="{ id }">
+                  <Input
+                    :id="id"
+                    type="number"
+                    value-as-number
+                    inputmode="numeric"
+                    min="0"
+                    size="large"
+                    class="min-h-[48px] tabular-nums"
+                    :invalid="multisportDraft.monthlyPrice <= 0"
+                    :model-value="multisportDraft.monthlyPrice"
+                    @update:model-value="setMultisportPrice('monthlyPrice', $event)"
+                  >
+                    <template #suffix><InputUnit unit="Kč" /></template>
+                  </Input>
+                </template>
+              </FormGroup>
+              <FormGroup label="One entry without it">
+                <template #default="{ id }">
+                  <Input
+                    :id="id"
+                    type="number"
+                    value-as-number
+                    inputmode="numeric"
+                    min="0"
+                    size="large"
+                    class="min-h-[48px] tabular-nums"
+                    :invalid="multisportDraft.entryPrice <= 0"
+                    :model-value="multisportDraft.entryPrice"
+                    @update:model-value="setMultisportPrice('entryPrice', $event)"
+                  >
+                    <template #suffix><InputUnit unit="Kč" /></template>
+                  </Input>
+                </template>
+              </FormGroup>
+            </div>
+
+            <SectionSaveFooter
+              :dirty="multisportDirty"
+              :just-saved="multisportSave.justSaved.value"
+              :saving="multisportSave.isSubmitting.value"
+              :invalid="!multisportValid"
+              @save="multisportSave.submit()"
+            />
+          </div>
+        </Card>
+
         <!-- Named, but deliberately not built: a disabled toggle here would read
            as a feature that is merely off. -->
         <Card title="Strava and notifications">

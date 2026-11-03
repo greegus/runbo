@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Button, Icon } from 'vuiii'
+import { Button, Checkbox, Icon } from 'vuiii'
 
 import PrescriptionCard from '@/components/cardio/PrescriptionCard.vue'
 import { format } from '@/liftoscript/weight'
 import type { HistoryEntry } from '@/session/historyList'
+import { isMultisportKind } from '@/training/multisport'
 import type { Profile, SetLog } from '@/types'
 
 /**
@@ -29,7 +30,14 @@ const props = withDefaults(
 const emit = defineEmits<{
   'update:expanded': [value: boolean]
   delete: []
+  /** Paid with the Multisport card, or not. */
+  multisport: [counted: boolean]
 }>()
+
+/** Only with a card set, and only on the visits it can pay for. */
+const showMultisport = computed(
+  () => props.profile.settings.multisport !== undefined && isMultisportKind(session.value),
+)
 
 const session = computed(() => props.entry.session)
 
@@ -98,6 +106,17 @@ function requestDelete(): void {
     </button>
 
     <div v-if="expanded" class="flex flex-col gap-3 border-t border-ink-200 p-3">
+      <!-- Counted unless unticked: most gym, pool and sauna visits are on the
+           card, and the exception — a home workout, another pool — is the one
+           worth a tap. -->
+      <Checkbox
+        v-if="showMultisport"
+        label="Entered with Multisport"
+        :model-value="session.multisport !== false"
+        :disabled="busy"
+        @update:model-value="!busy && emit('multisport', $event === true)"
+      />
+
       <!-- Cardio: the same card the athlete logged against, in its completed form. -->
       <PrescriptionCard
         v-if="session.kind === 'cardio' && session.prescription"
