@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { FormGroup, Select } from 'vuiii'
+import { FormGroup } from 'vuiii'
 
 import RangeSlider from '@/components/RangeSlider.vue'
+import WeekdayPicker from '@/components/settings/WeekdayPicker.vue'
 import type { Availability } from '@/onboarding/types'
 import { DEFAULT_STRENGTH_DAYS_PER_WEEK, trainingWeekdays, weeklyTrackBudget } from '@/training/composer'
 import { WEEKDAY_LABELS } from '@/utils/date'
@@ -16,8 +17,6 @@ const emit = defineEmits<{
   'update:valid': [value: boolean]
   'update:blockedReason': [value: string | null]
 }>()
-
-const dayOptions = WEEKDAY_LABELS.map((label, index) => ({ value: index, label }))
 
 /**
  * Lifting days are offered up to the training budget and no further: a value
@@ -106,14 +105,6 @@ function patch(changes: Partial<Availability>): void {
   })
 }
 
-function toggleDay(day: number): void {
-  const next = preferred.value.includes(day)
-    ? preferred.value.filter((value) => value !== day)
-    : [...preferred.value, day]
-
-  patch({ preferredDays: next.sort((a, b) => a - b) })
-}
-
 function dayCountText(value: number): string {
   return `${value} ${value === 1 ? 'day' : 'days'}`
 }
@@ -161,25 +152,12 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
       <legend class="text-sm font-medium text-ink-900">Preferred days</legend>
       <p class="text-sm text-ink-500">The week starts on Monday.</p>
 
-      <!-- Seven across on the narrowest phone: a grid rather than flex-wrap, so
-           the columns stay index-aligned with the Mon-first day numbers we store. -->
-      <div class="grid grid-cols-7 gap-1">
-        <button
-          v-for="option in dayOptions"
-          :key="option.value"
-          type="button"
-          class="flex min-h-[48px] items-center justify-center rounded-md border text-sm font-semibold"
-          :class="
-            preferred.includes(option.value)
-              ? 'border-accent-600 bg-accent-600 text-white'
-              : 'border-ink-200 bg-white text-ink-700'
-          "
-          :aria-pressed="preferred.includes(option.value)"
-          @click="toggleDay(option.value)"
-        >
-          {{ option.label }}
-        </button>
-      </div>
+      <WeekdayPicker
+        multiple
+        label="Preferred days"
+        :model-value="preferred"
+        @update:model-value="patch({ preferredDays: $event as number[] })"
+      />
 
       <p v-if="preferred.length === 0" class="text-sm text-ink-500">
         No days ticked — we'll spread {{ modelValue.daysPerWeek }} sessions across the week for you.
@@ -194,21 +172,18 @@ watch(blockedReason, (value) => emit('update:blockedReason', value), { immediate
       </p>
     </fieldset>
 
-    <FormGroup label="Long session day" hint="Your longest cardio session lands here when the week allows it.">
-      <template #default="{ id }">
-        <Select
-          :id="id"
-          :model-value="modelValue.longSessionDay"
-          :options="dayOptions"
-          option-label="label"
-          option-value="value"
-          type="number"
-          size="large"
-          class="min-h-[48px]"
-          @update:model-value="(value: number) => patch({ longSessionDay: value })"
-        />
-      </template>
-    </FormGroup>
+    <!-- Every day is offered, not only the training ones: the composer moves the
+         long session to the closest training day, and the note below says so. -->
+    <fieldset class="flex flex-col gap-2">
+      <legend class="text-sm font-medium text-ink-900">Long session day</legend>
+      <p class="text-sm text-ink-500">Your longest cardio session lands here when the week allows it.</p>
+
+      <WeekdayPicker
+        label="Long session day"
+        :model-value="modelValue.longSessionDay"
+        @update:model-value="patch({ longSessionDay: $event as number })"
+      />
+    </fieldset>
 
     <!-- Not an error: the composer places the long session on the training day
          closest to this one, so a mismatch only needs explaining. -->
