@@ -159,10 +159,26 @@ function onStep(delta: number): void {
         <span class="font-semibold" :class="set.phase === 'done' ? 'text-white' : 'text-ink-500'">
           Set {{ setNumber }}
         </span>
-        <span class="font-semibold tabular-nums" :class="set.phase === 'done' ? 'text-white' : 'text-ink-900'">
+        <!-- Skipped reads as it does on every other set: the prescription
+             struck through, in the card's muted ink. -->
+        <span
+          class="font-semibold tabular-nums"
+          :class="{
+            'text-white': set.phase === 'done',
+            'text-ink-900': set.phase === 'untouched',
+            'line-through': set.phase === 'skipped',
+          }"
+        >
           {{ repTarget }} reps
         </span>
-        <span class="tabular-nums" :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-600'">
+        <span
+          class="tabular-nums"
+          :class="{
+            'text-accent-100': set.phase === 'done',
+            'text-ink-600': set.phase === 'untouched',
+            'line-through': set.phase === 'skipped',
+          }"
+        >
           {{ weightLabel }}
         </span>
         <span v-if="set.label" :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-500'">
@@ -205,18 +221,19 @@ function onStep(delta: number): void {
           :aria-label="tapLabel"
           @click="onTap"
         >
-          <span
-            class="text-5xl leading-none font-bold tabular-nums"
-            :class="[
-              set.phase === 'done' ? 'text-white' : 'text-ink-300',
-              set.phase === 'skipped' ? 'text-ink-300 line-through' : '',
-            ]"
-          >
-            {{ set.phase === 'skipped' ? '—' : amrapReps }}
-          </span>
-          <span class="mt-1 text-xs uppercase" :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-500'">
-            {{ set.phase === 'done' ? 'reps done' : set.phase === 'skipped' ? 'skipped' : 'tap to log' }}
-          </span>
+          <!-- Skipped says the word, as the other sets do, rather than a dash. -->
+          <span v-if="set.phase === 'skipped'" class="text-base font-semibold uppercase">Skipped</span>
+          <template v-else>
+            <span
+              class="text-5xl leading-none font-bold tabular-nums"
+              :class="set.phase === 'done' ? 'text-white' : 'text-ink-300'"
+            >
+              {{ amrapReps }}
+            </span>
+            <span class="mt-1 text-xs uppercase" :class="set.phase === 'done' ? 'text-accent-100' : 'text-ink-500'">
+              {{ set.phase === 'done' ? 'reps done' : 'tap to log' }}
+            </span>
+          </template>
         </button>
 
         <button
