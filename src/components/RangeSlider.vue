@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 /**
  * A whole number on a track, with the value beside it. `null` is "not
@@ -37,7 +37,28 @@ const emit = defineEmits<{
  */
 const dragging = ref<number | null>(null)
 
-const shown = computed(() => dragging.value ?? props.modelValue)
+/**
+ * The value just released, until the parent hands it back. A parent may take a
+ * moment — the cardio form's draft does — and without this the thumb fell back
+ * to the old value in between, and an unanswered slider read the tap that
+ * followed as answering with the resting middle. A parent that rejects or
+ * clamps the value never hands it back, so it lapses after a moment and the
+ * slider shows what the parent kept.
+ */
+const pending = ref<number | null>(null)
+const PENDING_LAPSE_MS = 600
+let pendingTimer: ReturnType<typeof setTimeout> | undefined
+
+function clearPending(): void {
+  pending.value = null
+  if (pendingTimer !== undefined) clearTimeout(pendingTimer)
+  pendingTimer = undefined
+}
+
+watch(() => props.modelValue, clearPending)
+onBeforeUnmount(clearPending)
+
+const shown = computed(() => dragging.value ?? pending.value ?? props.modelValue)
 
 /** Where the thumb rests while nothing is answered: the middle of the track. */
 const resting = computed(() => Math.round((props.min + props.max) / 2))
@@ -61,17 +82,16 @@ function onInput(event: Event): void {
   dragging.value = Number((event.target as HTMLInputElement).value)
 }
 
-async function onChange(event: Event): Promise<void> {
-  const input = event.target as HTMLInputElement
-
-  emit('update:modelValue', Number(input.value))
+function commit(value: number): void {
+  clearPending()
+  pending.value = value
+  pendingTimer = setTimeout(clearPending, PENDING_LAPSE_MS)
   dragging.value = null
+  emit('update:modelValue', value)
+}
 
-  // A parent that rejects or clamps the value leaves the prop unchanged, and
-  // Vue never rewrites an unchanged `:value` — so the thumb would stay where
-  // it was dropped while the number beside it says otherwise.
-  await nextTick()
-  input.value = String(props.modelValue ?? resting.value)
+function onChange(event: Event): void {
+  commit(Number((event.target as HTMLInputElement).value))
 }
 
 /**
@@ -80,9 +100,10 @@ async function onChange(event: Event): Promise<void> {
  * value it shows. The click answers it.
  */
 function onClick(event: Event): void {
-  if (props.modelValue !== null) return
+  // Answered, or answered by this very tap's `change` a moment ago.
+  if (shown.value !== null) return
 
-  emit('update:modelValue', Number((event.target as HTMLInputElement).value))
+  commit(Number((event.target as HTMLInputElement).value))
 }
 </script>
 
