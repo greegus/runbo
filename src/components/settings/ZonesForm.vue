@@ -2,6 +2,7 @@
 import { computed, reactive, watch } from 'vue'
 import { FormGroup, Icon, Input, Select } from 'vuiii'
 
+import NumberField from '@/components/NumberField.vue'
 import type { CardioZones, PaceDraft, ZonesDraft } from '@/onboarding/types'
 import {
   clockFromMinutes,
@@ -43,30 +44,32 @@ const PACE_MODE_OPTIONS = [
  * have to be chosen per modality. Getting this table wrong is the one mistake
  * the zone preview cannot make visible: every unit produces five plausible rows.
  */
-const PACE_COPY: Record<Modality, { icon: string; title: string; threshold: string; hint: string; distance: string }> =
-  {
-    run: {
-      icon: 'run',
-      title: 'Running',
-      threshold: 'Threshold pace per kilometre',
-      hint: 'Roughly the pace you could hold for an hour.',
-      distance: 'Distance (km)',
-    },
-    bike: {
-      icon: 'bike',
-      title: 'Cycling',
-      threshold: 'Threshold speed (km/h)',
-      hint: 'Roughly the speed you could hold for an hour.',
-      distance: 'Distance (km)',
-    },
-    swim: {
-      icon: 'swim',
-      title: 'Swimming',
-      threshold: 'Threshold pace per 100 m',
-      hint: 'Roughly the pace you could hold for an hour.',
-      distance: 'Distance (m)',
-    },
-  }
+const PACE_COPY: Record<
+  Modality,
+  { icon: string; title: string; threshold: string; hint: string; distanceUnit: string }
+> = {
+  run: {
+    icon: 'run',
+    title: 'Running',
+    threshold: 'Threshold pace per kilometre',
+    hint: 'Roughly the pace you could hold for an hour.',
+    distanceUnit: 'km',
+  },
+  bike: {
+    icon: 'bike',
+    title: 'Cycling',
+    threshold: 'Threshold speed (km/h)',
+    hint: 'Roughly the speed you could hold for an hour.',
+    distanceUnit: 'km',
+  },
+  swim: {
+    icon: 'swim',
+    title: 'Swimming',
+    threshold: 'Threshold pace per 100 m',
+    hint: 'Roughly the pace you could hold for an hour.',
+    distanceUnit: 'm',
+  },
+}
 
 /** `mm:ss` is only natural where the stored unit is a time; km/h is a plain number. */
 function usesClock(modality: Modality): boolean {
@@ -203,61 +206,38 @@ watch(
         </template>
       </FormGroup>
 
-      <FormGroup v-if="props.draft.hrMode === 'max'" label="Max HR" hint="bpm — the highest you have ever seen.">
-        <template #default="{ id }">
-          <Input
-            :id="id"
-            type="number"
-            value-as-number
-            inputmode="numeric"
-            min="0"
-            size="large"
-            class="min-h-[48px] text-2xl font-semibold tabular-nums"
-            :model-value="props.draft.maxHr"
-            @update:model-value="patchDraft({ maxHr: numberOrNull($event) })"
-          />
-        </template>
-      </FormGroup>
+      <NumberField
+        v-if="props.draft.hrMode === 'max'"
+        label="Max HR"
+        hint="The highest you have ever seen."
+        unit="bpm"
+        size="xl"
+        :model-value="props.draft.maxHr"
+        @update:model-value="patchDraft({ maxHr: numberOrNull($event) })"
+      />
 
-      <FormGroup v-else-if="props.draft.hrMode === 'age'" label="Age" hint="We estimate your max with 208 − 0.7 × age.">
-        <template #default="{ id }">
-          <Input
-            :id="id"
-            type="number"
-            value-as-number
-            inputmode="numeric"
-            min="0"
-            size="large"
-            class="min-h-[48px] text-2xl font-semibold tabular-nums"
-            :model-value="props.draft.age"
-            @update:model-value="patchDraft({ age: numberOrNull($event) })"
-          />
-        </template>
-      </FormGroup>
+      <NumberField
+        v-else-if="props.draft.hrMode === 'age'"
+        label="Age"
+        hint="We estimate your max with 208 − 0.7 × age."
+        size="xl"
+        :model-value="props.draft.age"
+        @update:model-value="patchDraft({ age: numberOrNull($event) })"
+      />
 
       <p v-if="estimatedMax !== null" class="text-sm text-ink-500" role="status">
         Estimated max HR: <span class="font-semibold text-ink-900">{{ estimatedMax }} bpm</span>. Only this number is
         saved.
       </p>
 
-      <FormGroup
+      <NumberField
         label="Threshold heart rate (LTHR)"
         hint="Average HR of a hard hour. If you have it, we use it instead of your max — it tracks fitness far better."
-      >
-        <template #default="{ id }">
-          <Input
-            :id="id"
-            type="number"
-            value-as-number
-            inputmode="numeric"
-            min="0"
-            size="large"
-            class="min-h-[48px] text-2xl font-semibold tabular-nums"
-            :model-value="props.draft.lthr"
-            @update:model-value="patchDraft({ lthr: numberOrNull($event) })"
-          />
-        </template>
-      </FormGroup>
+        unit="bpm"
+        size="xl"
+        :model-value="props.draft.lthr"
+        @update:model-value="patchDraft({ lthr: numberOrNull($event) })"
+      />
 
       <!-- Read-only previews: a grey panel, so they do not pass for one more
            field to fill in. -->
@@ -310,6 +290,7 @@ watch(
               min="0"
               size="large"
               class="min-h-[48px] text-2xl font-semibold tabular-nums"
+              :aria-label="`${PACE_COPY[modality].threshold}, minutes`"
               :model-value="thresholdClock[modality].minutes"
               @update:model-value="setThresholdClock(modality, 'minutes', $event)"
             />
@@ -325,6 +306,7 @@ watch(
               max="59"
               size="large"
               class="min-h-[48px] text-2xl font-semibold tabular-nums"
+              :aria-label="`${PACE_COPY[modality].threshold}, seconds`"
               :model-value="thresholdClock[modality].seconds"
               @update:model-value="setThresholdClock(modality, 'seconds', $event)"
             />
@@ -332,40 +314,28 @@ watch(
         </div>
       </fieldset>
 
-      <FormGroup v-else-if="props.draft.pace[modality].mode === 'threshold'" label="Threshold speed" hint="km/h">
-        <template #default="{ id }">
-          <Input
-            :id="id"
-            type="number"
-            value-as-number
-            inputmode="decimal"
-            min="0"
-            step="0.1"
-            size="large"
-            class="min-h-[48px] text-2xl font-semibold tabular-nums"
-            :model-value="props.draft.pace[modality].threshold"
-            @update:model-value="patchPace(modality, { threshold: numberOrNull($event) })"
-          />
-        </template>
-      </FormGroup>
+      <NumberField
+        v-else-if="props.draft.pace[modality].mode === 'threshold'"
+        label="Threshold speed"
+        unit="km/h"
+        size="xl"
+        inputmode="decimal"
+        step="0.1"
+        :model-value="props.draft.pace[modality].threshold"
+        @update:model-value="patchPace(modality, { threshold: numberOrNull($event) })"
+      />
 
       <div v-else-if="props.draft.pace[modality].mode === 'recent'" class="flex flex-col gap-4">
-        <FormGroup :label="PACE_COPY[modality].distance" hint="A recent hard effort — we take it as your threshold.">
-          <template #default="{ id }">
-            <Input
-              :id="id"
-              type="number"
-              value-as-number
-              inputmode="decimal"
-              min="0"
-              step="0.1"
-              size="large"
-              class="min-h-[48px] text-2xl font-semibold tabular-nums"
-              :model-value="distanceOf(modality)"
-              @update:model-value="setDistance(modality, $event)"
-            />
-          </template>
-        </FormGroup>
+        <NumberField
+          label="Distance"
+          hint="A recent hard effort — we take it as your threshold."
+          :unit="PACE_COPY[modality].distanceUnit"
+          size="xl"
+          inputmode="decimal"
+          step="0.1"
+          :model-value="distanceOf(modality)"
+          @update:model-value="setDistance(modality, $event)"
+        />
 
         <fieldset v-if="usesClock(modality)">
           <legend class="text-sm font-medium text-ink-900">Time</legend>
@@ -379,6 +349,7 @@ watch(
                 min="0"
                 size="large"
                 class="min-h-[48px] text-2xl font-semibold tabular-nums"
+                aria-label="Time, minutes"
                 :model-value="recentClock[modality].minutes"
                 @update:model-value="setRecentClock(modality, 'minutes', $event)"
               />
@@ -394,6 +365,7 @@ watch(
                 max="59"
                 size="large"
                 class="min-h-[48px] text-2xl font-semibold tabular-nums"
+                aria-label="Time, seconds"
                 :model-value="recentClock[modality].seconds"
                 @update:model-value="setRecentClock(modality, 'seconds', $event)"
               />
@@ -401,21 +373,14 @@ watch(
           </div>
         </fieldset>
 
-        <FormGroup v-else label="Time" hint="minutes">
-          <template #default="{ id }">
-            <Input
-              :id="id"
-              type="number"
-              value-as-number
-              inputmode="numeric"
-              min="0"
-              size="large"
-              class="min-h-[48px] text-2xl font-semibold tabular-nums"
-              :model-value="props.draft.pace[modality].minutes"
-              @update:model-value="patchPace(modality, { minutes: numberOrNull($event) })"
-            />
-          </template>
-        </FormGroup>
+        <NumberField
+          v-else
+          label="Time"
+          unit="min"
+          size="xl"
+          :model-value="props.draft.pace[modality].minutes"
+          @update:model-value="patchPace(modality, { minutes: numberOrNull($event) })"
+        />
       </div>
 
       <div v-if="pacePreview(modality)" class="rounded-lg border border-ink-200 bg-ink-50 p-4">

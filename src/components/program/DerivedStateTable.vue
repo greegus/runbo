@@ -231,6 +231,7 @@ watch(
                 :id="id"
                 :ref="(element: unknown) => registerWeightInput(row.key, element)"
                 class="min-h-[48px] text-lg"
+                :aria-label="`${row.lift} next session’s weight`"
                 :model-value="row.weight"
                 :invalid="row.weightConfidence === 'guess' && row.weight === null"
                 type="number"

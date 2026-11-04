@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { FormGroup, Icon, IconButton, Input } from 'vuiii'
+import { Icon, IconButton } from 'vuiii'
 
 import DiagnosticsList from '@/components/DiagnosticsList.vue'
+import NumberField from '@/components/NumberField.vue'
 import PlateHint from '@/components/strength/PlateHint.vue'
 import SetRow from '@/components/strength/SetRow.vue'
 import { format } from '@/liftoscript/weight'
@@ -176,33 +177,20 @@ function selectAll(event: FocusEvent): void {
            the athlete would train off numbers that mean nothing. -->
       <DiagnosticsList v-if="exercise.diagnostics.length" :diagnostics="exercise.diagnostics" />
 
-      <FormGroup
+      <NumberField
         v-if="asksWeight"
         label="Working weight"
-        :hint="`In ${settings.units}. Rounded to what your plates can load.`"
-      >
-        <template #default="{ id }">
-          <div class="flex items-center gap-2">
-            <Input
-              :id="id"
-              :model-value="weightDraft"
-              aria-label="Working weight"
-              type="number"
-              value-as-number
-              inputmode="decimal"
-              step="0.5"
-              min="0"
-              size="large"
-              class="min-h-[48px] w-32 text-lg"
-              :invalid="needsWeight"
-              @focus="selectAll"
-              @blur="commitWeight()"
-              @update:model-value="setWeightDraft($event)"
-            />
-            <span class="text-ink-500">{{ settings.units }}</span>
-          </div>
-        </template>
-      </FormGroup>
+        :aria-label="`${exercise.name} working weight`"
+        hint="Rounded to what your plates can load."
+        :unit="settings.units"
+        inputmode="decimal"
+        step="0.5"
+        :invalid="needsWeight"
+        :model-value="weightDraft"
+        @focus="selectAll"
+        @blur="commitWeight()"
+        @update:model-value="setWeightDraft($event)"
+      />
 
       <!-- Warmups are prescribed and shown, never logged: a warmup inside
            `exercises[].sets` would be fed to the progression script and counted

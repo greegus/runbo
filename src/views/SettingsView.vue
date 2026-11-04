@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, Card, Checkbox, FormGroup, Input, TabsNav, useSubmitAction } from 'vuiii'
+import { Button, Card, Checkbox, TabsNav, useSubmitAction } from 'vuiii'
 
-import InputUnit from '@/components/InputUnit.vue'
+import NumberField from '@/components/NumberField.vue'
 import AvailabilityForm from '@/components/settings/AvailabilityForm.vue'
 import CardioForm from '@/components/settings/CardioForm.vue'
 import ExportDataCard from '@/components/settings/ExportDataCard.vue'
@@ -523,81 +523,50 @@ function setComebackGap(value: unknown): void {
           <div class="flex flex-col gap-6">
             <p class="text-sm text-ink-500">How long the timer runs between sets, per tier. Seconds.</p>
 
+            <!-- The default (md) size: three across on a 360px phone, a 3-digit
+                 number at text-xl no longer fit its field. -->
             <div class="grid grid-cols-3 gap-3">
-              <FormGroup v-if="timersDraft" label="T1">
-                <template #default="{ id }">
-                  <Input
-                    :id="id"
-                    type="number"
-                    value-as-number
-                    inputmode="numeric"
-                    min="0"
-                    step="15"
-                    size="large"
-                    class="min-h-[48px] text-xl font-semibold tabular-nums"
-                    :model-value="timersDraft.restTimers.t1"
-                    @update:model-value="setTimer('t1', $event)"
-                  />
-                </template>
-              </FormGroup>
+              <NumberField
+                v-if="timersDraft"
+                label="T1"
+                aria-label="T1 rest in seconds"
+                step="15"
+                :model-value="timersDraft.restTimers.t1"
+                @update:model-value="setTimer('t1', $event)"
+              />
 
-              <FormGroup v-if="timersDraft" label="T2">
-                <template #default="{ id }">
-                  <Input
-                    :id="id"
-                    type="number"
-                    value-as-number
-                    inputmode="numeric"
-                    min="0"
-                    step="15"
-                    size="large"
-                    class="min-h-[48px] text-xl font-semibold tabular-nums"
-                    :model-value="timersDraft.restTimers.t2"
-                    @update:model-value="setTimer('t2', $event)"
-                  />
-                </template>
-              </FormGroup>
+              <NumberField
+                v-if="timersDraft"
+                label="T2"
+                aria-label="T2 rest in seconds"
+                step="15"
+                :model-value="timersDraft.restTimers.t2"
+                @update:model-value="setTimer('t2', $event)"
+              />
 
-              <FormGroup v-if="timersDraft" label="T3">
-                <template #default="{ id }">
-                  <Input
-                    :id="id"
-                    type="number"
-                    value-as-number
-                    inputmode="numeric"
-                    min="0"
-                    step="15"
-                    size="large"
-                    class="min-h-[48px] text-xl font-semibold tabular-nums"
-                    :model-value="timersDraft.restTimers.t3"
-                    @update:model-value="setTimer('t3', $event)"
-                  />
-                </template>
-              </FormGroup>
+              <NumberField
+                v-if="timersDraft"
+                label="T3"
+                aria-label="T3 rest in seconds"
+                step="15"
+                :model-value="timersDraft.restTimers.t3"
+                @update:model-value="setTimer('t3', $event)"
+              />
             </div>
 
-            <FormGroup
+            <NumberField
               v-if="timersDraft"
               label="Comeback after a break of"
               hint="Days away before we offer an easier session to come back on."
               :error="timersDraft.comebackGapDays < 1 ? 'Enter at least one day.' : ''"
-            >
-              <template #default="{ id }">
-                <Input
-                  :id="id"
-                  type="number"
-                  value-as-number
-                  inputmode="numeric"
-                  min="1"
-                  step="1"
-                  size="large"
-                  class="min-h-[48px] text-xl font-semibold tabular-nums"
-                  :invalid="timersDraft.comebackGapDays < 1"
-                  :model-value="timersDraft.comebackGapDays"
-                  @update:model-value="setComebackGap($event)"
-                />
-              </template>
-            </FormGroup>
+              unit="days"
+              size="lg"
+              min="1"
+              step="1"
+              :invalid="timersDraft.comebackGapDays < 1"
+              :model-value="timersDraft.comebackGapDays"
+              @update:model-value="setComebackGap($event)"
+            />
 
             <SectionSaveFooter
               :dirty="timersDirty"
@@ -692,42 +661,20 @@ function setComebackGap(value: unknown): void {
             />
 
             <div v-if="multisportDraft.enabled" class="grid grid-cols-2 gap-3">
-              <FormGroup label="Card per month">
-                <template #default="{ id }">
-                  <Input
-                    :id="id"
-                    type="number"
-                    value-as-number
-                    inputmode="numeric"
-                    min="0"
-                    size="large"
-                    class="min-h-[48px] tabular-nums"
-                    :invalid="multisportDraft.monthlyPrice <= 0"
-                    :model-value="multisportDraft.monthlyPrice"
-                    @update:model-value="setMultisportPrice('monthlyPrice', $event)"
-                  >
-                    <template #suffix><InputUnit unit="Kč" /></template>
-                  </Input>
-                </template>
-              </FormGroup>
-              <FormGroup label="One entry without it">
-                <template #default="{ id }">
-                  <Input
-                    :id="id"
-                    type="number"
-                    value-as-number
-                    inputmode="numeric"
-                    min="0"
-                    size="large"
-                    class="min-h-[48px] tabular-nums"
-                    :invalid="multisportDraft.entryPrice <= 0"
-                    :model-value="multisportDraft.entryPrice"
-                    @update:model-value="setMultisportPrice('entryPrice', $event)"
-                  >
-                    <template #suffix><InputUnit unit="Kč" /></template>
-                  </Input>
-                </template>
-              </FormGroup>
+              <NumberField
+                label="Card per month"
+                unit="Kč"
+                :invalid="multisportDraft.monthlyPrice <= 0"
+                :model-value="multisportDraft.monthlyPrice"
+                @update:model-value="setMultisportPrice('monthlyPrice', $event)"
+              />
+              <NumberField
+                label="One entry without it"
+                unit="Kč"
+                :invalid="multisportDraft.entryPrice <= 0"
+                :model-value="multisportDraft.entryPrice"
+                @update:model-value="setMultisportPrice('entryPrice', $event)"
+              />
             </div>
 
             <SectionSaveFooter

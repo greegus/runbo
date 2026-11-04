@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Button, FormGroup, Icon, Input, RadioButtonGroup } from 'vuiii'
+import { Button, FormGroup, Icon, RadioButtonGroup } from 'vuiii'
 
+import NumberField from '@/components/NumberField.vue'
 import { computeFromFiveRm, GZCLP_SEED_GROUPS } from '@/onboarding/programSeed'
 import type { GymSettings, LiftSeedDraft } from '@/onboarding/types'
 import { formatPlatesForWeight } from '@/training/plates'
@@ -133,26 +134,18 @@ function plateHint(draft: LiftSeedDraft): string {
         </div>
 
         <div class="mt-3 flex flex-wrap items-start gap-4">
-          <FormGroup
-            :label="`Working weight (${settings.units})`"
+          <!-- Big numerals: this field is read and retyped at arm's length in a gym. -->
+          <NumberField
+            label="Working weight"
+            :aria-label="`${row.draft.lift} working weight`"
             class="min-w-[9rem] flex-1"
             :hint="row.draft.weight === null ? 'Empty — we’ll ask at the gym' : plateHint(row.draft)"
-          >
-            <template #default="{ id }">
-              <!-- Big numerals: this field is read and retyped at arm's length in a gym. -->
-              <Input
-                :id="id"
-                class="min-h-[48px] text-lg"
-                :model-value="row.draft.weight"
-                type="number"
-                value-as-number
-                inputmode="decimal"
-                step="0.5"
-                min="0"
-                @update:model-value="setWeight(row.index, $event)"
-              />
-            </template>
-          </FormGroup>
+            :unit="settings.units"
+            inputmode="decimal"
+            step="0.5"
+            :model-value="row.draft.weight"
+            @update:model-value="setWeight(row.index, $event)"
+          />
 
           <!-- A T3 line has a single set variation, so a stage picker there would
                offer two choices that do nothing. The group is named with
@@ -184,25 +177,17 @@ function plateHint(draft: LiftSeedDraft): string {
         </div>
 
         <div v-if="isHelperOpen(row.draft)" class="mt-3 flex flex-wrap items-end gap-3 rounded-lg bg-ink-50 p-3">
-          <FormGroup
-            :label="`Your 5-rep max (${settings.units})`"
+          <NumberField
+            label="Your 5-rep max"
+            :aria-label="`${row.draft.lift} 5-rep max`"
             class="min-w-[9rem] flex-1"
             hint="The heaviest weight you can do five hard reps with."
-          >
-            <template #default="{ id }">
-              <Input
-                :id="id"
-                class="min-h-[48px] text-lg"
-                :model-value="row.draft.fiveRm"
-                type="number"
-                value-as-number
-                inputmode="decimal"
-                step="0.5"
-                min="0"
-                @update:model-value="setFiveRm(row.index, $event)"
-              />
-            </template>
-          </FormGroup>
+            :unit="settings.units"
+            inputmode="decimal"
+            step="0.5"
+            :model-value="row.draft.fiveRm"
+            @update:model-value="setFiveRm(row.index, $event)"
+          />
 
           <Button
             color="primary"

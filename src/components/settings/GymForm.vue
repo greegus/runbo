@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { Button, FormGroup, Icon, Input, RadioButtonGroup } from 'vuiii'
+import { Button, Icon, Input, RadioButtonGroup } from 'vuiii'
 
 import CountStepper from '@/components/CountStepper.vue'
 import InputUnit from '@/components/InputUnit.vue'
+import NumberField from '@/components/NumberField.vue'
 import { PLATE_PAINT } from '@/components/strength/platePaint'
 import PlateStack from '@/components/strength/PlateStack.vue'
 import { smallestStep } from '@/liftoscript/weight'
@@ -227,28 +228,18 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
       </div>
     </div>
 
-    <FormGroup label="Barbell weight" :error="barbellError ?? false" hint="Most Olympic bars are 20 kg / 45 lb.">
-      <template #default="{ id }">
-        <Input
-          :id="id"
-          :model-value="modelValue.barbellWeight"
-          type="number"
-          value-as-number
-          inputmode="decimal"
-          step="0.5"
-          min="0"
-          size="large"
-          class="min-h-[48px] text-lg"
-          :invalid="barbellError !== null"
-          @focus="selectAll"
-          @update:model-value="update({ barbellWeight: toNumber($event) })"
-        >
-          <template #suffix>
-            <InputUnit :unit="modelValue.units" />
-          </template>
-        </Input>
-      </template>
-    </FormGroup>
+    <NumberField
+      label="Barbell weight"
+      :error="barbellError ?? false"
+      hint="Most Olympic bars are 20 kg / 45 lb."
+      :unit="modelValue.units"
+      inputmode="decimal"
+      step="0.5"
+      :invalid="barbellError !== null"
+      :model-value="modelValue.barbellWeight"
+      @focus="selectAll"
+      @update:model-value="update({ barbellWeight: toNumber($event) })"
+    />
 
     <section class="flex flex-col gap-3">
       <header>
@@ -379,22 +370,15 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
         <span class="font-semibold text-ink-900">{{ step }} {{ modelValue.units }}</span>
       </p>
 
-      <FormGroup label="Try a weight">
-        <template #default="{ id }">
-          <Input
-            :id="id"
-            v-model="sampleWeight"
-            type="number"
-            value-as-number
-            inputmode="decimal"
-            step="2.5"
-            min="0"
-            size="large"
-            class="min-h-[48px] text-lg"
-            @focus="selectAll"
-          />
-        </template>
-      </FormGroup>
+      <NumberField
+        label="Try a weight"
+        :unit="modelValue.units"
+        inputmode="decimal"
+        step="2.5"
+        :model-value="sampleWeight"
+        @focus="selectAll"
+        @update:model-value="sampleWeight = $event as number"
+      />
 
       <!-- The same discs the session shows, so the colours a user checks here
            are the ones they will look for on the rack. The text load stays for

@@ -228,9 +228,11 @@ function useFallback(): void {
 
           <FormGroup :label="`Weight (${row.unit})`" class="w-32">
             <template #default="{ id }">
+              <!-- Named by its lift: every row's visible label reads the same. -->
               <Input
                 :id="id"
                 class="min-h-[48px] text-lg"
+                :aria-label="`${row.lift} weight in ${row.unit}`"
                 :model-value="row.weight"
                 type="number"
                 value-as-number
