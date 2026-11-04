@@ -44,6 +44,8 @@ These are decisions, not components — write them down once and the components 
 
 ### P1 — fix now (bugs and accessibility)
 
+_Done: items 1, 2 and 4 in `b74b5c9` and `f1ce6c2`; item 3 in `5f9b564` and `923392a` (Notice)._
+
 1. **24 inputs are read out as "input".** vuiii sets `aria-label = placeholder || "input"` on the inner `<input>`
    (`node_modules/vuiii/dist/vuiii.js:1351`), which overrides `FormGroup`'s `<label for>`. `CardioLogForm` works
    around it; these do not: `CardioForm` (2), `ProgramForm` (2), `ZonesForm` (10), `GymForm` (2), `DerivedStateTable`,
@@ -60,9 +62,9 @@ These are decisions, not components — write them down once and the components 
 | # | Component | Replaces | Reach |
 | --- | --- | --- | --- |
 | 1 | **Button rules → `AppButton` or a documented size/variant convention**; `TouchIconButton` baking in `size="large"` + 48px | hand-rolled CTAs in `ReadinessSheet`, `ComebackCard`, `TodayCard`, `TodayView`, `RestTimer`; 12 IconButton sites repeating `size="large" min-h-[48px] min-w-[48px]` | ~20 sites |
-| 2 | **`Notice`** — `tone` neutral/info/warning/error/success, optional icon and title | ~35 inline panels: Progress, History, Plan, Program, StepShell, both session views, ExportDataCard, SignIn, CardioForm, GymForm, ProgramForm, ImportPaste/History, DerivedStateTable, ProgramStep, WeekPreview, ZonesForm, ReadinessSheet advice | ~35 |
-| 3 | **`NumberField`** — FormGroup + Input + InputUnit + aria-label from the label + one number size | number fields in Zones, Cardio, Program, Gym, Settings, TierBlock, DerivedStateTable, ImportPaste, BodyweightQuickAdd | ~25 fields |
-| 4 | **`src/utils/number.ts`** — `finiteOrNull`, `positiveOrNull`, `nonNegativeOrZero`, `clampWhole` | `numberOrNull` (ZonesForm), `toNumberOrNull` (TierBlock), `toOptionalNumber` (CardioLogForm), `toNumber` (GymForm), `toMinutes` (CardioForm), `whole` (AvailabilityForm) and ~8 inline copies | ~14 |
+| 2 | **`Notice`** _(done: `5f9b564`, `923392a`)_ — `tone` neutral/info/warning/error/success, optional icon and title | ~35 inline panels: Progress, History, Plan, Program, StepShell, both session views, ExportDataCard, SignIn, CardioForm, GymForm, ProgramForm, ImportPaste/History, DerivedStateTable, ProgramStep, WeekPreview, ZonesForm, ReadinessSheet advice | ~35 |
+| 3 | **`NumberField`** _(done: `b74b5c9`)_ — FormGroup + Input + InputUnit + aria-label from the label + one number size | number fields in Zones, Cardio, Program, Gym, Settings, TierBlock, DerivedStateTable, ImportPaste, BodyweightQuickAdd | ~25 fields |
+| 4 | **`src/utils/number.ts`** _(not started)_ — `finiteOrNull`, `positiveOrNull`, `nonNegativeOrZero`, `clampWhole` | `numberOrNull` (ZonesForm), `toNumberOrNull` (TierBlock), `toOptionalNumber` (CardioLogForm), `toNumber` (GymForm), `toMinutes` (CardioForm), `whole` (AvailabilityForm) and ~8 inline copies | ~14 |
 | 5 | **`Disclosure`** (trigger + rotating chevron + collapse panel) | ReplacePicker, TierBlock warmup, HistoryRow, DerivedStateTable, ImportHistoryForm, and the `<details>` in WeekPreview, ChartFigure, ExportDataCard | 8 |
 | 6 | **`BottomSheet`** (teleport, scrim + blur, slide/scale, `useFocusTrap`, header + X) | `ReadinessSheet`, `ProjectionSheet` — which today differ in scrim, blur, mobile animation and focus trap | 2 |
 | 7 | **`PageHeader`** + **`PageShell`** (`max-w-lg p-4 gap-4`) + **`StickyActionBar`** | h1 blocks in 6 tab views and StepShell; the sticky footer copied in StrengthSession, CardioSession, StepShell | ~10 |
@@ -74,13 +76,13 @@ These are decisions, not components — write them down once and the components 
 
 ### P3 — smaller unifications
 
-- **`SectionSaveFooter` in `ProgramView`** (`:274-291` re-implements it: no alert icon, 56px button). Add a `label`
+- _(Done: `5bc278f`.)_ **`SectionSaveFooter` in `ProgramView`** (`:274-291` re-implements it: no alert icon, 56px button). Add a `label`
   prop for "Save program".
 - **One stepper.** The AMRAP stepper in `SetRow` (`:198-250`) is three bordered boxes — exactly what `CountStepper`
   was built to replace. Give `CountStepper` a `size="large"` and use it there.
 - **One 1–N scale control.** Readiness uses a 1–5 `RadioButtonGroup`, RPE a 1–10 `RangeSlider`. Pick one idiom (or
   document why they differ).
-- **`PendingSyncNotice`** shared by both session views (`:632` vs `:412` — different copy and text size).
+- _(Done with Notice: one info notice, same opening sentence.)_ **`PendingSyncNotice`** shared by both session views (`:632` vs `:412` — different copy and text size).
 - **Not-found state** for sessions: Cardio has a heading and a button, Strength an icon and a line. One component.
 - **Confirm copy** for abandoning a session differs between cardio and strength; History's delete is `outlined`
   where the session screens use `text`.
@@ -97,7 +99,7 @@ These are decisions, not components — write them down once and the components 
   SessionHeader) instead of four inline overrides.
 - z-index scale: `--z-sticky: 10`, `--z-toast: 40`, `--z-overlay: 50`.
 - `--app-nav-height`, replacing the hard-coded `5.5rem` offset in `UpdatePrompt`.
-- `--color-success` (green-600, text green-700) for the success rule above; replace the raw `green-*` classes in
+- _(Done: `a519652`.)_ `--color-success` (green-600, text green-700) for the success rule above; replace the raw `green-*` classes in
   `StrengthSessionView` (tab check), `BodyweightQuickAdd` (saved check) and `MultisportUsage`, and move the accent
   done marks in `WeekPreview`, `SessionHeader` and `SectionSaveFooter` ("Saved") onto it.
 - Shared TabsNav classes (`scroll-px-4 px-4 [&_[role=tab]]:min-h-[48px]`, repeated in Settings and StrengthSession)
