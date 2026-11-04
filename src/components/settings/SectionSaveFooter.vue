@@ -13,6 +13,7 @@ defineProps<{
   saving: boolean
   /** Blocked by a validation error even when there are changes to save. */
   invalid?: boolean
+  label?: string
 }>()
 
 const emit = defineEmits<{ save: [] }>()
@@ -25,17 +26,18 @@ const emit = defineEmits<{ save: [] }>()
         <Icon name="alert" />
         Unsaved changes
       </span>
-      <span v-else-if="justSaved" class="inline-flex items-center gap-1 text-ink-500">
+      <span v-else-if="justSaved" class="inline-flex items-center gap-1 text-success-700">
         <Icon name="check" />
         Saved
       </span>
     </p>
     <Button
       color="primary"
-      label="Save"
+      :label="label ?? 'Save'"
       size="large"
       class="min-h-[48px]"
       :disabled="!dirty || invalid"
+      :aria-disabled="!dirty || invalid"
       :loading="saving"
       @click="emit('save')"
     />

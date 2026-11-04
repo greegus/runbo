@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Button, Card, Icon, useDialogStack } from 'vuiii'
+import { Button, Card, useDialogStack } from 'vuiii'
 
 import ProgramEditor from '@/components/program/ProgramEditor.vue'
 import ProgramStateTable from '@/components/program/ProgramStateTable.vue'
+import SectionSaveFooter from '@/components/settings/SectionSaveFooter.vue'
 import { mergeProgramState, variationCounts } from '@/import/mergeProgramState'
 import { adoptProgramText } from '@/import/programText'
 import { parseProgram } from '@/liftoscript/parser'
@@ -271,26 +272,14 @@ async function save(): Promise<void> {
 
           <p v-if="error" role="alert" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm">{{ error }}</p>
 
-          <div class="flex items-center justify-between gap-4 border-t border-ink-200 pt-4">
-            <p class="text-sm" role="status">
-              <span v-if="dirty" class="text-accent-600">Unsaved changes</span>
-              <span v-else-if="justSaved" class="inline-flex items-center gap-1 text-ink-500">
-                <Icon name="check" />
-                Saved
-              </span>
-            </p>
-
-            <Button
-              color="primary"
-              label="Save program"
-              size="large"
-              class="min-h-[56px]"
-              :disabled="!canSave"
-              :aria-disabled="!canSave"
-              :loading="busy"
-              @click="save()"
-            />
-          </div>
+          <SectionSaveFooter
+            :dirty="dirty"
+            :just-saved="justSaved"
+            :saving="busy"
+            :invalid="!adoption.adopted"
+            label="Save program"
+            @save="save()"
+          />
         </div>
       </Card>
 
