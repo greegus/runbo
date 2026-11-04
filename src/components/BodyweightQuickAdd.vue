@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { Button, Icon, Input } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import type { BodyweightEntry } from '@/types'
 
 const props = withDefaults(
@@ -113,8 +114,6 @@ function save(): void {
       />
     </div>
 
-    <p v-if="props.error" role="alert" class="text-sm text-accent-700">
-      {{ props.error }}
-    </p>
+    <Notice v-if="props.error" tone="error">{{ props.error }}</Notice>
   </section>
 </template>

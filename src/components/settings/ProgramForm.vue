@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Button, FormGroup, Icon, RadioButtonGroup } from 'vuiii'
+import { Button, FormGroup, RadioButtonGroup } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import NumberField from '@/components/NumberField.vue'
 import { computeFromFiveRm, GZCLP_SEED_GROUPS } from '@/onboarding/programSeed'
 import type { GymSettings, LiftSeedDraft } from '@/onboarding/types'
@@ -114,15 +115,12 @@ function plateHint(draft: LiftSeedDraft): string {
     <!-- Ask-weight is the default, and it is not obvious what it costs: without
          this line an athlete leaves the form empty without realising the first
          session will stop and ask for every number. -->
-    <p class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700">
-      <Icon name="alert" class="mt-0.5 shrink-0 text-accent-600" />
-      <span>
-        Leave a weight empty and we’ll ask you for it at the gym, before your first set of that lift.
-        <template v-if="askCount > 0">
-          Right now that’s <strong>{{ askCount }}</strong> of {{ modelValue.length }} lifts.
-        </template>
-      </span>
-    </p>
+    <Notice tone="info" icon="info">
+      Leave a weight empty and we’ll ask you for it at the gym, before your first set of that lift.
+      <template v-if="askCount > 0">
+        Right now that’s <strong>{{ askCount }}</strong> of {{ modelValue.length }} lifts.
+      </template>
+    </Notice>
 
     <section v-for="group in groups" :key="group.day" class="flex flex-col gap-4">
       <h2 class="text-sm font-semibold tracking-wide text-ink-500 uppercase">Day {{ group.day }}</h2>

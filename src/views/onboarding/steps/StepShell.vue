@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { Button } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import type { StepId } from '@/onboarding/types'
 import { LAST_STEP } from '@/onboarding/wizard'
 
@@ -77,9 +78,7 @@ const percent = computed(() => Math.round((props.step / LAST_STEP) * 100))
     >
       <!-- Errors are announced here, next to the button that failed, rather
            than in a snackbar the user may have already dismissed. -->
-      <p v-if="error" role="alert" class="mb-3 rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-900">
-        {{ error }}
-      </p>
+      <Notice v-if="error" tone="error" class="mb-3">{{ error }}</Notice>
 
       <!-- vuiii's `disabled` only adds a class whose CSS is `pointer-events:
            none` — the button stays tabbable and Enter still fires @click, so the
@@ -88,13 +87,7 @@ const percent = computed(() => Math.round((props.step / LAST_STEP) * 100))
       <!-- A disabled Continue with nothing next to it is a dead end: the athlete
            can see they are stuck and not what to change. Whatever disables the
            step has to say why. -->
-      <p
-        v-if="nextDisabled && nextBlockedReason"
-        role="status"
-        class="mb-3 rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-700"
-      >
-        {{ nextBlockedReason }}
-      </p>
+      <Notice v-if="nextDisabled && nextBlockedReason" class="mb-3">{{ nextBlockedReason }}</Notice>
 
       <Button
         color="primary"

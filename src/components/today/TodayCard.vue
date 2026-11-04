@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { Icon } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import { describeTargets, prescriptionTitle } from '@/training/zones'
 import type { PlannedItem, Profile, Session } from '@/types'
 
@@ -205,7 +206,7 @@ function primary(): void {
       {{ props.busy ? 'Starting…' : primaryLabel }}
     </button>
 
-    <p v-if="props.error" role="alert" class="text-sm text-accent-700">{{ props.error }}</p>
+    <Notice v-if="props.error" tone="error">{{ props.error }}</Notice>
   </section>
 </template>
 

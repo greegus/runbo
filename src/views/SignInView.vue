@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { FirebaseError } from 'firebase/app'
 import { computed } from 'vue'
-import { Button, Icon, useSubmitAction } from 'vuiii'
+import { Button, useSubmitAction } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
@@ -72,16 +73,9 @@ const { submit: signOut, isSubmitting: isSigningOut } = useSubmitAction(() => au
          invite-only and there is no request-access backend, so the only
          action offered is trying a different account. -->
     <div v-if="authStore.status === 'notAllowlisted'" class="flex flex-col gap-4">
-      <div class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm">
-        <Icon name="alert" size="large" class="shrink-0 text-accent-600" />
-        <div>
-          <p class="font-semibold text-ink-900">{{ accessTitle }}</p>
-          <p class="mt-1 text-ink-500">
-            Signed in as <span class="font-medium text-ink-900">{{ authStore.user?.email }}</span
-            >. {{ accessDetail }}
-          </p>
-        </div>
-      </div>
+      <Notice tone="warning" :title="accessTitle">
+        Signed in as <span class="font-medium">{{ authStore.user?.email }}</span>. {{ accessDetail }}
+      </Notice>
 
       <Button
         color="primary"

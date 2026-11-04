@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { Button, Checkbox, FormGroup, Icon, Input, RadioGroup, Select } from 'vuiii'
 
 import DiagnosticsList from '@/components/DiagnosticsList.vue'
+import Notice from '@/components/Notice.vue'
 import type { DeriveReport } from '@/import/deriveState'
 import { CONFIDENCE_COPY, KEY_RESOLUTION_COPY, MATCH_COPY, UNMATCHED_COPY } from '@/onboarding/deriveCopy'
 import { dedupeUnmatched } from '@/onboarding/derivedRows'
@@ -191,17 +192,10 @@ watch(
         underneath it.
       </p>
 
-      <p
-        v-if="reviewCount > 0"
-        role="status"
-        class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700"
-      >
-        <Icon name="alert" class="mt-0.5 shrink-0 text-accent-600" />
-        <span>
-          <strong>{{ reviewCount }}</strong> {{ reviewCount === 1 ? 'lift needs' : 'lifts need' }} a look — they are
-          opened below, with the reason. Everything here is editable.
-        </span>
-      </p>
+      <Notice v-if="reviewCount > 0" tone="warning">
+        <strong>{{ reviewCount }}</strong> {{ reviewCount === 1 ? 'lift needs' : 'lifts need' }} a look — they are
+        opened below, with the reason. Everything here is editable.
+      </Notice>
     </header>
 
     <ul role="list" class="flex flex-col gap-3">

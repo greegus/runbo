@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { Button, FormGroup, Icon, Input, RadioButtonGroup } from 'vuiii'
+import { Button, FormGroup, Input, RadioButtonGroup } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import ProgramEditor from '@/components/program/ProgramEditor.vue'
 import { adoptProgramText, gzclpFallback } from '@/import/programText'
 import { parseExerciseKey } from '@/onboarding/derivedRows'
@@ -155,15 +156,12 @@ function useFallback(): void {
          on verbatim: an athlete who pastes their program must get their program
          back, not our re-serialisation of it. -->
     <div v-else-if="result.adopted" class="flex flex-col gap-3">
-      <p class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700">
-        <Icon name="check" class="mt-0.5 shrink-0 text-accent-600" />
-        <span>
-          This program runs as written. We read a starting weight for
-          {{ Object.keys(result.detected).length }} of
-          {{ Object.keys(result.detected).length + result.askWeightKeys.length }} lifts; the rest we’ll ask you for at
-          the gym.
-        </span>
-      </p>
+      <Notice tone="success">
+        This program runs as written. We read a starting weight for
+        {{ Object.keys(result.detected).length }} of
+        {{ Object.keys(result.detected).length + result.askWeightKeys.length }} lifts; the rest we’ll ask you for at the
+        gym.
+      </Notice>
 
       <Button color="primary" class="min-h-[56px]" label="Use this program" @click="useThisProgram()" />
     </div>
@@ -171,24 +169,16 @@ function useFallback(): void {
     <div v-else class="flex flex-col gap-4">
       <!-- The silent-failure hole: adoption can fail with nothing to show for it.
            Saying so is the only honest option — an empty panel reads as a bug. -->
-      <p
-        v-if="result.diagnostics.length === 0"
-        class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700"
-        role="alert"
-      >
-        <Icon name="alert" class="mt-0.5 shrink-0 text-accent-600" />
-        <span>We couldn’t read this program, and the parser gave no reason.</span>
-      </p>
+      <Notice v-if="result.diagnostics.length === 0" tone="error">
+        We couldn’t read this program, and the parser gave no reason.
+      </Notice>
 
-      <p v-else class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700" role="alert">
-        <Icon name="alert" class="mt-0.5 shrink-0 text-accent-600" />
-        <!-- Warnings block adoption just as errors do, so the copy never offers
-             to continue anyway. -->
-        <span>
-          We can’t run this program as written — every problem listed above has to be fixed, warnings included. Edit the
-          text, or keep the weights we did read and run the built-in GZCLP instead.
-        </span>
-      </p>
+      <!-- Warnings block adoption just as errors do, so the copy never offers
+           to continue anyway. -->
+      <Notice v-else tone="error">
+        We can’t run this program as written — every problem listed above has to be fixed, warnings included. Edit the
+        text, or keep the weights we did read and run the built-in GZCLP instead.
+      </Notice>
 
       <div v-if="!showFallback">
         <Button

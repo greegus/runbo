@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 import { Icon } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import { buildWeekGrid, type WeekGridDay } from '@/session/weekGrid'
 import { MODALITY_LABELS } from '@/training/zones'
 import type { Profile, Session } from '@/types'
@@ -148,14 +149,9 @@ const rows = computed(() =>
     <!-- The planner never silently drops volume it cannot place; when minutes
          are left over the user is the only one who can fix it, by giving the
          week another day. -->
-    <div
-      v-if="model.shortfallMinutes > 0"
-      class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm"
-      role="status"
-    >
-      <Icon name="alert" size="large" class="shrink-0 text-accent-600" />
-      <p class="text-ink-900">{{ model.shortfallMinutes }} min of cardio don't fit this week — add a cardio day.</p>
-    </div>
+    <Notice v-if="model.shortfallMinutes > 0" tone="warning">
+      {{ model.shortfallMinutes }} min of cardio don't fit this week — add a cardio day.
+    </Notice>
 
     <details v-if="model.explanations.length > 0" class="text-sm">
       <summary class="min-h-[48px] cursor-pointer py-3 font-medium text-ink-700">Why these days?</summary>

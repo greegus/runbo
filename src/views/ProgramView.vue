@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { Button, Card, useDialogStack } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import ProgramEditor from '@/components/program/ProgramEditor.vue'
 import ProgramStateTable from '@/components/program/ProgramStateTable.vue'
 import SectionSaveFooter from '@/components/settings/SectionSaveFooter.vue'
@@ -254,23 +255,11 @@ async function save(): Promise<void> {
 
           <!-- A disabled Save with nothing next to it is a dead end: whatever
                blocks the write has to say so in words. -->
-          <p
-            v-if="blockedReason"
-            role="status"
-            class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-700"
-          >
-            {{ blockedReason }}
-          </p>
+          <Notice v-if="blockedReason">{{ blockedReason }}</Notice>
 
-          <p
-            v-else-if="dirty && saveSummary"
-            role="status"
-            class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-700"
-          >
-            {{ saveSummary }}
-          </p>
+          <Notice v-else-if="dirty && saveSummary">{{ saveSummary }}</Notice>
 
-          <p v-if="error" role="alert" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm">{{ error }}</p>
+          <Notice v-if="error" tone="error">{{ error }}</Notice>
 
           <SectionSaveFooter
             :dirty="dirty"

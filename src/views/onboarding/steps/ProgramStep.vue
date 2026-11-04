@@ -2,6 +2,7 @@
 import { computed, ref, shallowRef, watch } from 'vue'
 import { Button, FormGroup, Icon, Select } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import DerivedStateTable from '@/components/program/DerivedStateTable.vue'
 import ImportHistoryForm from '@/components/program/ImportHistoryForm.vue'
 import ImportPasteForm from '@/components/program/ImportPasteForm.vue'
@@ -296,16 +297,13 @@ async function onNext(): Promise<void> {
         <ImportPasteForm v-model="pasteText" :settings="modelValue.settings" @adopt="onAdopt" />
 
         <template v-if="adopted">
-          <p class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700">
-            <Icon name="check" class="mt-0.5 shrink-0 text-accent-600" />
-            <span>
-              {{
-                adopted.source === 'paste'
-                  ? 'We’ll run your program exactly as you pasted it.'
-                  : 'We’ll run the built-in GZCLP with the weights we read from your paste.'
-              }}
-            </span>
-          </p>
+          <Notice tone="success">
+            {{
+              adopted.source === 'paste'
+                ? 'We’ll run your program exactly as you pasted it.'
+                : 'We’ll run the built-in GZCLP with the weights we read from your paste.'
+            }}
+          </Notice>
 
           <ImportHistoryForm :uid="modelValue.id" :units="modelValue.settings.units" @result="importResult = $event" />
         </template>
@@ -347,10 +345,9 @@ async function onNext(): Promise<void> {
 
             <!-- Shown even when the confidence is `certain`: a session labelled A1
                  that logged none of A1's lifts makes the label itself worthless. -->
-            <p v-if="cursorRow.suspect" role="alert" class="flex gap-3 text-sm text-ink-700">
-              <Icon name="alert" class="mt-0.5 shrink-0 text-accent-600" />
-              <span>{{ SUSPECT_CURSOR_COPY.replace('{day}', cursorRow.lastProgramDay ?? 'a day') }}</span>
-            </p>
+            <Notice v-if="cursorRow.suspect" tone="warning">
+              {{ SUSPECT_CURSOR_COPY.replace('{day}', cursorRow.lastProgramDay ?? 'a day') }}
+            </Notice>
           </section>
 
           <DerivedStateTable v-model="rows" :report="derived.report" :settings="modelValue.settings" />

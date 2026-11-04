@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Button, Checkbox, Icon } from 'vuiii'
 
 import PrescriptionCard from '@/components/cardio/PrescriptionCard.vue'
+import Notice from '@/components/Notice.vue'
 import { format } from '@/liftoscript/weight'
 import type { HistoryEntry } from '@/session/historyList'
 import { isMultisportKind } from '@/training/multisport'
@@ -190,7 +191,7 @@ function requestDelete(): void {
               : 'Deleting it changes nothing about your program.'
           }}
         </p>
-        <p v-if="error" role="alert" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm">{{ error }}</p>
+        <Notice v-if="error" tone="error">{{ error }}</Notice>
       </div>
     </div>
   </li>

@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { Button, useDialogStack } from 'vuiii'
 
 import HistoryRow from '@/components/history/HistoryRow.vue'
+import Notice from '@/components/Notice.vue'
 import { deleteConfirmCopy, groupByMonth, isDeletable, type HistoryEntry } from '@/session/historyList'
 import { useProfileStore } from '@/stores/profile'
 import { useSessionsStore } from '@/stores/sessions'
@@ -209,20 +210,16 @@ async function remove(entry: HistoryEntry): Promise<void> {
     </div>
 
     <template v-else>
-      <p v-if="notice" role="status" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-700">
-        {{ notice }}
-      </p>
+      <Notice v-if="notice">{{ notice }}</Notice>
 
       <!-- A load that failed is not an empty history: telling a returning
            athlete their training never happened is the worse lie of the two. -->
-      <div
-        v-if="firstPageError"
-        role="alert"
-        class="flex flex-col gap-3 rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm"
-      >
-        <p class="text-ink-900">{{ firstPageError }}</p>
-        <Button color="primary" label="Try again" variant="outlined" class="min-h-[48px]" @click="loadFirstPage()" />
-      </div>
+      <Notice v-if="firstPageError" tone="error">
+        {{ firstPageError }}
+        <template #actions>
+          <Button color="primary" label="Try again" variant="outlined" class="min-h-[48px]" @click="loadFirstPage()" />
+        </template>
+      </Notice>
 
       <!-- `isLoadingHistory` matters here because a delete empties the list and
            re-pages it: without it the athlete reads "no finished sessions yet"
@@ -271,9 +268,7 @@ async function remove(entry: HistoryEntry): Promise<void> {
           @click="loadMore"
         />
 
-        <p v-if="pageError" role="alert" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm">
-          {{ pageError }}
-        </p>
+        <Notice v-if="pageError" tone="error">{{ pageError }}</Notice>
 
         <!-- Said once, at the bottom, rather than as a disabled button on 200 rows. -->
         <p class="text-sm text-ink-500">History is read-only. Only your most recent session can be deleted.</p>

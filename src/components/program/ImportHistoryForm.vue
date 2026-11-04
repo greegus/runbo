@@ -9,6 +9,7 @@ import {
   WRONG_EXPORT_MESSAGE,
   type ImportResult,
 } from '@/import/liftosaurHistory'
+import Notice from '@/components/Notice.vue'
 import { safeImportReason } from '@/onboarding/deriveCopy'
 
 const props = defineProps<{
@@ -182,7 +183,7 @@ watch(result, (value) => emit('result', value), { immediate: true })
       />
     </div>
 
-    <p v-if="readError" role="alert" class="text-sm text-accent-700">{{ readError }}</p>
+    <Notice v-if="readError" tone="error">{{ readError }}</Notice>
 
     <!-- Reading and parsing a long history blocks the main thread; without this
          line the screen simply stops responding and reads as a crash. -->
@@ -191,36 +192,25 @@ watch(result, (value) => emit('result', value), { immediate: true })
     <template v-if="report && !busy">
       <!-- A whole-import failure: the module's own message verbatim, plus the one
            thing the user can do about it. -->
-      <div
-        v-if="report.failure"
-        role="alert"
-        class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700"
-      >
-        <Icon name="alert" class="mt-0.5 shrink-0 text-accent-600" />
-        <span>
-          <span class="block font-semibold text-ink-900">{{ report.failure }}</span>
-          <span v-if="remedy" class="mt-1 block">{{ remedy }}</span>
-        </span>
-      </div>
+      <Notice v-if="report.failure" tone="error" :title="report.failure">
+        <template v-if="remedy">{{ remedy }}</template>
+      </Notice>
 
       <template v-else>
         <!-- An empty history is a success, not a failure: "we read your file and
              it had nothing in it" is a different sentence from "we couldn't read
              your file", and confusing the two sends the user hunting for a
              problem that does not exist. -->
-        <p role="status" class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm text-ink-700">
-          <Icon name="check" class="mt-0.5 shrink-0 text-accent-600" />
-          <span>
-            <template v-if="report.imported === 0"> We read your file; it contained no finished workouts. </template>
-            <template v-else>
-              We read <strong>{{ report.imported }}</strong> {{ report.imported === 1 ? 'workout' : 'workouts' }} from
-              your file.
-            </template>
-            <span v-if="unitsConverted" class="mt-1 block">
-              Your export was in {{ report.sourceUnits }}; weights were converted to {{ units }}.
-            </span>
+        <Notice tone="success">
+          <template v-if="report.imported === 0"> We read your file; it contained no finished workouts. </template>
+          <template v-else>
+            We read <strong>{{ report.imported }}</strong> {{ report.imported === 1 ? 'workout' : 'workouts' }} from your
+            file.
+          </template>
+          <span v-if="unitsConverted" class="mt-1 block">
+            Your export was in {{ report.sourceUnits }}; weights were converted to {{ units }}.
           </span>
-        </p>
+        </Notice>
 
         <Checkbox
           v-model="includeInProgress"

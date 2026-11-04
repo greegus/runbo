@@ -8,6 +8,7 @@ import { buildLineChart } from '@/charts/lineChart'
 import BarChart from '@/components/charts/BarChart.vue'
 import LineChart from '@/components/charts/LineChart.vue'
 import MultisportUsage from '@/components/MultisportUsage.vue'
+import Notice from '@/components/Notice.vue'
 import StatTile from '@/components/StatTile.vue'
 import { useBodyweightStore } from '@/stores/bodyweight'
 import { useProfileStore } from '@/stores/profile'
@@ -198,23 +199,21 @@ function tonnageValue(value: { value: number } | null): string {
 
     <!-- A failure is not a slow load: the skeleton stands down and the athlete
          gets something to press. -->
-    <div
-      v-if="loadError"
-      role="alert"
-      class="flex flex-col gap-3 rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm"
-    >
-      <p>{{ loadError }}</p>
-      <Button
-        color="primary"
-        label="Try again"
-        variant="outlined"
-        class="min-h-[48px]"
-        :loading="sessionsStore.isLoadingAll"
-        :disabled="sessionsStore.isLoadingAll"
-        :aria-disabled="sessionsStore.isLoadingAll"
-        @click="retryLoad()"
-      />
-    </div>
+    <Notice v-if="loadError" tone="error">
+      {{ loadError }}
+      <template #actions>
+        <Button
+          color="primary"
+          label="Try again"
+          variant="outlined"
+          class="min-h-[48px]"
+          :loading="sessionsStore.isLoadingAll"
+          :disabled="sessionsStore.isLoadingAll"
+          :aria-disabled="sessionsStore.isLoadingAll"
+          @click="retryLoad()"
+        />
+      </template>
+    </Notice>
 
     <!-- Loading is its own state. An empty `allSessions` before the first page
          resolves means "not answered yet", never "nothing there". -->
@@ -249,9 +248,7 @@ function tonnageValue(value: { value: number } | null): string {
       <section class="flex flex-col gap-3">
         <h2 class="text-lg font-semibold">Lifts</h2>
 
-        <p v-if="!hasLiftData" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-500">
-          No lifts logged yet.
-        </p>
+        <Notice v-if="!hasLiftData">No lifts logged yet.</Notice>
 
         <template v-else>
           <FormGroup label="Lift">
@@ -281,9 +278,7 @@ function tonnageValue(value: { value: number } | null): string {
       <section class="flex flex-col gap-3">
         <h2 class="text-lg font-semibold">Cardio</h2>
 
-        <p v-if="!hasCardio" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-500">
-          No cardio logged in the last 12 weeks.
-        </p>
+        <Notice v-if="!hasCardio">No cardio logged in the last 12 weeks.</Notice>
 
         <BarChart
           v-else
@@ -298,9 +293,7 @@ function tonnageValue(value: { value: number } | null): string {
       <section class="flex flex-col gap-3">
         <h2 class="text-lg font-semibold">Records</h2>
 
-        <p v-if="records.length === 0" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-500">
-          No records yet — your first completed set sets all three.
-        </p>
+        <Notice v-if="records.length === 0">No records yet — your first completed set sets all three.</Notice>
 
         <!-- A table, not a chart: four ordered columns say more about three
              bests per lift than any picture of the same numbers. -->
@@ -344,26 +337,19 @@ function tonnageValue(value: { value: number } | null): string {
           <span class="sr-only">Loading your weigh-ins…</span>
         </div>
 
-        <p
-          v-else-if="bodyweightStore.error"
-          role="alert"
-          class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm"
-        >
-          Your weigh-ins could not be loaded.
-        </p>
+        <Notice v-else-if="bodyweightStore.error" tone="error">Your weigh-ins could not be loaded.</Notice>
 
-        <div
-          v-else-if="bodyweightPoints.length === 0"
-          class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-500"
-        >
-          <p>No weigh-ins yet.</p>
-          <router-link
-            :to="{ name: 'today' }"
-            class="mt-1 inline-flex min-h-[48px] items-center font-medium text-accent-600 underline"
-          >
-            Add one on Today
-          </router-link>
-        </div>
+        <Notice v-else-if="bodyweightPoints.length === 0">
+          No weigh-ins yet.
+          <template #actions>
+            <router-link
+              :to="{ name: 'today' }"
+              class="inline-flex min-h-[48px] items-center font-medium text-accent-600 underline"
+            >
+              Add one on Today
+            </router-link>
+          </template>
+        </Notice>
 
         <LineChart
           v-else
@@ -381,12 +367,12 @@ function tonnageValue(value: { value: number } | null): string {
         <!-- DECISION: two means and a count, never a scatter. Readiness is
              optional and often skipped, so at this many sessions a cloud of
              points would invite a correlation claim the data cannot support. -->
-        <p v-if="!hasReadiness" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-500">
+        <Notice v-if="!hasReadiness">
           Readiness needs a few more sessions before it says anything.
           <template v-if="readiness.scoredSessions > 0">
             {{ readiness.scoredSessions }} of your sessions carry an answer so far.
           </template>
-        </p>
+        </Notice>
 
         <template v-else>
           <p class="text-sm text-ink-500">

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { Checkbox, CheckboxGroup, Icon } from 'vuiii'
+import { Checkbox, CheckboxGroup } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import NumberField from '@/components/NumberField.vue'
 import type { CardioTrack } from '@/onboarding/types'
 import type { Modality } from '@/types'
@@ -99,20 +100,10 @@ watch(isValid, (valid) => emit('update:valid', valid), { immediate: true })
          plan composer has no strength-only cardio track — it would prescribe
          nothing every week — so we explain the consequence instead of hiding
          the state behind a disabled checkbox. -->
-    <div
-      v-if="props.modelValue.modalities.length === 0"
-      class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm"
-      role="alert"
-    >
-      <Icon name="alert" size="large" class="shrink-0 text-accent-600" />
-      <div>
-        <p class="font-semibold text-ink-900">No sport selected.</p>
-        <p class="mt-1 text-ink-500">
-          Your weeks would be strength only, and we cannot plan a single cardio session. Pick at least one sport — you
-          can set the weekly minutes as low as you like.
-        </p>
-      </div>
-    </div>
+    <Notice v-if="props.modelValue.modalities.length === 0" tone="warning" title="No sport selected.">
+      Your weeks would be strength only, and we cannot plan a single cardio session. Pick at least one sport — you can
+      set the weekly minutes as low as you like.
+    </Notice>
 
     <NumberField
       label="Cardio per week"

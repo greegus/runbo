@@ -4,6 +4,7 @@ import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import { Button, Icon, TabsNav, useDialogStack } from 'vuiii'
 
 import DiagnosticsList from '@/components/DiagnosticsList.vue'
+import Notice from '@/components/Notice.vue'
 import ReadinessSheet from '@/components/ReadinessSheet.vue'
 import RestTimer from '@/components/RestTimer.vue'
 import SessionHeader from '@/components/SessionHeader.vue'
@@ -629,9 +630,11 @@ onBeforeRouteLeave(() => {
           </ul>
         </section>
 
-        <p v-if="pendingSync" role="status" class="mt-6 rounded-lg border border-ink-200 bg-ink-50 p-3 text-ink-700">
+        <!-- The same words as the cardio session's; only a lift has "what it
+             changed" to wait for. -->
+        <Notice v-if="pendingSync" tone="info" icon="info" class="mt-6">
           Saved on this device — it will sync when you’re back online. What it changed shows up then.
-        </p>
+        </Notice>
 
         <p v-else-if="!summarySession.progressionSummary?.length && !records.length" class="mt-6 text-ink-500">
           Nothing moved this time. The session is recorded.
@@ -722,9 +725,7 @@ onBeforeRouteLeave(() => {
           @dismiss="dismissRest()"
         />
 
-        <p v-if="error" role="alert" class="mb-3 rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-900">
-          {{ error }}
-        </p>
+        <Notice v-if="error" tone="error" class="mb-3">{{ error }}</Notice>
 
         <template v-if="isDone">
           <Button
@@ -753,13 +754,7 @@ onBeforeRouteLeave(() => {
         />
 
         <template v-else-if="plan && plan.diagnostics.length === 0">
-          <p
-            v-if="blockedReason"
-            role="status"
-            class="mb-3 rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-700"
-          >
-            {{ blockedReason }}
-          </p>
+          <Notice v-if="blockedReason" class="mb-3">{{ blockedReason }}</Notice>
 
           <p v-else class="mb-3 text-sm text-ink-500 tabular-nums">
             {{ doneSets }} of {{ totalSets }} sets logged<span v-if="totalSets - doneSets > 0">

@@ -4,6 +4,7 @@ import { Button, Icon, Input, RadioButtonGroup } from 'vuiii'
 
 import CountStepper from '@/components/CountStepper.vue'
 import InputUnit from '@/components/InputUnit.vue'
+import Notice from '@/components/Notice.vue'
 import NumberField from '@/components/NumberField.vue'
 import { PLATE_PAINT } from '@/components/strength/platePaint'
 import PlateStack from '@/components/strength/PlateStack.vue'
@@ -210,23 +211,19 @@ watch(isValid, (value) => emit('update:valid', value), { immediate: true })
 
     <!-- Shown only after a switch: a re-labelled inventory is the one place in
          this form where doing nothing leaves wrong data behind. -->
-    <div v-if="unitsChanged" class="flex gap-3 rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm">
-      <Icon name="alert" size="large" class="shrink-0 text-accent-600" />
-      <div>
-        <p class="font-semibold text-ink-900">Your numbers were not converted.</p>
-        <p class="mt-1 text-ink-500">
-          The bar and plates below are now read as {{ modelValue.units }}. Check them, or load a standard
-          {{ modelValue.units }} set.
-        </p>
+    <Notice v-if="unitsChanged" tone="warning" title="Your numbers were not converted.">
+      The bar and plates below are now read as {{ modelValue.units }}. Check them, or load a standard
+      {{ modelValue.units }} set.
+      <template #actions>
         <Button
           color="primary"
           label="Use a standard set"
           variant="outlined"
-          class="mt-3 min-h-[48px]"
+          class="min-h-[48px]"
           @click="loadDefaultInventory()"
         />
-      </div>
-    </div>
+      </template>
+    </Notice>
 
     <NumberField
       label="Barbell weight"

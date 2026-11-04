@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { Button } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import { buildExport, exportFileName } from '@/export/userData'
 import { listBodyweightEntries } from '@/services/bodyweightService'
 import { useProfileStore } from '@/stores/profile'
@@ -110,7 +111,7 @@ async function copyJson(): Promise<void> {
       @click="exportData()"
     />
 
-    <p v-if="error" role="alert" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm">{{ error }}</p>
+    <Notice v-if="error" tone="error">{{ error }}</Notice>
 
     <!-- The count only ever appears AFTER a successful export: a "0 sessions"
          line printed off an unloaded list would read as an empty history. -->
@@ -134,9 +135,7 @@ async function copyJson(): Promise<void> {
             @click="copyJson()"
           />
 
-          <p v-if="copyError" role="alert" class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm">
-            {{ copyError }}
-          </p>
+          <Notice v-if="copyError" tone="error">{{ copyError }}</Notice>
 
           <!-- Selectable text, not a link: a viewer that blocks blob downloads
                still lets the athlete select all and paste this into a file. -->

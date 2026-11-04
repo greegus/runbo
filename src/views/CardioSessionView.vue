@@ -6,6 +6,7 @@ import { Button, useDialogStack } from 'vuiii'
 
 import CardioLogForm from '@/components/cardio/CardioLogForm.vue'
 import PrescriptionCard from '@/components/cardio/PrescriptionCard.vue'
+import Notice from '@/components/Notice.vue'
 import ReadinessSheet from '@/components/ReadinessSheet.vue'
 import SessionHeader from '@/components/SessionHeader.vue'
 import { deleteSession, loadSession, saveSession } from '@/services/sessionsService'
@@ -391,9 +392,7 @@ onBeforeUnmount(() => {
 
         <!-- An unplanned session: the athlete simply went out. There is nothing
              to prescribe, only something to record. -->
-        <p v-else-if="!prescription" class="rounded-lg border border-ink-200 bg-ink-50 p-4 text-ink-700">
-          Unplanned session — no target for this one. Log what you did.
-        </p>
+        <Notice v-else-if="!prescription">Unplanned session — no target for this one. Log what you did.</Notice>
 
         <!-- A Strava activity is already logged; there is nothing to type. -->
         <p v-if="isImported" class="text-sm text-ink-500">This activity came from Strava, so it is already logged.</p>
@@ -408,13 +407,7 @@ onBeforeUnmount(() => {
             {{ session.notes }}
           </p>
           <p class="text-ink-700">Logged. Nice work.</p>
-          <p
-            v-if="pendingSync"
-            role="status"
-            class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-700"
-          >
-            Saved on this device — it will sync when you’re back online.
-          </p>
+          <Notice v-if="pendingSync" tone="info" icon="info">Saved on this device — it will sync when you’re back online.</Notice>
         </template>
 
         <CardioLogForm
@@ -448,7 +441,7 @@ onBeforeUnmount(() => {
       <div
         class="sticky bottom-0 border-t border-ink-200 bg-white px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
       >
-        <p v-if="error" class="mb-3 rounded-lg bg-accent-50 p-3 text-sm text-accent-700" role="alert">{{ error }}</p>
+        <Notice v-if="error" tone="error" class="mb-3">{{ error }}</Notice>
 
         <!-- `replace`, so the back button cannot walk into a finished session. -->
         <Button
@@ -462,7 +455,8 @@ onBeforeUnmount(() => {
         />
 
         <template v-else>
-          <p v-if="blockedReason" class="mb-3 text-sm text-accent-700" role="status">{{ blockedReason }}</p>
+          <!-- The same panel as the strength session's blocked reason. -->
+          <Notice v-if="blockedReason" class="mb-3">{{ blockedReason }}</Notice>
 
           <Button
             color="primary"

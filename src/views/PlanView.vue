@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { IconButton } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import StatTile from '@/components/StatTile.vue'
 import WeekPreview from '@/components/WeekPreview.vue'
 import { liveWeekWindow, stepWeek, weekOffsetLabel, weekRangeLabel } from '@/session/weekGrid'
@@ -187,20 +188,8 @@ watch(
 
       <!-- A disabled control with nothing next to it is a dead end: whatever
            stops the athlete has to say why, and where the answer lives. -->
-      <p
-        v-if="prevWeek === null"
-        role="status"
-        class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-700"
-      >
-        History further back lives in the History tab.
-      </p>
-      <p
-        v-if="nextWeek === null"
-        role="status"
-        class="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm text-ink-700"
-      >
-        Next week is as far ahead as the plan goes.
-      </p>
+      <Notice v-if="prevWeek === null">History further back lives in the History tab.</Notice>
+      <Notice v-if="nextWeek === null">Next week is as far ahead as the plan goes.</Notice>
 
       <!-- A fresh athlete has logged nothing; the week is still a plan, not a
            list of failures. -->

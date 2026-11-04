@@ -2,6 +2,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { IconButton, RadioButtonGroup } from 'vuiii'
 
+import Notice from '@/components/Notice.vue'
 import { readinessAdvice, scoreReadiness, type ReadinessInput } from '@/training/readiness'
 import type { TrainingKind } from '@/types'
 
@@ -255,13 +256,7 @@ watch(
             ><span class="tabular-nums">/15</span> · {{ score.band }}
           </p>
 
-          <p
-            v-if="advice"
-            class="rounded-lg border border-accent-200 bg-accent-50 p-3 text-sm text-accent-800"
-            role="status"
-          >
-            {{ advice }}
-          </p>
+          <Notice v-if="advice" tone="warning">{{ advice }}</Notice>
 
           <div class="flex flex-col gap-2">
             <button
