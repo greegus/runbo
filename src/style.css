@@ -38,8 +38,11 @@
      finished lift, a logged session or day, "Saved", a card that has paid
      off. The accent stays the brand: actions and the active thing. Tailwind's
      green, named for its job. */
+  --color-success-50: var(--color-green-50);
+  --color-success-200: var(--color-green-200);
   --color-success-600: var(--color-green-600);
   --color-success-700: var(--color-green-700);
+  --color-success-800: var(--color-green-800);
 
   /* The sheets' desktop entrance: a centred dialog fades and grows into place
      instead of rising from an edge it is no longer attached to. */
