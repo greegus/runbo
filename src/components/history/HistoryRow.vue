@@ -170,8 +170,8 @@ function requestDelete(): void {
         </section>
       </template>
 
-      <!-- No trash icon is registered, and an unregistered name renders nothing
-           at all — so the one destructive action in the app is a word. -->
+      <!-- The one destructive action in History, spelled out, with what it does
+           to the program right under it. -->
       <div v-if="deletable" class="flex flex-col gap-2">
         <Button
           label="Delete this session"

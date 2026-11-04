@@ -134,6 +134,15 @@ body {
       box-shadow: inset 0 0 0 100vmax rgb(20 24 31 / 0.05);
     }
   }
+
+  /* A hand-rolled button marked busy with `aria-disabled` alone stays
+     focusable (on purpose, so a screen reader can still find it) but looked
+     exactly like an active one: "Start session" mid-request gave no sign it
+     had been tapped. Natively disabled buttons style themselves (SetRow,
+     CountStepper), so they are left alone. */
+  button:not(.vuiii-button):not(:disabled)[aria-disabled='true'] {
+    opacity: 0.5;
+  }
 }
 
 /*
