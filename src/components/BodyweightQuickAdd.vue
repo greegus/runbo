@@ -93,7 +93,7 @@ function save(): void {
             <Icon
               v-if="isSaved"
               name="check-circle"
-              class="shrink-0 text-green-600 [--vuiii-icon-size:1.5rem]"
+              class="shrink-0 text-success-600 [--vuiii-icon-size:1.5rem]"
               role="img"
               aria-label="Saved"
             />

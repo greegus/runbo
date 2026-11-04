@@ -665,7 +665,7 @@ onBeforeRouteLeave(() => {
                  set is logged. -->
               <span class="flex w-7 shrink-0 items-center justify-center text-xs tabular-nums">
                 <template v-if="tab.complete">
-                  <Icon name="check" class="text-green-600" aria-hidden="true" />
+                  <Icon name="check" class="text-success-600" aria-hidden="true" />
                   <span class="sr-only">done</span>
                 </template>
                 <template v-else>{{ tab.progress }}</template>

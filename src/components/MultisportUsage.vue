@@ -78,7 +78,7 @@ function money(amount: number): string {
     >
       <div
         class="h-full rounded-full transition-[width] duration-300"
-        :class="usage.remaining === 0 ? 'bg-green-600' : 'bg-accent-600'"
+        :class="usage.remaining === 0 ? 'bg-success-600' : 'bg-accent-600'"
         :style="{ width: `${progress}%` }"
       />
     </div>
@@ -90,7 +90,7 @@ function money(amount: number): string {
       <span v-if="usage.remaining > 0">
         {{ usage.remaining }} more {{ usage.remaining === 1 ? 'entry' : 'entries' }} to pay off
       </span>
-      <span v-else class="font-semibold text-green-700">paid off, {{ money(usage.balance) }} saved</span>
+      <span v-else class="font-semibold text-success-700">paid off, {{ money(usage.balance) }} saved</span>
     </p>
   </section>
 </template>

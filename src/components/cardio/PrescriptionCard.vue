@@ -57,7 +57,7 @@ const stats = computed(() => {
           {{ MODALITY_LABELS[prescription.modality] }} · {{ prescription.kind }}
         </h2>
       </div>
-      <Icon v-if="completed" name="check" size="large" class="ml-auto shrink-0 text-accent-600" />
+      <Icon v-if="completed" name="check" size="large" class="ml-auto shrink-0 text-success-600" />
     </header>
 
     <!-- Read at arm's length mid-session: the whole prescription on one line,

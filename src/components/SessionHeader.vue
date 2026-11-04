@@ -30,7 +30,7 @@ const emit = defineEmits<{ close: [] }>()
       <h1 class="text-2xl font-bold text-ink-900">{{ title }}</h1>
       <p v-if="subtitle" class="text-lg leading-snug font-semibold tabular-nums text-ink-700">{{ subtitle }}</p>
     </div>
-    <span v-if="done" class="flex shrink-0 items-center gap-1 pt-1.5 text-sm font-semibold text-accent-700">
+    <span v-if="done" class="flex shrink-0 items-center gap-1 pt-1.5 text-sm font-semibold text-success-700">
       <Icon name="check" aria-hidden="true" />
       Logged
     </span>

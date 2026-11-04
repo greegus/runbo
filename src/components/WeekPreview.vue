@@ -132,7 +132,7 @@ const rows = computed(() =>
           <!-- Status is a word and a shape, never colour alone: the app is used
                in a bright gym at arm's length, and "done" must survive that. -->
           <span v-if="props.showStatus && day.showDone" class="ml-auto flex shrink-0 items-center">
-            <Icon name="check" class="text-accent-600" aria-hidden="true" />
+            <Icon name="check" class="text-success-600" aria-hidden="true" />
             <span class="sr-only">done</span>
           </span>
           <span v-else-if="props.showStatus && day.status === 'missed'" class="ml-auto shrink-0 text-xs text-ink-500">

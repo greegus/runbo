@@ -34,6 +34,13 @@
   --color-ink-800: #272c35;
   --color-ink-900: #14181f;
 
+  /* Success: green confirms that something succeeded or is complete — a
+     finished lift, a logged session or day, "Saved", a card that has paid
+     off. The accent stays the brand: actions and the active thing. Tailwind's
+     green, named for its job. */
+  --color-success-600: var(--color-green-600);
+  --color-success-700: var(--color-green-700);
+
   /* The sheets' desktop entrance: a centred dialog fades and grows into place
      instead of rising from an edge it is no longer attached to. */
   --animate-dialog-in: dialog-in 160ms ease-out;

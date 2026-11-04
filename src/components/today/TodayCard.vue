@@ -150,7 +150,7 @@ function primary(): void {
           <span class="font-semibold text-ink-900">Sauna claimed</span>
           <span v-if="props.saunaClaimed.minutes" class="tabular-nums"> · {{ props.saunaClaimed.minutes }} min</span>
         </span>
-        <Icon name="check" class="shrink-0 text-accent-600" aria-hidden="true" />
+        <Icon name="check" class="shrink-0 text-success-600" aria-hidden="true" />
         <button
           type="button"
           class="min-h-[40px] shrink-0 rounded-lg px-2 font-medium text-ink-500 focus-visible:outline-2 focus-visible:outline-accent-600"
