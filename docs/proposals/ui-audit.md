@@ -15,7 +15,8 @@ but the same job looks and behaves differently from screen to screen:
 - **5 disclosure implementations** (two animated, three that swap `chevron-up`/`chevron-down`, plus three styled
   `<details>`), **2 bottom sheets** with different scrims and animation, **2 month/week pagers** that differ.
 - **5 ways to show a unit** on a number field, **~14 copies** of "finite number or null" coercion.
-- **Green** used for "done" in three places where the rest of the app uses the accent.
+- **Green** used for "done" in three places where the rest of the app uses the accent (now decided — see the
+  success colour rule).
 - One real accessibility bug: **24 inputs are announced as "input"** (see P1).
 
 Most of it collapses into about ten small components and a short list of rules. The backlog below is ordered by what
@@ -30,7 +31,7 @@ These are decisions, not components — write them down once and the components 
 | Tap targets | 48px for every control; 56px only for a screen's one primary action in a sticky bar. No 40px buttons (`TodayCard` sauna buttons are 40px today). |
 | Primary action | vuiii `Button color="primary" size="large"`. Never a hand-rolled `<button>` for a plain CTA. |
 | Destructive action | One recipe: `variant="text" color="secondary" prefix-icon="trash"`, centred under the content; the confirm uses one copy pattern ("Abandon this session?" / "Abandon session") everywhere. |
-| "Done" colour | The accent. Green only where it means money saved (Multisport) — or nowhere; pick once. |
+| Success colour | **Decided:** green (a `--color-success` token) confirms that something succeeded or is complete — a finished lift's tab check, "Logged" in a session header, a done day's check in the calendar, "Saved", Multisport once paid off. The accent stays the brand: actions, the active or current thing, and a logged set's fill. |
 | Surfaces | Card = `rounded-xl border-ink-200 bg-white p-4`. Inset panel = `rounded-lg bg-ink-50 p-3`. Nothing else. |
 | Section heading | Two variants only: *title* (`text-lg font-semibold text-ink-900`) and *eyebrow* (`text-sm font-semibold tracking-wide uppercase text-ink-500`). |
 | Muted text | `text-ink-500` for secondary text; `ink-600` only for body copy on `bg-ink-50`; `ink-400` for icons/chevrons/skipped. |
@@ -96,8 +97,9 @@ These are decisions, not components — write them down once and the components 
   SessionHeader) instead of four inline overrides.
 - z-index scale: `--z-sticky: 10`, `--z-toast: 40`, `--z-overlay: 50`.
 - `--app-nav-height`, replacing the hard-coded `5.5rem` offset in `UpdatePrompt`.
-- `--success` alias if green stays for Multisport; otherwise drop green from `StrengthSessionView` (tab check),
-  `BodyweightQuickAdd` (saved check) and `MultisportUsage`.
+- `--color-success` (green-600, text green-700) for the success rule above; replace the raw `green-*` classes in
+  `StrengthSessionView` (tab check), `BodyweightQuickAdd` (saved check) and `MultisportUsage`, and move the accent
+  done marks in `WeekPreview`, `SessionHeader` and `SectionSaveFooter` ("Saved") onto it.
 - Shared TabsNav classes (`scroll-px-4 px-4 [&_[role=tab]]:min-h-[48px]`, repeated in Settings and StrengthSession)
   into the global `.TabsNav` rule.
 
